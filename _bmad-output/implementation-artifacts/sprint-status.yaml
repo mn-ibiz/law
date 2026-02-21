@@ -1,0 +1,241 @@
+# generated: 2026-02-22
+# project: Law Firm Registry
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: "{project-root}/_bmad-output/implementation-artifacts"
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created, ready for development
+#   - in-progress: Developer actively working on implementation
+#   - review: Implementation complete, ready for review
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Mark epic as 'in-progress' when starting work on its first story
+# - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
+
+generated: 2026-02-22
+project: Law Firm Registry
+project_key: NOKEY
+tracking_system: file-system
+story_location: "{project-root}/_bmad-output/implementation-artifacts"
+
+development_status:
+  # ============================================
+  # Epic 1: Project Foundation (3 stories)
+  # Dependencies: None — root epic
+  # ============================================
+  epic-1: in-progress
+  1-1-project-initialization: done
+  1-2-database-schema: ready-for-dev
+  1-3-seed-data: ready-for-dev
+  epic-1-retrospective: optional
+
+  # ============================================
+  # Epic 2: Authentication & Authorization (3 stories)
+  # Dependencies: Epic 1
+  # ============================================
+  epic-2: backlog
+  2-1-authentication-system: ready-for-dev
+  2-2-rbac-middleware: ready-for-dev
+  2-3-dashboard-shell: ready-for-dev
+  epic-2-retrospective: optional
+
+  # ============================================
+  # Epic 3: Dashboards & Global Search (3 stories)
+  # Dependencies: Epic 2
+  # ============================================
+  epic-3: backlog
+  3-1-role-based-dashboards: ready-for-dev
+  3-2-dashboard-charts: ready-for-dev
+  3-3-global-search: ready-for-dev
+  epic-3-retrospective: optional
+
+  # ============================================
+  # Epic 4: Attorney Management (3 stories)
+  # Dependencies: Epic 2
+  # ============================================
+  epic-4: backlog
+  4-1-attorney-crud: ready-for-dev
+  4-2-practising-certificates-cpd: ready-for-dev
+  4-3-attorney-performance-disciplinary: ready-for-dev
+  epic-4-retrospective: optional
+
+  # ============================================
+  # Epic 5: Client Management & KYC (4 stories)
+  # Dependencies: Epic 2
+  # ============================================
+  epic-5: backlog
+  5-1-client-intake-crm: ready-for-dev
+  5-2-kyc-aml-compliance: ready-for-dev
+  5-3-conflict-of-interest: ready-for-dev
+  5-4-online-intake-form-builder: ready-for-dev
+  epic-5-retrospective: optional
+
+  # ============================================
+  # Epic 6: Case Management (4 stories)
+  # Dependencies: Epic 5, Epic 4
+  # ============================================
+  epic-6: backlog
+  6-1-case-crud-status-workflow: ready-for-dev
+  6-2-case-detail-page: ready-for-dev
+  6-3-case-assignments-timeline: ready-for-dev
+  6-4-matter-pipeline-kanban: ready-for-dev
+  epic-6-retrospective: optional
+
+  # ============================================
+  # Epic 7: Kenya Courts & Bring-Ups (3 stories)
+  # Dependencies: Epic 6
+  # ============================================
+  epic-7: backlog
+  7-1-kenya-court-hierarchy: ready-for-dev
+  7-2-court-filing-service: ready-for-dev
+  7-3-file-bring-up-system: ready-for-dev
+  epic-7-retrospective: optional
+
+  # ============================================
+  # Epic 8: Calendar & Scheduling (3 stories)
+  # Dependencies: Epic 6
+  # ============================================
+  epic-8: backlog
+  8-1-calendar-views-court-calendar: ready-for-dev
+  8-2-events-deadline-tracker: ready-for-dev
+  8-3-task-management: ready-for-dev
+  epic-8-retrospective: optional
+
+  # ============================================
+  # Epic 9: Document Management (3 stories)
+  # Dependencies: Epic 6
+  # ============================================
+  epic-9: backlog
+  9-1-document-upload-management: ready-for-dev
+  9-2-document-versioning-templates: ready-for-dev
+  9-3-esignature-integration: ready-for-dev
+  epic-9-retrospective: optional
+
+  # ============================================
+  # Epic 10: Time & Expense Tracking (3 stories)
+  # Dependencies: Epic 6
+  # ============================================
+  epic-10: backlog
+  10-1-time-entry-live-timer: ready-for-dev
+  10-2-weekly-timesheet-expenses: ready-for-dev
+  10-3-requisitions-purchase-orders-suppliers: ready-for-dev
+  epic-10-retrospective: optional
+
+  # ============================================
+  # Epic 11: Billing & Fee Notes (4 stories)
+  # Dependencies: Epic 10
+  # ============================================
+  epic-11: backlog
+  11-1-quotes-fee-note-generation: ready-for-dev
+  11-2-kenya-vat-fee-note-pdf: ready-for-dev
+  11-3-fee-note-approval-credit-notes: ready-for-dev
+  11-4-payment-recording-mpesa: ready-for-dev
+  epic-11-retrospective: optional
+
+  # ============================================
+  # Epic 12: Trust Accounts & Financial Ops (3 stories)
+  # Dependencies: Epic 11
+  # ============================================
+  epic-12: backlog
+  12-1-trust-client-accounts: ready-for-dev
+  12-2-petty-cash-management: ready-for-dev
+  12-3-bank-reconciliation: ready-for-dev
+  epic-12-retrospective: optional
+
+  # ============================================
+  # Epic 13: Client Portal (3 stories)
+  # Dependencies: Epic 11, Epic 9, Epic 6
+  # ============================================
+  epic-13: backlog
+  13-1-portal-layout-dashboard: ready-for-dev
+  13-2-portal-case-document-access: ready-for-dev
+  13-3-portal-invoices-profile: ready-for-dev
+  epic-13-retrospective: optional
+
+  # ============================================
+  # Epic 14: Messaging & Communication (3 stories)
+  # Dependencies: Epic 13, Epic 6
+  # ============================================
+  epic-14: backlog
+  14-1-secure-messaging: ready-for-dev
+  14-2-in-app-notifications: ready-for-dev
+  14-3-sms-whatsapp-integration: ready-for-dev
+  epic-14-retrospective: optional
+
+  # ============================================
+  # Epic 15: Email Integration & Templates (2 stories)
+  # Dependencies: Epic 14
+  # ============================================
+  epic-15: backlog
+  15-1-email-notification-system: ready-for-dev
+  15-2-email-sms-template-management: ready-for-dev
+  epic-15-retrospective: optional
+
+  # ============================================
+  # Epic 16: Automated Workflows (2 stories)
+  # Dependencies: Epic 8, Epic 14
+  # ============================================
+  epic-16: backlog
+  16-1-workflow-engine-rule-builder: ready-for-dev
+  16-2-prebuilt-templates-court-rules: ready-for-dev
+  epic-16-retrospective: optional
+
+  # ============================================
+  # Epic 17: Reports & Analytics (4 stories)
+  # Dependencies: All previous data epics
+  # ============================================
+  epic-17: backlog
+  17-1-caseload-revenue-reports: ready-for-dev
+  17-2-billing-productivity-reports: ready-for-dev
+  17-3-trust-financial-reports: ready-for-dev
+  17-4-compliance-reports: ready-for-dev
+  epic-17-retrospective: optional
+
+  # ============================================
+  # Epic 18: Settings & Configuration (3 stories)
+  # Dependencies: Epic 2
+  # ============================================
+  epic-18: backlog
+  18-1-firm-settings-branding: ready-for-dev
+  18-2-user-management: ready-for-dev
+  18-3-practice-areas-billing-rates: ready-for-dev
+  epic-18-retrospective: optional
+
+  # ============================================
+  # Epic 19: Multi-Branch & Customization (4 stories)
+  # Dependencies: Epic 18
+  # ============================================
+  epic-19: backlog
+  19-1-multi-branch-management: ready-for-dev
+  19-2-custom-fields: ready-for-dev
+  19-3-tags-labels: ready-for-dev
+  19-4-audit-log: ready-for-dev
+  epic-19-retrospective: optional
+
+  # ============================================
+  # Epic 20: Data Management, Compliance & Polish (5 stories)
+  # Dependencies: All previous epics
+  # ============================================
+  epic-20: backlog
+  20-1-data-import-csv: ready-for-dev
+  20-2-data-export-backup: ready-for-dev
+  20-3-data-protection-act-compliance: ready-for-dev
+  20-4-responsive-design-polish: ready-for-dev
+  20-5-final-deployment-verification: ready-for-dev
+  epic-20-retrospective: optional
