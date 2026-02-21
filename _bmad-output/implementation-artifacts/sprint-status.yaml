@@ -41,7 +41,7 @@ development_status:
   # ============================================
   epic-1: in-progress
   1-1-project-initialization: done
-  1-2-database-schema: ready-for-dev
+  1-2-database-schema: done
   1-3-seed-data: ready-for-dev
   epic-1-retrospective: optional
 
