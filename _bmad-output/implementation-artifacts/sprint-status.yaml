@@ -90,11 +90,11 @@ development_status:
   # Epic 6: Case Management (4 stories)
   # Dependencies: Epic 5, Epic 4
   # ============================================
-  epic-6: backlog
-  6-1-case-crud-status-workflow: ready-for-dev
-  6-2-case-detail-page: ready-for-dev
-  6-3-case-assignments-timeline: ready-for-dev
-  6-4-matter-pipeline-kanban: ready-for-dev
+  epic-6: done
+  6-1-case-crud-status-workflow: done
+  6-2-case-detail-page: done
+  6-3-case-assignments-timeline: done
+  6-4-matter-pipeline-kanban: done
   epic-6-retrospective: optional
 
   # ============================================
