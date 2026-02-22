@@ -1,0 +1,90 @@
+export type Role = "admin" | "attorney" | "client";
+export type Resource =
+  | "attorneys"
+  | "clients"
+  | "cases"
+  | "documents"
+  | "calendar"
+  | "time-tracking"
+  | "expenses"
+  | "billing"
+  | "trust-accounts"
+  | "messages"
+  | "reports"
+  | "settings"
+  | "audit-log"
+  | "users";
+export type Action = "create" | "read" | "update" | "delete" | "export";
+
+const permissions: Record<Role, Partial<Record<Resource, Action[]>>> = {
+  admin: {
+    attorneys: ["create", "read", "update", "delete"],
+    clients: ["create", "read", "update", "delete"],
+    cases: ["create", "read", "update", "delete"],
+    documents: ["create", "read", "update", "delete"],
+    calendar: ["create", "read", "update", "delete"],
+    "time-tracking": ["create", "read", "update", "delete"],
+    expenses: ["create", "read", "update", "delete"],
+    billing: ["create", "read", "update", "delete"],
+    "trust-accounts": ["create", "read", "update", "delete"],
+    messages: ["create", "read", "update", "delete"],
+    reports: ["read", "export"],
+    settings: ["create", "read", "update", "delete"],
+    "audit-log": ["read", "export"],
+    users: ["create", "read", "update", "delete"],
+  },
+  attorney: {
+    attorneys: ["read"],
+    clients: ["create", "read", "update"],
+    cases: ["create", "read", "update"],
+    documents: ["create", "read", "update", "delete"],
+    calendar: ["create", "read", "update", "delete"],
+    "time-tracking": ["create", "read", "update", "delete"],
+    expenses: ["create", "read", "update", "delete"],
+    billing: ["read"],
+    "trust-accounts": ["read"],
+    messages: ["create", "read"],
+    reports: ["read"],
+    settings: ["read"],
+  },
+  client: {
+    cases: ["read"],
+    documents: ["read"],
+    billing: ["read"],
+    messages: ["create", "read"],
+    settings: ["read"],
+  },
+};
+
+export function checkPermission(
+  session: { user: { role: Role } } | null,
+  resource: Resource,
+  action: Action
+): boolean {
+  if (!session) return false;
+  const rolePermissions = permissions[session.user.role];
+  if (!rolePermissions) return false;
+  const resourcePermissions = rolePermissions[resource];
+  if (!resourcePermissions) return false;
+  return resourcePermissions.includes(action);
+}
+
+export function isAdmin(role: Role): boolean {
+  return role === "admin";
+}
+
+export function isAttorney(role: Role): boolean {
+  return role === "attorney";
+}
+
+export function isClient(role: Role): boolean {
+  return role === "client";
+}
+
+export function canAccessDashboard(role: Role): boolean {
+  return role === "admin" || role === "attorney";
+}
+
+export function canAccessPortal(role: Role): boolean {
+  return role === "client";
+}
