@@ -20,12 +20,19 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 
+interface UserOption {
+  id: string;
+  name: string | null;
+  email: string;
+}
+
 interface AttorneyFormProps {
   defaultValues?: Partial<CreateAttorneyInput>;
   attorneyId?: string;
+  users?: UserOption[];
 }
 
-export function AttorneyForm({ defaultValues, attorneyId }: AttorneyFormProps) {
+export function AttorneyForm({ defaultValues, attorneyId, users }: AttorneyFormProps) {
   const router = useRouter();
   const isEditing = !!attorneyId;
 
@@ -48,18 +55,21 @@ export function AttorneyForm({ defaultValues, attorneyId }: AttorneyFormProps) {
   });
 
   async function onSubmit(data: CreateAttorneyInput) {
-    const result = isEditing
-      ? await updateAttorney(attorneyId, data)
-      : await createAttorney(data);
+    try {
+      const result = isEditing
+        ? await updateAttorney(attorneyId, data)
+        : await createAttorney(data);
 
-    if (result.error) {
-      toast.error(result.error);
-      return;
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success(isEditing ? "Attorney updated" : "Attorney created");
+      router.push("/attorneys");
+    } catch {
+      toast.error("An unexpected error occurred");
     }
-
-    toast.success(isEditing ? "Attorney updated" : "Attorney created");
-    router.push("/attorneys");
-    router.refresh();
   }
 
   return (
@@ -70,11 +80,32 @@ export function AttorneyForm({ defaultValues, attorneyId }: AttorneyFormProps) {
             {!isEditing && (
               <div className="space-y-2">
                 <Label htmlFor="userId">User Account *</Label>
-                <Input
-                  id="userId"
-                  placeholder="User UUID"
-                  {...form.register("userId")}
-                />
+                {users && users.length > 0 ? (
+                  <Select
+                    value={form.watch("userId")}
+                    onValueChange={(val) => form.setValue("userId", val, { shouldValidate: true })}
+                  >
+                    <SelectTrigger id="userId">
+                      <SelectValue placeholder="Select a user account" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {users.map((u) => (
+                        <SelectItem key={u.id} value={u.id}>
+                          {u.name ?? u.email} ({u.email})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    id="userId"
+                    placeholder="Enter user account UUID"
+                    {...form.register("userId")}
+                  />
+                )}
+                <p className="text-xs text-muted-foreground">
+                  The user account to link this attorney profile to.
+                </p>
                 {form.formState.errors.userId && (
                   <p className="text-sm text-destructive">{form.formState.errors.userId.message}</p>
                 )}
@@ -124,7 +155,7 @@ export function AttorneyForm({ defaultValues, attorneyId }: AttorneyFormProps) {
                 id="hourlyRate"
                 type="number"
                 step="100"
-                {...form.register("hourlyRate")}
+                {...form.register("hourlyRate", { valueAsNumber: true })}
               />
             </div>
 

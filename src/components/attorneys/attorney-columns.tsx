@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 import { formatKES } from "@/lib/utils/format";
+import { formatEnum } from "@/lib/utils/format-enum";
 
 export interface AttorneyRow {
   id: string;
@@ -42,7 +43,7 @@ export const attorneyColumns: ColumnDef<AttorneyRow>[] = [
     accessorKey: "title",
     header: "Title",
     cell: ({ row }) => (
-      <span className="capitalize">{(row.getValue("title") as string).replace("_", " ")}</span>
+      <span className="capitalize">{formatEnum(row.getValue("title") as string)}</span>
     ),
   },
   {
@@ -81,7 +82,7 @@ export const attorneyColumns: ColumnDef<AttorneyRow>[] = [
     cell: ({ row }) => (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Actions">
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>

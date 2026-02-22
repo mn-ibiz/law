@@ -41,7 +41,7 @@ export const courtFilings = pgTable(
     }),
     filedBy: uuid("filed_by")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => users.id, { onDelete: "restrict" }),
     filingType: text("filing_type").notNull(),
     filingNumber: text("filing_number"),
     status: filingStatus("status").notNull().default("pending"),

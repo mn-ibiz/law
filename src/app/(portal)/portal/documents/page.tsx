@@ -1,13 +1,21 @@
-import { requireAuth } from "@/lib/auth/get-session";
+import { requireRole } from "@/lib/auth/get-session";
 import { getPortalDocuments } from "@/lib/queries/portal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { formatEnum } from "@/lib/utils/format-enum";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { APP_LOCALE } from "@/lib/constants/locale";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "My Documents",
+  description: "View documents related to your cases",
+};
 
 export default async function PortalDocumentsPage() {
-  const session = await requireAuth();
+  const session = await requireRole("client");
   const docs = await getPortalDocuments(session.user.id as string);
 
   return (
@@ -35,9 +43,9 @@ export default async function PortalDocumentsPage() {
                   <TableRow key={doc.id}>
                     <TableCell className="font-medium">{doc.title}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="capitalize">{doc.category.replace("_", " ")}</Badge>
+                      <Badge variant="outline" className="capitalize">{formatEnum(doc.category)}</Badge>
                     </TableCell>
-                    <TableCell>{new Date(doc.createdAt).toLocaleDateString("en-KE")}</TableCell>
+                    <TableCell>{new Date(doc.createdAt).toLocaleDateString(APP_LOCALE)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

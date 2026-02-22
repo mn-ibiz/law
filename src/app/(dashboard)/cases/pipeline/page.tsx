@@ -4,6 +4,12 @@ import { getCasesByPipelineStage } from "@/lib/queries/cases";
 import { CasePipeline } from "@/components/cases/case-pipeline";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Case Pipeline",
+  description: "Visual case pipeline and workflow",
+};
 
 export default async function CasePipelinePage() {
   await requireAdminOrAttorney();

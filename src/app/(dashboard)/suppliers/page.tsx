@@ -13,6 +13,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Suppliers",
+  description: "Manage vendors and supplier invoices",
+};
 
 export default async function SuppliersPage() {
   await requireAdmin();

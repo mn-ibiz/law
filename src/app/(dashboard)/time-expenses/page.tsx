@@ -7,10 +7,23 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { formatKES } from "@/lib/utils/format";
+import { formatEnum } from "@/lib/utils/format-enum";
+import { APP_LOCALE } from "@/lib/constants/locale";
 import Link from "next/link";
+import type { Metadata } from "next";
 
-export default async function TimeExpensesPage() {
+export const metadata: Metadata = {
+  title: "Time & Expenses",
+  description: "Track billable hours and expenses",
+};
+
+export default async function TimeExpensesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
   await requireAdminOrAttorney();
+  const params = await searchParams;
   const [entries, expenseList] = await Promise.all([
     getTimeEntries(),
     getExpenses(),
@@ -22,7 +35,7 @@ export default async function TimeExpensesPage() {
         <h1 className="text-2xl font-bold tracking-tight">Time & Expenses</h1>
         <p className="text-muted-foreground">Track billable hours and expenses.</p>
       </div>
-      <Tabs defaultValue="time">
+      <Tabs defaultValue={params.tab === "expenses" ? "expenses" : "time"}>
         <TabsList>
           <TabsTrigger value="time">Time Entries</TabsTrigger>
           <TabsTrigger value="expenses">Expenses</TabsTrigger>
@@ -51,7 +64,7 @@ export default async function TimeExpensesPage() {
                   <TableBody>
                     {entries.map((e) => (
                       <TableRow key={e.id}>
-                        <TableCell>{new Date(e.date).toLocaleDateString("en-KE")}</TableCell>
+                        <TableCell>{new Date(e.date).toLocaleDateString(APP_LOCALE)}</TableCell>
                         <TableCell className="max-w-[200px] truncate">{e.description}</TableCell>
                         <TableCell>
                           {e.caseNumber ? (
@@ -97,9 +110,9 @@ export default async function TimeExpensesPage() {
                   <TableBody>
                     {expenseList.map((e) => (
                       <TableRow key={e.id}>
-                        <TableCell>{new Date(e.date).toLocaleDateString("en-KE")}</TableCell>
+                        <TableCell>{new Date(e.date).toLocaleDateString(APP_LOCALE)}</TableCell>
                         <TableCell>{e.description}</TableCell>
-                        <TableCell className="capitalize">{e.category.replace("_", " ")}</TableCell>
+                        <TableCell className="capitalize">{formatEnum(e.category)}</TableCell>
                         <TableCell className="font-mono text-xs">{e.caseNumber ?? "—"}</TableCell>
                         <TableCell>{formatKES(Number(e.amount))}</TableCell>
                         <TableCell>

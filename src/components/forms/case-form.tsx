@@ -18,6 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { CASE_TYPES } from "@/lib/constants/case-types";
+import { formatEnum } from "@/lib/utils/format-enum";
 
 interface CaseFormProps {
   defaultValues?: Partial<CreateCaseInput>;
@@ -55,18 +57,21 @@ export function CaseForm({ defaultValues, caseId, clients }: CaseFormProps) {
   const billingType = form.watch("billingType");
 
   async function onSubmit(data: CreateCaseInput) {
-    const result = isEditing
-      ? await updateCase(caseId, data)
-      : await createCase(data);
+    try {
+      const result = isEditing
+        ? await updateCase(caseId, data)
+        : await createCase(data);
 
-    if (result.error) {
-      toast.error(result.error);
-      return;
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success(isEditing ? "Case updated" : "Case created");
+      router.push("/cases");
+    } catch {
+      toast.error("An unexpected error occurred");
     }
-
-    toast.success(isEditing ? "Case updated" : "Case created");
-    router.push("/cases");
-    router.refresh();
   }
 
   return (
@@ -114,16 +119,11 @@ export function CaseForm({ defaultValues, caseId, clients }: CaseFormProps) {
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="civil_litigation">Civil Litigation</SelectItem>
-                  <SelectItem value="criminal_defense">Criminal Defense</SelectItem>
-                  <SelectItem value="family_law">Family Law</SelectItem>
-                  <SelectItem value="property_law">Property / Conveyancing</SelectItem>
-                  <SelectItem value="commercial_law">Commercial Law</SelectItem>
-                  <SelectItem value="employment_law">Employment Law</SelectItem>
-                  <SelectItem value="personal_injury">Personal Injury</SelectItem>
-                  <SelectItem value="immigration">Immigration</SelectItem>
-                  <SelectItem value="tax_law">Tax Law</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  {CASE_TYPES.map((ct) => (
+                    <SelectItem key={ct} value={ct}>
+                      {formatEnum(ct)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

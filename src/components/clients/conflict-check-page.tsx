@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { searchConflicts, type ConflictResult } from "@/lib/actions/conflicts";
 import { Search, Loader2, AlertTriangle, CheckCircle, Shield } from "lucide-react";
+import { formatEnum } from "@/lib/utils/format-enum";
 
 const severityVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   none: "secondary",
@@ -91,7 +92,7 @@ export function ConflictCheckPage() {
                           {r.caseReference && ` — Case ${r.caseReference}`}
                         </p>
                         <p className="text-xs text-muted-foreground capitalize">
-                          Type: {r.entityType.replace("_", " ")}
+                          Type: {formatEnum(r.entityType)}
                         </p>
                       </div>
                       <Badge variant={severityVariant[r.severity]}>

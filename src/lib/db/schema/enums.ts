@@ -237,6 +237,14 @@ export const contactType = pgEnum("contact_type", [
   "video_call",
 ]);
 
+// Suppliers
+export const supplierInvoiceStatus = pgEnum("supplier_invoice_status", [
+  "pending",
+  "approved",
+  "paid",
+  "cancelled",
+]);
+
 // Conflict checks
 export const conflictSeverity = pgEnum("conflict_severity", [
   "clear",

@@ -3,9 +3,16 @@ import { getPettyCashTransactions } from "@/lib/queries/trust";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatKES } from "@/lib/utils/format";
+import { APP_LOCALE } from "@/lib/constants/locale";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Petty Cash",
+  description: "Track petty cash transactions",
+};
 
 export default async function PettyCashPage() {
   await requireAdmin();
@@ -39,7 +46,7 @@ export default async function PettyCashPage() {
               <TableBody>
                 {transactions.map((t) => (
                   <TableRow key={t.id}>
-                    <TableCell>{new Date(t.transactionDate).toLocaleDateString("en-KE")}</TableCell>
+                    <TableCell>{new Date(t.transactionDate).toLocaleDateString(APP_LOCALE)}</TableCell>
                     <TableCell>
                       <Badge variant={t.type === "deposit" ? "default" : "outline"}>
                         {t.type}

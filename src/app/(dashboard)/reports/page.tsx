@@ -2,9 +2,16 @@ import { requireAdminOrAttorney } from "@/lib/auth/get-session";
 import { getCaseloadReport, getBillingReport, getProductivityReport, getClientReport } from "@/lib/queries/reports";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatKES } from "@/lib/utils/format";
+import { formatEnum } from "@/lib/utils/format-enum";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Reports",
+  description: "Financial and operational reports",
+};
 
 export default async function ReportsPage() {
   await requireAdminOrAttorney();
@@ -36,7 +43,7 @@ export default async function ReportsPage() {
               <TableBody>
                 {caseload.map((row) => (
                   <TableRow key={row.status}>
-                    <TableCell className="capitalize">{row.status.replace("_", " ")}</TableCell>
+                    <TableCell className="capitalize">{formatEnum(row.status)}</TableCell>
                     <TableCell className="text-right font-medium">{row.count}</TableCell>
                   </TableRow>
                 ))}
@@ -60,7 +67,7 @@ export default async function ReportsPage() {
               <TableBody>
                 {billing.map((row) => (
                   <TableRow key={row.status}>
-                    <TableCell className="capitalize">{row.status.replace("_", " ")}</TableCell>
+                    <TableCell className="capitalize">{formatEnum(row.status)}</TableCell>
                     <TableCell className="text-right">{row.count}</TableCell>
                     <TableCell className="text-right">{formatKES(Number(row.totalAmount ?? 0))}</TableCell>
                     <TableCell className="text-right">{formatKES(Number(row.paidAmount ?? 0))}</TableCell>

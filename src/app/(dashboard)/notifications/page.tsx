@@ -3,6 +3,13 @@ import { getNotifications } from "@/lib/queries/messaging";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Bell } from "lucide-react";
+import { APP_LOCALE } from "@/lib/constants/locale";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Notifications",
+  description: "View system notifications and alerts",
+};
 
 const typeVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   info: "outline",
@@ -48,7 +55,7 @@ export default async function NotificationsPage() {
                       <span className="font-medium text-sm">{n.title}</span>
                     </div>
                     <span className="text-xs text-muted-foreground">
-                      {new Date(n.createdAt).toLocaleString("en-KE")}
+                      {new Date(n.createdAt).toLocaleString(APP_LOCALE)}
                     </span>
                   </div>
                   <p className="text-sm text-muted-foreground">{n.message}</p>

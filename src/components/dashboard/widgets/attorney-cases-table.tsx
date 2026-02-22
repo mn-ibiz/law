@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Briefcase } from "lucide-react";
+import { formatEnum } from "@/lib/utils/format-enum";
 
 interface AttorneyCase {
   id: string;
@@ -51,7 +52,7 @@ export function AttorneyCasesTable({ data }: { data: AttorneyCase[] }) {
                     <td className="py-2">{c.clientName}</td>
                     <td className="py-2">
                       <Badge variant="outline" className="capitalize text-xs">
-                        {c.status.replace("_", " ")}
+                        {formatEnum(c.status)}
                       </Badge>
                     </td>
                   </tr>

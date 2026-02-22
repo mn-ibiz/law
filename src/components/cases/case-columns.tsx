@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
+import { formatEnum } from "@/lib/utils/format-enum";
 
 export interface CaseRow {
   id: string;
@@ -77,7 +78,7 @@ export const caseColumns: ColumnDef<CaseRow>[] = [
     accessorKey: "caseType",
     header: "Type",
     cell: ({ row }) => (
-      <span className="capitalize">{(row.getValue("caseType") as string).replace("_", " ")}</span>
+      <span className="capitalize">{formatEnum(row.getValue("caseType") as string)}</span>
     ),
   },
   {
@@ -87,7 +88,7 @@ export const caseColumns: ColumnDef<CaseRow>[] = [
       const status = row.getValue("status") as string;
       return (
         <Badge variant={statusVariant[status] ?? "secondary"}>
-          {status.replace("_", " ")}
+          {formatEnum(status)}
         </Badge>
       );
     },
@@ -109,7 +110,7 @@ export const caseColumns: ColumnDef<CaseRow>[] = [
     cell: ({ row }) => (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Actions">
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>

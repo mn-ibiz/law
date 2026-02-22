@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { messages, notifications } from "@/lib/db/schema/messaging";
 import { users } from "@/lib/db/schema/auth";
-import { eq, desc, and, isNull } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 
 export async function getMessages(userId: string) {
   return db
@@ -17,7 +17,8 @@ export async function getMessages(userId: string) {
     .from(messages)
     .innerJoin(users, eq(messages.senderId, users.id))
     .where(eq(messages.recipientId, userId))
-    .orderBy(desc(messages.createdAt));
+    .orderBy(desc(messages.createdAt))
+    .limit(200);
 }
 
 export async function getSentMessages(userId: string) {
@@ -33,7 +34,8 @@ export async function getSentMessages(userId: string) {
     .from(messages)
     .innerJoin(users, eq(messages.recipientId, users.id))
     .where(eq(messages.senderId, userId))
-    .orderBy(desc(messages.createdAt));
+    .orderBy(desc(messages.createdAt))
+    .limit(200);
 }
 
 export async function getNotifications(userId: string) {
@@ -45,10 +47,10 @@ export async function getNotifications(userId: string) {
     .limit(50);
 }
 
-export async function getUnreadNotificationCount(userId: string) {
-  const result = await db
-    .select()
+export async function getUnreadNotificationCount(userId: string): Promise<number> {
+  const [result] = await db
+    .select({ count: sql<number>`count(*)::int` })
     .from(notifications)
-    .where(and(eq(notifications.userId, userId), isNull(notifications.readAt)));
-  return result.length;
+    .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
+  return result?.count ?? 0;
 }

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireAdminOrAttorney } from "@/lib/auth/get-session";
 import { getAttorneyById } from "@/lib/queries/attorneys";
@@ -5,6 +6,16 @@ import { getActiveDisciplinaryProceedings } from "@/lib/queries/disciplinary";
 import { AttorneyDetailTabs } from "@/components/attorneys/attorney-detail-tabs";
 import { DisciplinaryAlert } from "@/components/attorneys/disciplinary-alert";
 import { Badge } from "@/components/ui/badge";
+import { formatEnum } from "@/lib/utils/format-enum";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const attorney = await getAttorneyById(id);
+  return {
+    title: attorney ? attorney.name : "Attorney Details",
+    description: attorney ? `Profile for ${attorney.name}` : "Attorney profile details",
+  };
+}
 
 export default async function AttorneyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdminOrAttorney();
@@ -21,7 +32,7 @@ export default async function AttorneyDetailPage({ params }: { params: Promise<{
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{attorney.name}</h1>
           <p className="text-muted-foreground capitalize">
-            {attorney.title.replace("_", " ")} {attorney.department ? `— ${attorney.department}` : ""}
+            {formatEnum(attorney.title)} {attorney.department ? `— ${attorney.department}` : ""}
           </p>
         </div>
         <Badge variant={attorney.isActive ? "default" : "secondary"}>

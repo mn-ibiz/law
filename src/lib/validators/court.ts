@@ -1,22 +1,22 @@
 import { z } from "zod";
 
 export const createCourtSchema = z.object({
-  name: z.string().min(1, "Court name is required"),
-  level: z.string().min(1, "Court level is required"),
-  jurisdiction: z.string().optional(),
-  address: z.string().optional(),
-  phone: z.string().optional(),
-  email: z.string().optional(),
+  name: z.string().min(1, "Court name is required").max(255),
+  level: z.string().min(1, "Court level is required").max(255),
+  jurisdiction: z.string().max(255).optional(),
+  address: z.string().max(500).optional(),
+  phone: z.string().max(20).optional(),
+  email: z.string().email().optional().or(z.literal("")),
 });
 
 export const createFilingSchema = z.object({
   caseId: z.string().uuid("Invalid case"),
   courtId: z.string().uuid("Invalid court").optional(),
-  courtStationId: z.string().optional(),
-  filingType: z.string().min(1, "Filing type is required"),
-  filingNumber: z.string().optional(),
+  courtStationId: z.string().uuid().optional(),
+  filingType: z.string().min(1, "Filing type is required").max(255),
+  filingNumber: z.string().max(100).optional(),
   filingDate: z.string().optional(),
-  notes: z.string().optional(),
+  notes: z.string().max(5000).optional(),
 });
 
 export const updateFilingStatusSchema = z.object({
@@ -27,8 +27,8 @@ export const createBringUpSchema = z.object({
   caseId: z.string().uuid("Invalid case"),
   assignedTo: z.string().uuid("Invalid user").optional(),
   date: z.string().min(1, "Date is required"),
-  reason: z.string().min(1, "Reason is required"),
-  notes: z.string().optional(),
+  reason: z.string().min(1, "Reason is required").max(5000),
+  notes: z.string().max(5000).optional(),
 });
 
 export type CreateCourtInput = z.infer<typeof createCourtSchema>;

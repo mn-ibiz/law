@@ -1,30 +1,23 @@
 import { requireAdmin } from "@/lib/auth/get-session";
-import { db } from "@/lib/db";
-import { auditLog } from "@/lib/db/schema/settings";
-import { users } from "@/lib/db/schema/auth";
-import { eq, desc } from "drizzle-orm";
+import { getAuditLogs } from "@/lib/queries/settings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { formatEnum } from "@/lib/utils/format-enum";
+import { APP_LOCALE } from "@/lib/constants/locale";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Audit Log",
+  description: "View system audit trail",
+};
 
 export default async function AuditLogPage() {
   await requireAdmin();
 
-  const logs = await db
-    .select({
-      id: auditLog.id,
-      action: auditLog.action,
-      entityType: auditLog.entityType,
-      entityId: auditLog.entityId,
-      createdAt: auditLog.createdAt,
-      userName: users.name,
-    })
-    .from(auditLog)
-    .leftJoin(users, eq(auditLog.userId, users.id))
-    .orderBy(desc(auditLog.createdAt))
-    .limit(100);
+  const logs = await getAuditLogs();
 
   return (
     <div className="space-y-6">
@@ -51,10 +44,10 @@ export default async function AuditLogPage() {
               <TableBody>
                 {logs.map((log) => (
                   <TableRow key={log.id}>
-                    <TableCell className="text-xs">{new Date(log.createdAt).toLocaleString("en-KE")}</TableCell>
-                    <TableCell>{log.userName ?? "System"}</TableCell>
+                    <TableCell className="text-xs">{new Date(log.createdAt).toLocaleString(APP_LOCALE)}</TableCell>
+                    <TableCell className="font-mono text-xs">{log.userId?.slice(0, 8) ?? "System"}</TableCell>
                     <TableCell><Badge variant="outline">{log.action}</Badge></TableCell>
-                    <TableCell className="capitalize">{log.entityType.replace("_", " ")}</TableCell>
+                    <TableCell className="capitalize">{formatEnum(log.entityType)}</TableCell>
                     <TableCell className="font-mono text-xs">{log.entityId?.slice(0, 8)}...</TableCell>
                   </TableRow>
                 ))}

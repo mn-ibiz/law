@@ -4,6 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { APP_LOCALE } from "@/lib/constants/locale";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Firm Settings",
+  description: "Configure firm-wide settings",
+};
 
 const SETTING_LABELS: Record<string, string> = {
   firm_name: "Firm Name",
@@ -66,7 +73,7 @@ export default async function FirmSettingsPage() {
                       {setting.value ?? <span className="text-muted-foreground italic">Not set</span>}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
-                      {new Date(setting.updatedAt).toLocaleDateString("en-KE")}
+                      {new Date(setting.updatedAt).toLocaleDateString(APP_LOCALE)}
                     </TableCell>
                   </TableRow>
                 ))}

@@ -20,6 +20,8 @@ import {
   Settings,
   User,
   Truck,
+  Gavel,
+  ShieldAlert,
   type LucideIcon,
 } from "lucide-react";
 
@@ -60,6 +62,8 @@ export const dashboardNav: NavGroup[] = [
       { label: "Tasks", href: "/tasks", icon: CheckSquare },
       { label: "Bring-Ups", href: "/bring-ups", icon: Bell },
       { label: "Documents", href: "/documents", icon: FileText },
+      { label: "Courts", href: "/courts", icon: Gavel },
+      { label: "Conflicts", href: "/conflicts", icon: ShieldAlert },
     ],
   },
   {
@@ -90,7 +94,7 @@ export const dashboardNav: NavGroup[] = [
   {
     label: "System",
     items: [
-      { label: "Settings", href: "/settings", icon: Settings },
+      { label: "Settings", href: "/settings", icon: Settings, adminOnly: true },
     ],
   },
 ];

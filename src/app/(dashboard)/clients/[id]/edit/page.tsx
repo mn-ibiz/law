@@ -1,7 +1,15 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireAdminOrAttorney } from "@/lib/auth/get-session";
 import { getClientById } from "@/lib/queries/clients";
 import { ClientForm } from "@/components/forms/client-form";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const client = await getClientById(id);
+  const name = client ? `${client.firstName} ${client.lastName}` : "Client";
+  return { title: `Edit ${name}`, description: "Update client information" };
+}
 
 export default async function EditClientPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdminOrAttorney();

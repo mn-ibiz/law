@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { requireAdminOrAttorney } from "@/lib/auth/get-session";
 import { getClients } from "@/lib/queries/clients";
 import { ClientDataTable } from "@/components/clients/client-data-table";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Clients",
+  description: "Manage client records and KYC compliance",
+};
 
 export default async function ClientsPage() {
   await requireAdminOrAttorney();

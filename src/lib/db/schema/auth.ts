@@ -1,5 +1,4 @@
-import { pgTable, uuid, text, boolean, timestamp, index } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { pgTable, uuid, text, boolean, timestamp, integer, index } from "drizzle-orm/pg-core";
 import { userRole } from "./enums";
 
 export const users = pgTable(
@@ -17,18 +16,15 @@ export const users = pgTable(
     emailVerified: timestamp("email_verified", { withTimezone: true }),
     resetToken: text("reset_token"),
     resetTokenExpiry: timestamp("reset_token_expiry", { withTimezone: true }),
+    failedAttempts: integer("failed_attempts").notNull().default(0),
+    lockedUntil: timestamp("locked_until", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
-    index("users_email_idx").on(table.email),
+    // email already has a unique constraint which creates an implicit index
     index("users_role_idx").on(table.role),
   ]
 );
 
-export const usersRelations = relations(users, ({ one, many }) => ({
-  branch: one(users, {
-    fields: [users.branchId],
-    references: [users.id],
-  }),
-}));
+// usersRelations is defined in branches.ts to avoid circular imports

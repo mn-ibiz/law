@@ -3,9 +3,16 @@ import { getRequisitions } from "@/lib/queries/time-expenses";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatKES } from "@/lib/utils/format";
+import { formatEnum } from "@/lib/utils/format-enum";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Requisitions",
+  description: "Manage expense requisitions and approvals",
+};
 
 const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   draft: "outline",
@@ -54,7 +61,7 @@ export default async function RequisitionsPage() {
                     <TableCell>{formatKES(Number(r.amount))}</TableCell>
                     <TableCell>
                       <Badge variant={statusVariant[r.status] ?? "secondary"}>
-                        {r.status.replace("_", " ")}
+                        {formatEnum(r.status)}
                       </Badge>
                     </TableCell>
                   </TableRow>

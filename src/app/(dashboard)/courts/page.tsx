@@ -2,6 +2,12 @@ import { requireAdminOrAttorney } from "@/lib/auth/get-session";
 import { getCourtHierarchy } from "@/lib/queries/courts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Courts",
+  description: "Kenya court hierarchy and stations",
+};
 
 export default async function CourtsPage() {
   await requireAdminOrAttorney();

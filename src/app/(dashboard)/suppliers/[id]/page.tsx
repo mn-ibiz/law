@@ -1,9 +1,11 @@
+import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/auth/get-session";
 import { getSupplierById, getSupplierInvoices } from "@/lib/queries/suppliers";
 import { notFound } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatKES } from "@/lib/utils/format";
+import { APP_LOCALE } from "@/lib/constants/locale";
 import {
   Table,
   TableBody,
@@ -12,6 +14,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const supplier = await getSupplierById(id);
+  return {
+    title: supplier ? supplier.name : "Supplier Details",
+    description: supplier ? `Supplier profile for ${supplier.name}` : "Supplier details",
+  };
+}
 
 export default async function SupplierDetailPage({
   params,
@@ -121,7 +132,7 @@ export default async function SupplierDetailPage({
                   <TableRow key={inv.id}>
                     <TableCell className="font-mono text-xs">{inv.invoiceNumber}</TableCell>
                     <TableCell className="max-w-[200px] truncate">{inv.description ?? "—"}</TableCell>
-                    <TableCell>{new Date(inv.invoiceDate).toLocaleDateString("en-KE")}</TableCell>
+                    <TableCell>{new Date(inv.invoiceDate).toLocaleDateString(APP_LOCALE)}</TableCell>
                     <TableCell>{formatKES(Number(inv.amount))}</TableCell>
                     <TableCell>{formatKES(Number(inv.vatAmount))}</TableCell>
                     <TableCell className="font-medium">{formatKES(Number(inv.totalAmount))}</TableCell>

@@ -16,13 +16,19 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { dashboardNav } from "./sidebar-nav";
+import { dashboardNav, portalNav } from "./sidebar-nav";
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const { data: session } = useSession();
-  const role = (session?.user?.role as string) ?? "";
+  const role = session?.user?.role ?? "";
+
+  // Use portal nav for client role, dashboard nav otherwise
+  const isClient = role === "client";
+  const navGroups = isClient
+    ? [{ label: "Portal", items: portalNav }]
+    : dashboardNav;
 
   return (
     <>
@@ -46,7 +52,7 @@ export function MobileNav() {
           </SheetHeader>
           <ScrollArea className="h-[calc(100vh-57px)]">
             <nav className="space-y-1 p-3">
-              {dashboardNav.map((group, groupIdx) => (
+              {navGroups.map((group, groupIdx) => (
                 <div key={group.label}>
                   {groupIdx > 0 && <Separator className="my-2" />}
                   <p className="px-2 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -55,10 +61,13 @@ export function MobileNav() {
                   {group.items
                     .filter((item) => !item.adminOnly || role === "admin")
                     .map((item) => {
+                      // Strip query params from href for active state comparison
+                      const hrefPath = item.href.split("?")[0];
                       const isActive =
-                        pathname === item.href ||
-                        (item.href !== "/dashboard" &&
-                          pathname.startsWith(item.href + "/"));
+                        pathname === hrefPath ||
+                        (hrefPath !== "/dashboard" &&
+                          hrefPath !== "/portal" &&
+                          pathname.startsWith(hrefPath + "/"));
                       const Icon = item.icon;
 
                       return (

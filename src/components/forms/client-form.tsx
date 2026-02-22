@@ -57,18 +57,21 @@ export function ClientForm({ defaultValues, clientId }: ClientFormProps) {
   const clientType = form.watch("type");
 
   async function onSubmit(data: CreateClientInput) {
-    const result = isEditing
-      ? await updateClient(clientId, data)
-      : await createClient(data);
+    try {
+      const result = isEditing
+        ? await updateClient(clientId, data)
+        : await createClient(data);
 
-    if (result.error) {
-      toast.error(result.error);
-      return;
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success(isEditing ? "Client updated" : "Client created");
+      router.push("/clients");
+    } catch {
+      toast.error("An unexpected error occurred");
     }
-
-    toast.success(isEditing ? "Client updated" : "Client created");
-    router.push("/clients");
-    router.refresh();
   }
 
   return (

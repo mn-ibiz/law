@@ -8,9 +8,10 @@ import {
   tags,
   emailTemplates,
   smsTemplates,
+  auditLog,
 } from "@/lib/db/schema/settings";
 import { branches, branchUsers } from "@/lib/db/schema/branches";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, inArray } from "drizzle-orm";
 
 // Dynamic imports to avoid circular deps - read schema directly
 export async function getUsers() {
@@ -24,7 +25,8 @@ export async function getUsers() {
       createdAt: users.createdAt,
     })
     .from(users)
-    .orderBy(desc(users.createdAt));
+    .orderBy(desc(users.createdAt))
+    .limit(500);
 }
 
 export async function getUserById(id: string) {
@@ -109,4 +111,36 @@ export async function getEmailTemplates() {
 
 export async function getSmsTemplates() {
   return db.select().from(smsTemplates).orderBy(smsTemplates.name);
+}
+
+export async function getAuditLogs(limit = 100) {
+  return db
+    .select({
+      id: auditLog.id,
+      action: auditLog.action,
+      entityType: auditLog.entityType,
+      entityId: auditLog.entityId,
+      details: auditLog.details,
+      createdAt: auditLog.createdAt,
+      userId: auditLog.userId,
+    })
+    .from(auditLog)
+    .orderBy(desc(auditLog.createdAt))
+    .limit(limit);
+}
+
+export async function getRecentDataOperations(limit = 50) {
+  return db
+    .select({
+      id: auditLog.id,
+      action: auditLog.action,
+      entityType: auditLog.entityType,
+      entityId: auditLog.entityId,
+      details: auditLog.details,
+      createdAt: auditLog.createdAt,
+    })
+    .from(auditLog)
+    .where(inArray(auditLog.action, ["create", "update", "delete"]))
+    .orderBy(desc(auditLog.createdAt))
+    .limit(limit);
 }

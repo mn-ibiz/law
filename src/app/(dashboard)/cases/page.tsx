@@ -4,6 +4,12 @@ import { getCases } from "@/lib/queries/cases";
 import { CaseDataTable } from "@/components/cases/case-data-table";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Cases",
+  description: "Manage legal cases and matters",
+};
 
 export default async function CasesPage() {
   await requireAdminOrAttorney();

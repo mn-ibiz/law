@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, boolean, timestamp, integer } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { workflowTriggerType, workflowActionType } from "./enums";
 import { users } from "./auth";
@@ -23,7 +23,7 @@ export const workflowRules = pgTable("workflow_rules", {
   actionType: workflowActionType("action_type").notNull(),
   actionConfig: text("action_config"),
   conditionConfig: text("condition_config"),
-  order: text("order").notNull().default("1"),
+  order: integer("order").notNull().default(1),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 

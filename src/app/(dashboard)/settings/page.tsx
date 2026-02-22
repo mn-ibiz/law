@@ -1,7 +1,13 @@
 import { requireAdmin } from "@/lib/auth/get-session";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { Settings, Users, Briefcase, Building2, Shield, Database } from "lucide-react";
+import { Users, Briefcase, Building2, Shield, Database } from "lucide-react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Settings",
+  description: "System configuration and administration",
+};
 
 const settingsGroups = [
   {

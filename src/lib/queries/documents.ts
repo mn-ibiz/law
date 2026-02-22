@@ -17,7 +17,10 @@ export async function getDocuments(filters: DocFilters = {}) {
   const conditions = [];
   if (caseId) conditions.push(eq(documents.caseId, caseId));
   if (category) conditions.push(eq(documents.category, category as "pleading" | "correspondence" | "contract" | "evidence" | "court_order" | "filing" | "template" | "other"));
-  if (search) conditions.push(or(ilike(documents.title, `%${search}%`), ilike(documents.fileName, `%${search}%`)));
+  if (search) {
+    const escaped = search.replace(/[%_\\]/g, "\\$&");
+    conditions.push(or(ilike(documents.title, `%${escaped}%`), ilike(documents.fileName, `%${escaped}%`)));
+  }
 
   const result = await db
     .select({
@@ -43,7 +46,7 @@ export async function getDocuments(filters: DocFilters = {}) {
 }
 
 export async function getDocumentTemplates() {
-  return db.select().from(documentTemplates).orderBy(desc(documentTemplates.createdAt));
+  return db.select().from(documentTemplates).orderBy(desc(documentTemplates.createdAt)).limit(200);
 }
 
 export async function getDocumentVersions(documentId: string) {

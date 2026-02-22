@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, boolean, timestamp, numeric, index } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, boolean, timestamp, numeric, integer, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { auditAction } from "./enums";
 import { users } from "./auth";
@@ -81,7 +81,7 @@ export const customFields = pgTable("custom_fields", {
   fieldOptions: text("field_options"),
   isRequired: boolean("is_required").notNull().default(false),
   isActive: boolean("is_active").notNull().default(true),
-  order: text("order").default("0"),
+  order: integer("order").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });

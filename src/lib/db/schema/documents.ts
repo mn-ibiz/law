@@ -14,7 +14,7 @@ export const documents = pgTable(
     clientId: uuid("client_id").references(() => clients.id, { onDelete: "set null" }),
     uploadedBy: uuid("uploaded_by")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => users.id, { onDelete: "restrict" }),
     category: documentCategory("category").notNull().default("other"),
     status: documentStatus("status").notNull().default("draft"),
     fileUrl: text("file_url").notNull(),
@@ -43,7 +43,7 @@ export const documentVersions = pgTable("document_versions", {
   fileSize: integer("file_size"),
   uploadedBy: uuid("uploaded_by")
     .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+    .references(() => users.id, { onDelete: "restrict" }),
   changeNotes: text("change_notes"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });

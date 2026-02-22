@@ -12,7 +12,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatKES } from "@/lib/utils/format";
-import { Clock, Users, FileText, MessageSquare } from "lucide-react";
+import { formatEnum } from "@/lib/utils/format-enum";
+import { Clock, Users, MessageSquare } from "lucide-react";
+import { APP_LOCALE } from "@/lib/constants/locale";
 
 interface CaseDetail {
   id: string;
@@ -104,7 +106,7 @@ export function CaseDetailTabs({ caseData, assignments, notes, timeline, parties
               <dl className="grid gap-3">
                 <div>
                   <dt className="text-sm text-muted-foreground">Case Type</dt>
-                  <dd className="font-medium capitalize">{caseData.caseType.replace("_", " ")}</dd>
+                  <dd className="font-medium capitalize">{formatEnum(caseData.caseType)}</dd>
                 </div>
                 {caseData.practiceArea && (
                   <div>
@@ -122,7 +124,7 @@ export function CaseDetailTabs({ caseData, assignments, notes, timeline, parties
                   <div>
                     <dt className="text-sm text-muted-foreground">Date Filed</dt>
                     <dd className="font-medium">
-                      {new Date(caseData.dateFiled).toLocaleDateString("en-KE")}
+                      {new Date(caseData.dateFiled).toLocaleDateString(APP_LOCALE)}
                     </dd>
                   </div>
                 )}
@@ -130,7 +132,7 @@ export function CaseDetailTabs({ caseData, assignments, notes, timeline, parties
                   <div>
                     <dt className="text-sm text-muted-foreground">Statute of Limitations</dt>
                     <dd className="font-medium">
-                      {new Date(caseData.statuteOfLimitations).toLocaleDateString("en-KE")}
+                      {new Date(caseData.statuteOfLimitations).toLocaleDateString(APP_LOCALE)}
                     </dd>
                   </div>
                 )}
@@ -182,7 +184,7 @@ export function CaseDetailTabs({ caseData, assignments, notes, timeline, parties
               <dl className="grid gap-3">
                 <div>
                   <dt className="text-sm text-muted-foreground">Billing Type</dt>
-                  <dd className="font-medium capitalize">{caseData.billingType.replace("_", " ")}</dd>
+                  <dd className="font-medium capitalize">{formatEnum(caseData.billingType)}</dd>
                 </div>
                 {caseData.hourlyRate && (
                   <div>
@@ -234,11 +236,11 @@ export function CaseDetailTabs({ caseData, assignments, notes, timeline, parties
                       <TableCell className="font-medium">{a.userName}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className="capitalize">
-                          {a.role.replace("_", " ")}
+                          {formatEnum(a.role)}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {new Date(a.assignedAt).toLocaleDateString("en-KE")}
+                        {new Date(a.assignedAt).toLocaleDateString(APP_LOCALE)}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -273,7 +275,7 @@ export function CaseDetailTabs({ caseData, assignments, notes, timeline, parties
                       <TableCell className="font-medium">{p.name}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className="capitalize">
-                          {p.role.replace("_", " ")}
+                          {formatEnum(p.role)}
                         </Badge>
                       </TableCell>
                       <TableCell>{p.email ?? "—"}</TableCell>
@@ -307,7 +309,7 @@ export function CaseDetailTabs({ caseData, assignments, notes, timeline, parties
                       <div className="flex items-center gap-2">
                         {n.isPrivate && <Badge variant="secondary">Private</Badge>}
                         <span className="text-xs text-muted-foreground">
-                          {new Date(n.createdAt).toLocaleString("en-KE")}
+                          {new Date(n.createdAt).toLocaleString(APP_LOCALE)}
                         </span>
                       </div>
                     </div>
@@ -342,7 +344,7 @@ export function CaseDetailTabs({ caseData, assignments, notes, timeline, parties
                       )}
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-xs text-muted-foreground">
-                          {new Date(e.createdAt).toLocaleString("en-KE")}
+                          {new Date(e.createdAt).toLocaleString(APP_LOCALE)}
                         </span>
                         {e.userName && (
                           <span className="text-xs text-muted-foreground">by {e.userName}</span>

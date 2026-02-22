@@ -1,137 +1,355 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { invoices, invoiceLineItems, payments } from "@/lib/db/schema/billing";
+import { invoices, invoiceLineItems, payments, quotes, receipts, creditNotes } from "@/lib/db/schema/billing";
 import { auth } from "@/lib/auth/auth";
 import { createAuditLog } from "@/lib/utils/audit";
-import { createInvoiceSchema, recordPaymentSchema } from "@/lib/validators/billing";
+import { createInvoiceSchema, recordPaymentSchema, createQuoteSchema, createReceiptSchema, createCreditNoteSchema } from "@/lib/validators/billing";
 import { generateInvoiceNumber } from "@/lib/queries/billing";
 import { eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { safeAction } from "@/lib/utils/safe-action";
+import { validateId } from "@/lib/utils/validate-id";
+import { withUniqueRetry } from "@/lib/utils/with-retry";
 
 export async function createInvoice(data: unknown) {
-  const session = await auth();
-  if (!session?.user || !["admin", "attorney"].includes(session.user.role as string)) {
-    return { error: "Unauthorized" };
-  }
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
 
-  const validated = createInvoiceSchema.safeParse(data);
-  if (!validated.success) {
-    return { error: validated.error.issues[0].message };
-  }
+    const validated = createInvoiceSchema.safeParse(data);
+    if (!validated.success) {
+      return { error: validated.error.issues[0].message };
+    }
 
-  const invoiceNumber = await generateInvoiceNumber();
-  const subtotal = validated.data.lineItems.reduce((sum, item) => sum + item.amount, 0);
-  const vatRate = 16;
-  const vatAmount = subtotal * (vatRate / 100);
-  const totalAmount = subtotal + vatAmount;
+    // Compute line item amounts server-side to prevent billing fraud
+    const computedLineItems = validated.data.lineItems.map((item) => ({
+      ...item,
+      amount: item.quantity * item.unitPrice,
+    }));
+    const subtotal = computedLineItems.reduce((sum, item) => sum + item.amount, 0);
+    const vatRate = 16;
+    const vatAmount = subtotal * (vatRate / 100);
+    const totalAmount = subtotal + vatAmount;
 
-  const result = await db
-    .insert(invoices)
-    .values({
-      invoiceNumber,
-      caseId: validated.data.caseId,
-      clientId: validated.data.clientId,
-      createdBy: session.user.id as string,
-      subtotal: String(subtotal),
-      vatRate: String(vatRate),
-      vatAmount: String(vatAmount),
-      totalAmount: String(totalAmount),
-      dueDate: new Date(validated.data.dueDate),
-      notes: validated.data.notes,
-    })
-    .returning();
+    // Retry on unique constraint violation (concurrent number generation race)
+    const result = await withUniqueRetry(async () => {
+      const invoiceNumber = await generateInvoiceNumber();
+      return await db
+        .insert(invoices)
+        .values({
+          invoiceNumber,
+          caseId: validated.data.caseId,
+          clientId: validated.data.clientId,
+          createdBy: session.user.id,
+          subtotal: String(subtotal),
+          vatRate: String(vatRate),
+          vatAmount: String(vatAmount),
+          totalAmount: String(totalAmount),
+          dueDate: new Date(validated.data.dueDate),
+          notes: validated.data.notes,
+        })
+        .returning();
+    });
 
-  const lineItemValues = validated.data.lineItems.map((item) => ({
-    invoiceId: result[0].id,
-    description: item.description,
-    quantity: String(item.quantity),
-    unitPrice: String(item.unitPrice),
-    amount: String(item.amount),
-  }));
+    const lineItemValues = computedLineItems.map((item) => ({
+      invoiceId: result[0].id,
+      description: item.description,
+      quantity: String(item.quantity),
+      unitPrice: String(item.unitPrice),
+      amount: String(item.amount),
+    }));
 
-  await db.insert(invoiceLineItems).values(lineItemValues);
+    await db.insert(invoiceLineItems).values(lineItemValues);
 
-  await createAuditLog(
-    session.user.id as string,
-    "create",
-    "invoice",
-    result[0].id,
-    { invoiceNumber, totalAmount }
-  );
+    await createAuditLog(
+      session.user.id,
+      "create",
+      "invoice",
+      result[0].id,
+      { invoiceNumber: result[0].invoiceNumber, totalAmount }
+    );
 
-  revalidatePath("/billing");
-  return { data: result[0] };
+    revalidatePath("/billing");
+    return { data: result[0] };
+  });
 }
 
 export async function sendInvoice(id: string) {
-  const session = await auth();
-  if (!session?.user || !["admin", "attorney"].includes(session.user.role as string)) {
-    return { error: "Unauthorized" };
-  }
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
 
-  await db
-    .update(invoices)
-    .set({ status: "sent", sentAt: new Date(), updatedAt: new Date() })
-    .where(eq(invoices.id, id));
+    if (!validateId(id)) return { error: "Invalid ID" };
 
-  revalidatePath("/billing");
-  return { success: true };
+    // Atomic conditional update — prevents TOCTOU race
+    const result = await db
+      .update(invoices)
+      .set({ status: "sent", sentAt: new Date(), updatedAt: new Date() })
+      .where(sql`${invoices.id} = ${id} AND ${invoices.status} = 'draft'`)
+      .returning({ id: invoices.id });
+
+    if (result.length === 0) {
+      return { error: "Invoice not found or not in draft status" };
+    }
+
+    revalidatePath("/billing");
+    return { success: true };
+  });
 }
 
 export async function recordPayment(data: unknown) {
-  const session = await auth();
-  if (!session?.user || !["admin", "attorney"].includes(session.user.role as string)) {
-    return { error: "Unauthorized" };
-  }
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
 
-  const validated = recordPaymentSchema.safeParse(data);
-  if (!validated.success) {
-    return { error: validated.error.issues[0].message };
-  }
+    const validated = recordPaymentSchema.safeParse(data);
+    if (!validated.success) {
+      return { error: validated.error.issues[0].message };
+    }
 
-  const result = await db
-    .insert(payments)
-    .values({
-      invoiceId: validated.data.invoiceId,
-      amount: String(validated.data.amount),
-      method: validated.data.paymentMethod,
-      reference: validated.data.referenceNumber,
-      mpesaTransactionId: validated.data.mpesaCode,
-      receivedBy: session.user.id as string,
-      notes: validated.data.notes,
-    })
-    .returning();
+    const invoiceId = validated.data.invoiceId;
+    const paymentAmount = String(validated.data.amount);
 
-  // Update paid amount on invoice
-  const invoice = await db.select().from(invoices).where(eq(invoices.id, validated.data.invoiceId)).limit(1);
-  if (invoice[0]) {
-    const newPaid = Number(invoice[0].paidAmount) + validated.data.amount;
-    const totalAmount = Number(invoice[0].totalAmount);
-    const newStatus = newPaid >= totalAmount ? "paid" : "partially_paid";
-
-    await db
+    // Atomic conditional update: guard status + prevent overpayment in a single statement
+    const updateResult = await db
       .update(invoices)
       .set({
-        paidAmount: String(newPaid),
-        status: newStatus,
-        paidAt: newPaid >= totalAmount ? new Date() : undefined,
+        paidAmount: sql`${invoices.paidAmount}::numeric + ${paymentAmount}::numeric`,
+        status: sql`CASE WHEN ${invoices.paidAmount}::numeric + ${paymentAmount}::numeric >= ${invoices.totalAmount}::numeric THEN 'paid' ELSE 'partially_paid' END`,
+        paidAt: sql`CASE WHEN ${invoices.paidAmount}::numeric + ${paymentAmount}::numeric >= ${invoices.totalAmount}::numeric THEN NOW() ELSE ${invoices.paidAt} END`,
         updatedAt: new Date(),
       })
-      .where(eq(invoices.id, validated.data.invoiceId));
-  }
+      .where(
+        sql`${invoices.id} = ${invoiceId} AND ${invoices.status} IN ('sent', 'partially_paid', 'overdue') AND (${invoices.totalAmount}::numeric - ${invoices.paidAmount}::numeric) >= ${paymentAmount}::numeric`
+      )
+      .returning({ id: invoices.id });
 
-  revalidatePath("/billing");
-  return { data: result[0] };
+    if (updateResult.length === 0) {
+      return { error: "Payment failed: invoice is not in a payable state or amount exceeds outstanding balance" };
+    }
+
+    const result = await db
+      .insert(payments)
+      .values({
+        invoiceId,
+        amount: paymentAmount,
+        method: validated.data.paymentMethod,
+        reference: validated.data.referenceNumber,
+        mpesaTransactionId: validated.data.mpesaCode,
+        receivedBy: session.user.id,
+        notes: validated.data.notes,
+      })
+      .returning();
+
+    revalidatePath("/billing");
+    return { data: result[0] };
+  });
 }
 
 export async function cancelInvoice(id: string) {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "admin") {
-    return { error: "Unauthorized" };
-  }
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || session.user.role !== "admin") {
+      return { error: "Unauthorized" };
+    }
 
-  await db.update(invoices).set({ status: "cancelled", updatedAt: new Date() }).where(eq(invoices.id, id));
-  revalidatePath("/billing");
-  return { success: true };
+    if (!validateId(id)) return { error: "Invalid ID" };
+
+    // Atomic conditional update — prevents TOCTOU race
+    const result = await db
+      .update(invoices)
+      .set({ status: "cancelled", updatedAt: new Date() })
+      .where(sql`${invoices.id} = ${id} AND ${invoices.status} NOT IN ('paid', 'cancelled')`)
+      .returning({ id: invoices.id });
+
+    if (result.length === 0) {
+      return { error: "Invoice not found, already paid, or already cancelled" };
+    }
+    revalidatePath("/billing");
+    return { success: true };
+  });
+}
+
+// --- Quotes ---
+export async function createQuote(data: unknown) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    const validated = createQuoteSchema.safeParse(data);
+    if (!validated.success) return { error: validated.error.issues[0].message };
+
+    // Retry on unique constraint violation (concurrent number generation race)
+    const result = await withUniqueRetry(async () => {
+      const year = new Date().getFullYear();
+      const qtPrefix = `QT-${year}-`;
+      const [qtResult] = await db
+        .select({ maxNum: sql<string>`MAX(${quotes.quoteNumber})` })
+        .from(quotes)
+        .where(sql`${quotes.quoteNumber} LIKE ${qtPrefix + '%'}`);
+      let qtNext = 1;
+      if (qtResult?.maxNum) {
+        const parts = qtResult.maxNum.split("-");
+        const lastNum = parseInt(parts[parts.length - 1], 10);
+        if (!isNaN(lastNum)) qtNext = lastNum + 1;
+      }
+      const quoteNumber = `${qtPrefix}${String(qtNext).padStart(4, "0")}`;
+
+      return await db
+        .insert(quotes)
+        .values({
+          quoteNumber,
+          clientId: validated.data.clientId,
+          caseId: validated.data.caseId || undefined,
+          createdBy: session.user.id,
+          subtotal: String(validated.data.amount),
+          vatAmount: "0",
+          totalAmount: String(validated.data.amount),
+          validUntil: validated.data.validUntil ? new Date(validated.data.validUntil) : undefined,
+          notes: validated.data.notes,
+        })
+        .returning();
+    });
+
+    revalidatePath("/billing");
+    return { data: result[0] };
+  });
+}
+
+// Valid quote status transitions
+const quoteTransitions: Record<string, string[]> = {
+  draft: ["sent"],
+  sent: ["accepted", "rejected", "expired"],
+  accepted: [],
+  rejected: [],
+  expired: ["draft"],
+};
+
+export async function updateQuoteStatus(id: string, status: "draft" | "sent" | "accepted" | "rejected" | "expired") {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    // Build valid source statuses for the target status
+    const validFromStatuses = Object.entries(quoteTransitions)
+      .filter(([, targets]) => targets.includes(status))
+      .map(([from]) => from);
+
+    if (validFromStatuses.length === 0) {
+      return { error: `Cannot transition any quote to '${status}'` };
+    }
+
+    // Atomic conditional update with state guard
+    const placeholders = validFromStatuses.map((s) => `'${s}'`).join(", ");
+    const result = await db
+      .update(quotes)
+      .set({ status, updatedAt: new Date() })
+      .where(sql`${quotes.id} = ${id} AND ${quotes.status} IN (${sql.raw(placeholders)})`)
+      .returning({ id: quotes.id });
+
+    if (result.length === 0) {
+      return { error: "Quote not found or invalid status transition" };
+    }
+
+    revalidatePath("/billing");
+    return { success: true };
+  });
+}
+
+// --- Receipts ---
+export async function createReceipt(data: unknown) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    const validated = createReceiptSchema.safeParse(data);
+    if (!validated.success) return { error: validated.error.issues[0].message };
+
+    // Retry on unique constraint violation (concurrent number generation race)
+    const result = await withUniqueRetry(async () => {
+      const rctYear = new Date().getFullYear();
+      const rctPrefix = `RCT-${rctYear}-`;
+      const [rctResult] = await db
+        .select({ maxNum: sql<string>`MAX(${receipts.receiptNumber})` })
+        .from(receipts)
+        .where(sql`${receipts.receiptNumber} LIKE ${rctPrefix + '%'}`);
+      let rctNext = 1;
+      if (rctResult?.maxNum) {
+        const parts = rctResult.maxNum.split("-");
+        const lastNum = parseInt(parts[parts.length - 1], 10);
+        if (!isNaN(lastNum)) rctNext = lastNum + 1;
+      }
+      const receiptNumber = `${rctPrefix}${String(rctNext).padStart(4, "0")}`;
+
+      return await db
+        .insert(receipts)
+        .values({
+          receiptNumber,
+          paymentId: validated.data.paymentId,
+          issuedTo: validated.data.issuedTo,
+          amount: String(validated.data.amount),
+        })
+        .returning();
+    });
+
+    revalidatePath("/billing");
+    return { data: result[0] };
+  });
+}
+
+// --- Credit Notes ---
+export async function createCreditNote(data: unknown) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || session.user.role !== "admin") {
+      return { error: "Unauthorized" };
+    }
+
+    const validated = createCreditNoteSchema.safeParse(data);
+    if (!validated.success) return { error: validated.error.issues[0].message };
+
+    // Retry on unique constraint violation (concurrent number generation race)
+    const result = await withUniqueRetry(async () => {
+      const cnYear = new Date().getFullYear();
+      const cnPrefix = `CN-${cnYear}-`;
+      const [cnResult] = await db
+        .select({ maxNum: sql<string>`MAX(${creditNotes.creditNoteNumber})` })
+        .from(creditNotes)
+        .where(sql`${creditNotes.creditNoteNumber} LIKE ${cnPrefix + '%'}`);
+      let cnNext = 1;
+      if (cnResult?.maxNum) {
+        const parts = cnResult.maxNum.split("-");
+        const lastNum = parseInt(parts[parts.length - 1], 10);
+        if (!isNaN(lastNum)) cnNext = lastNum + 1;
+      }
+      const creditNoteNumber = `${cnPrefix}${String(cnNext).padStart(4, "0")}`;
+
+      return await db
+        .insert(creditNotes)
+        .values({
+          creditNoteNumber,
+          invoiceId: validated.data.invoiceId,
+          amount: String(validated.data.amount),
+          reason: validated.data.reason,
+          createdBy: session.user.id,
+        })
+        .returning();
+    });
+
+    revalidatePath("/billing");
+    return { data: result[0] };
+  });
 }

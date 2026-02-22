@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { submitIntake } from "@/lib/actions/intake";
+import { CASE_TYPES } from "@/lib/constants/case-types";
+import { formatEnum } from "@/lib/utils/format-enum";
 
 export function PublicIntakeForm() {
   const router = useRouter();
@@ -39,15 +41,19 @@ export function PublicIntakeForm() {
   });
 
   async function onSubmit(data: PublicIntakeInput) {
-    const result = await submitIntake(data);
+    try {
+      const result = await submitIntake(data);
 
-    if (result.error) {
-      toast.error(result.error);
-      return;
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success("Intake form submitted successfully");
+      router.push("/intake/success");
+    } catch {
+      toast.error("An unexpected error occurred");
     }
-
-    toast.success("Intake form submitted successfully");
-    router.push("/intake/success");
   }
 
   return (
@@ -98,16 +104,11 @@ export function PublicIntakeForm() {
                 <SelectValue placeholder="Select case type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="civil_litigation">Civil Litigation</SelectItem>
-                <SelectItem value="criminal_defense">Criminal Defense</SelectItem>
-                <SelectItem value="family_law">Family Law</SelectItem>
-                <SelectItem value="property_law">Property / Conveyancing</SelectItem>
-                <SelectItem value="commercial_law">Commercial Law</SelectItem>
-                <SelectItem value="employment_law">Employment Law</SelectItem>
-                <SelectItem value="personal_injury">Personal Injury</SelectItem>
-                <SelectItem value="immigration">Immigration</SelectItem>
-                <SelectItem value="tax_law">Tax Law</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
+                {CASE_TYPES.map((ct) => (
+                  <SelectItem key={ct} value={ct}>
+                    {formatEnum(ct)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             {form.formState.errors.caseType && (

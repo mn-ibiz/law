@@ -11,6 +11,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { APP_LOCALE } from "@/lib/constants/locale";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Deadlines",
+  description: "Track statutory and case deadlines",
+};
 
 const priorityVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   low: "secondary",
@@ -120,7 +127,7 @@ export default async function DeadlinesPage() {
                       </TableCell>
                       <TableCell>
                         <span className={isOverdue ? "text-destructive font-medium" : ""}>
-                          {new Date(d.dueDate).toLocaleDateString("en-KE")}
+                          {new Date(d.dueDate).toLocaleDateString(APP_LOCALE)}
                         </span>
                       </TableCell>
                       <TableCell>

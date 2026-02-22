@@ -11,6 +11,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { APP_LOCALE } from "@/lib/constants/locale";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Bring-Ups",
+  description: "File bring-up reminders and follow-ups",
+};
 
 const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   pending: "outline",
@@ -53,7 +60,7 @@ export default async function BringUpsPage() {
                 {bringUpList.map((bu) => (
                   <TableRow key={bu.id}>
                     <TableCell>
-                      {new Date(bu.date).toLocaleDateString("en-KE")}
+                      {new Date(bu.date).toLocaleDateString(APP_LOCALE)}
                     </TableCell>
                     <TableCell>
                       <Link

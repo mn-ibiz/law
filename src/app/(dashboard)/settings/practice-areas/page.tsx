@@ -6,6 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Practice Areas",
+  description: "Manage practice areas and billing rates",
+};
 
 export default async function PracticeAreasPage() {
   await requireAdmin();

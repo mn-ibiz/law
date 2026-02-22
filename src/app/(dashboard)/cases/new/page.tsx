@@ -1,6 +1,12 @@
 import { requireAdminOrAttorney } from "@/lib/auth/get-session";
 import { getClients } from "@/lib/queries/clients";
 import { CaseForm } from "@/components/forms/case-form";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "New Case",
+  description: "Open a new legal case",
+};
 
 export default async function NewCasePage() {
   await requireAdminOrAttorney();

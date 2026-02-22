@@ -12,7 +12,7 @@ export const pettyCashTransactions = pgTable("petty_cash_transactions", {
   receiptUrl: text("receipt_url"),
   performedBy: uuid("performed_by")
     .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+    .references(() => users.id, { onDelete: "restrict" }),
   approvedBy: uuid("approved_by").references(() => users.id, { onDelete: "set null" }),
   transactionDate: timestamp("transaction_date", { withTimezone: true }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -21,7 +21,7 @@ export const pettyCashTransactions = pgTable("petty_cash_transactions", {
 export const bankAccounts = pgTable("bank_accounts", {
   id: uuid("id").primaryKey().defaultRandom(),
   accountName: text("account_name").notNull(),
-  accountNumber: text("account_number").notNull(),
+  accountNumber: text("account_number").notNull().unique(),
   bankName: text("bank_name").notNull(),
   branchName: text("branch_name"),
   swiftCode: text("swift_code"),

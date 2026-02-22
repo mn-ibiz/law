@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/auth/get-session";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+export const metadata: Metadata = {
+  title: "Attorney Performance",
+  description: "View attorney performance metrics",
+};
 
 export default async function AttorneyPerformancePage() {
   await requireAdmin();

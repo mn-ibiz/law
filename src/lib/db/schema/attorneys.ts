@@ -1,7 +1,8 @@
-import { pgTable, pgEnum, uuid, text, boolean, timestamp, numeric, index } from "drizzle-orm/pg-core";
+import { pgTable, pgEnum, uuid, text, boolean, timestamp, numeric, index, unique } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { attorneyTitle, licenseStatus } from "./enums";
 import { users } from "./auth";
+import { practiceAreas } from "./settings";
 
 export const attorneys = pgTable(
   "attorneys",
@@ -9,9 +10,9 @@ export const attorneys = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     userId: uuid("user_id")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" })
+      .references(() => users.id, { onDelete: "restrict" })
       .unique(),
-    barNumber: text("bar_number").notNull(),
+    barNumber: text("bar_number").notNull().unique(),
     jurisdiction: text("jurisdiction").notNull(),
     title: attorneyTitle("title").notNull().default("associate"),
     department: text("department"),
@@ -33,14 +34,22 @@ export const attorneys = pgTable(
   ]
 );
 
-export const attorneyPracticeAreas = pgTable("attorney_practice_areas", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  attorneyId: uuid("attorney_id")
-    .notNull()
-    .references(() => attorneys.id, { onDelete: "cascade" }),
-  practiceAreaId: uuid("practice_area_id").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const attorneyPracticeAreas = pgTable(
+  "attorney_practice_areas",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    attorneyId: uuid("attorney_id")
+      .notNull()
+      .references(() => attorneys.id, { onDelete: "cascade" }),
+    practiceAreaId: uuid("practice_area_id")
+      .notNull()
+      .references(() => practiceAreas.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    unique("attorney_practice_areas_unique").on(table.attorneyId, table.practiceAreaId),
+  ]
+);
 
 export const attorneyLicenses = pgTable("attorney_licenses", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -101,7 +110,7 @@ export const disciplinaryRecords = pgTable("disciplinary_records", {
   status: disciplinaryStatus("status").notNull().default("pending"),
   outcome: text("outcome"),
   notes: text("notes"),
-  createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+  createdBy: uuid("created_by").references(() => users.id, { onDelete: "restrict" }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });

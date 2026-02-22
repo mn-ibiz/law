@@ -7,7 +7,7 @@ import { messages } from "@/lib/db/schema/messaging";
 import { eq, desc, sql, and } from "drizzle-orm";
 
 export async function getPortalCases(clientUserId: string) {
-  const client = await db.select().from(clients).where(eq(clients.userId, clientUserId)).limit(1);
+  const client = await db.select({ id: clients.id }).from(clients).where(eq(clients.userId, clientUserId)).limit(1);
   if (!client[0]) return [];
 
   return db
@@ -21,11 +21,12 @@ export async function getPortalCases(clientUserId: string) {
     })
     .from(cases)
     .where(eq(cases.clientId, client[0].id))
-    .orderBy(desc(cases.createdAt));
+    .orderBy(desc(cases.createdAt))
+    .limit(200);
 }
 
 export async function getPortalInvoices(clientUserId: string) {
-  const client = await db.select().from(clients).where(eq(clients.userId, clientUserId)).limit(1);
+  const client = await db.select({ id: clients.id }).from(clients).where(eq(clients.userId, clientUserId)).limit(1);
   if (!client[0]) return [];
 
   return db
@@ -39,11 +40,12 @@ export async function getPortalInvoices(clientUserId: string) {
     })
     .from(invoices)
     .where(eq(invoices.clientId, client[0].id))
-    .orderBy(desc(invoices.createdAt));
+    .orderBy(desc(invoices.createdAt))
+    .limit(200);
 }
 
 export async function getPortalDocuments(clientUserId: string) {
-  const client = await db.select().from(clients).where(eq(clients.userId, clientUserId)).limit(1);
+  const client = await db.select({ id: clients.id }).from(clients).where(eq(clients.userId, clientUserId)).limit(1);
   if (!client[0]) return [];
 
   return db
@@ -56,12 +58,20 @@ export async function getPortalDocuments(clientUserId: string) {
     })
     .from(documents)
     .where(eq(documents.clientId, client[0].id))
-    .orderBy(desc(documents.createdAt));
+    .orderBy(desc(documents.createdAt))
+    .limit(200);
 }
 
 export async function getPortalMessages(userId: string) {
   return db
-    .select()
+    .select({
+      id: messages.id,
+      subject: messages.subject,
+      body: messages.body,
+      senderId: messages.senderId,
+      readAt: messages.readAt,
+      createdAt: messages.createdAt,
+    })
     .from(messages)
     .where(eq(messages.recipientId, userId))
     .orderBy(desc(messages.createdAt))

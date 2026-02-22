@@ -2,10 +2,10 @@ import { z } from "zod";
 
 export const createDisciplinaryRecordSchema = z.object({
   date: z.string().min(1, "Date is required"),
-  caseReference: z.string().min(1, "Case reference is required"),
+  caseReference: z.string().min(1, "Case reference is required").max(100),
   status: z.enum(["pending", "resolved", "dismissed"]),
-  outcome: z.string().optional(),
-  notes: z.string().optional(),
+  outcome: z.string().max(5000).optional(),
+  notes: z.string().max(5000).optional(),
 });
 
 export const updateDisciplinaryRecordSchema = createDisciplinaryRecordSchema.partial();

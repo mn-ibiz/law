@@ -3,6 +3,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, AlertTriangle } from "lucide-react";
+import { formatEnum } from "@/lib/utils/format-enum";
+import { APP_LOCALE } from "@/lib/constants/locale";
 
 interface CalendarEvent {
   id: string;
@@ -82,7 +84,7 @@ export function CalendarView({ events, deadlines }: CalendarViewProps) {
                     <p className="font-medium text-sm">{event.title}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-xs text-muted-foreground">
-                        {new Date(event.startTime).toLocaleString("en-KE", {
+                        {new Date(event.startTime).toLocaleString(APP_LOCALE, {
                           dateStyle: "medium",
                           timeStyle: "short",
                         })}
@@ -91,7 +93,7 @@ export function CalendarView({ events, deadlines }: CalendarViewProps) {
                         <Badge variant="destructive" className="text-xs">Court</Badge>
                       )}
                       <Badge variant="outline" className="text-xs capitalize">
-                        {event.type.replace("_", " ")}
+                        {formatEnum(event.type)}
                       </Badge>
                     </div>
                     {event.location && (
@@ -130,7 +132,7 @@ export function CalendarView({ events, deadlines }: CalendarViewProps) {
                       <p className="font-medium text-sm">{dl.title}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-xs text-muted-foreground">
-                          Due: {new Date(dl.dueDate).toLocaleDateString("en-KE")}
+                          Due: {new Date(dl.dueDate).toLocaleDateString(APP_LOCALE)}
                         </span>
                         {dl.caseNumber && (
                           <span className="text-xs font-mono text-muted-foreground">

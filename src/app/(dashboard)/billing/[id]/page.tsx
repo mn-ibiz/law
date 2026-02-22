@@ -1,13 +1,25 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireAdminOrAttorney } from "@/lib/auth/get-session";
 import { getInvoiceById, getInvoiceLineItems, getInvoicePayments } from "@/lib/queries/billing";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatKES } from "@/lib/utils/format";
+import { formatEnum } from "@/lib/utils/format-enum";
+import { APP_LOCALE } from "@/lib/constants/locale";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const invoice = await getInvoiceById(id);
+  return {
+    title: invoice ? `Invoice ${invoice.invoiceNumber}` : "Invoice Details",
+    description: invoice ? `Invoice ${invoice.invoiceNumber} details` : "Invoice details",
+  };
+}
 
 export default async function InvoiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdminOrAttorney();
@@ -27,7 +39,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
           <h1 className="text-2xl font-bold tracking-tight font-mono">{invoice.invoiceNumber}</h1>
           <p className="text-muted-foreground">{invoice.clientName} {invoice.caseNumber ? `— ${invoice.caseNumber}` : ""}</p>
         </div>
-        <Badge>{invoice.status.replace("_", " ")}</Badge>
+        <Badge>{formatEnum(invoice.status)}</Badge>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -96,8 +108,8 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
               <TableBody>
                 {paymentList.map((p) => (
                   <TableRow key={p.id}>
-                    <TableCell>{new Date(p.paymentDate).toLocaleDateString("en-KE")}</TableCell>
-                    <TableCell className="capitalize">{p.method.replace("_", " ")}</TableCell>
+                    <TableCell>{new Date(p.paymentDate).toLocaleDateString(APP_LOCALE)}</TableCell>
+                    <TableCell className="capitalize">{formatEnum(p.method)}</TableCell>
                     <TableCell>{p.reference ?? p.mpesaTransactionId ?? "—"}</TableCell>
                     <TableCell>{p.receivedByName ?? "—"}</TableCell>
                     <TableCell className="text-right font-medium">{formatKES(Number(p.amount))}</TableCell>

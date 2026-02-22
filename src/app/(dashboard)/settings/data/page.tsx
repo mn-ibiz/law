@@ -1,32 +1,24 @@
 import { requireAdmin } from "@/lib/auth/get-session";
-import { db } from "@/lib/db";
-import { auditLog } from "@/lib/db/schema/settings";
-import { users } from "@/lib/db/schema/auth";
-import { eq, desc, inArray } from "drizzle-orm";
+import { getRecentDataOperations } from "@/lib/queries/settings";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Upload, Download, Database } from "lucide-react";
+import { formatEnum } from "@/lib/utils/format-enum";
+import { APP_LOCALE } from "@/lib/constants/locale";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Data Management",
+  description: "Import, export, and manage system data",
+};
 
 export default async function DataManagementPage() {
   await requireAdmin();
 
-  const recentDataOps = await db
-    .select({
-      id: auditLog.id,
-      action: auditLog.action,
-      entityType: auditLog.entityType,
-      details: auditLog.details,
-      createdAt: auditLog.createdAt,
-      userName: users.name,
-    })
-    .from(auditLog)
-    .leftJoin(users, eq(auditLog.userId, users.id))
-    .where(inArray(auditLog.action, ["export", "create"]))
-    .orderBy(desc(auditLog.createdAt))
-    .limit(20);
+  const recentDataOps = await getRecentDataOperations();
 
   return (
     <div className="space-y-6">
@@ -104,13 +96,13 @@ export default async function DataManagementPage() {
                 {recentDataOps.map((op) => (
                   <TableRow key={op.id}>
                     <TableCell className="text-xs">
-                      {new Date(op.createdAt).toLocaleString("en-KE")}
+                      {new Date(op.createdAt).toLocaleString(APP_LOCALE)}
                     </TableCell>
-                    <TableCell>{op.userName ?? "System"}</TableCell>
+                    <TableCell className="font-mono text-xs">{op.id.slice(0, 8)}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className="capitalize">{op.action}</Badge>
                     </TableCell>
-                    <TableCell className="capitalize">{op.entityType.replace("_", " ")}</TableCell>
+                    <TableCell className="capitalize">{formatEnum(op.entityType)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

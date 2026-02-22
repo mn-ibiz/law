@@ -106,10 +106,10 @@ export function AdminDashboard() {
       <Suspense fallback={<DashboardSkeleton cards={0} />}>
         <AdminCharts />
       </Suspense>
-      <Suspense>
+      <Suspense fallback={<div className="animate-pulse h-32 bg-muted rounded-lg" />}>
         <AdminWidgets />
       </Suspense>
-      <Suspense>
+      <Suspense fallback={<div className="animate-pulse h-32 bg-muted rounded-lg" />}>
         <ComplianceWidget />
       </Suspense>
     </div>

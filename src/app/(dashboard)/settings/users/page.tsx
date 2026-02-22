@@ -5,6 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { APP_LOCALE } from "@/lib/constants/locale";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "User Management",
+  description: "Manage user accounts and roles",
+};
 
 export default async function UsersPage() {
   await requireAdmin();
@@ -42,7 +49,7 @@ export default async function UsersPage() {
                       {u.isActive ? "Active" : "Inactive"}
                     </Badge>
                   </TableCell>
-                  <TableCell>{new Date(u.createdAt).toLocaleDateString("en-KE")}</TableCell>
+                  <TableCell>{new Date(u.createdAt).toLocaleDateString(APP_LOCALE)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

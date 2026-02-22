@@ -1,6 +1,12 @@
 import { requireAdminOrAttorney } from "@/lib/auth/get-session";
 import { getCalendarEvents, getDeadlines } from "@/lib/queries/calendar";
 import { CalendarView } from "@/components/calendar/calendar-view";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Calendar",
+  description: "Court dates, deadlines, and events",
+};
 
 export default async function CalendarPage() {
   await requireAdminOrAttorney();

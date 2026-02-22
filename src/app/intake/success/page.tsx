@@ -1,5 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle } from "lucide-react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Submission Received",
+  description: "Your intake form has been submitted successfully",
+};
 
 export default function IntakeSuccessPage() {
   return (

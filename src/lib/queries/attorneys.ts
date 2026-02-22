@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { db } from "@/lib/db";
 import { attorneys, attorneyPracticeAreas, attorneyLicenses } from "@/lib/db/schema/attorneys";
 import { users } from "@/lib/db/schema/auth";
@@ -23,11 +24,12 @@ export async function getAttorneys(filters: AttorneyFilters = {}) {
   if (title) conditions.push(eq(attorneys.title, title as "partner" | "senior_associate" | "associate" | "of_counsel" | "paralegal"));
 
   if (search) {
+    const escaped = search.replace(/[%_\\]/g, "\\$&");
     conditions.push(
       or(
-        ilike(users.name, `%${search}%`),
-        ilike(attorneys.barNumber, `%${search}%`),
-        ilike(attorneys.lskNumber, `%${search}%`)
+        ilike(users.name, `%${escaped}%`),
+        ilike(attorneys.barNumber, `%${escaped}%`),
+        ilike(attorneys.lskNumber, `%${escaped}%`)
       )
     );
   }
@@ -67,7 +69,7 @@ export async function getAttorneys(filters: AttorneyFilters = {}) {
   };
 }
 
-export async function getAttorneyById(id: string) {
+export const getAttorneyById = cache(async (id: string) => {
   const result = await db
     .select({
       id: attorneys.id,
@@ -95,7 +97,7 @@ export async function getAttorneyById(id: string) {
     .limit(1);
 
   return result[0] ?? null;
-}
+});
 
 export async function getAttorneyLicenses(attorneyId: string) {
   return db
@@ -119,8 +121,10 @@ export async function getAttorneyPracticeAreas(attorneyId: string) {
 
 export async function getAvailableUsers() {
   // Users with attorney role that don't already have an attorney profile
-  return db
+  const result = await db
     .select({ id: users.id, name: users.name, email: users.email })
     .from(users)
-    .where(eq(users.role, "attorney"));
+    .leftJoin(attorneys, eq(users.id, attorneys.userId))
+    .where(and(eq(users.role, "attorney"), sql`${attorneys.id} IS NULL`));
+  return result;
 }

@@ -10,10 +10,15 @@ import { courtStationData } from "./seed-data/court-stations";
 import { practiceAreaData } from "./seed-data/practice-areas";
 import { userData, sampleCases } from "./seed-data/users";
 
-const DEFAULT_PASSWORD = "Password123!";
+const DEFAULT_PASSWORD = process.env.SEED_PASSWORD || "Password123!";
 const SALT_ROUNDS = 10;
 
 async function main() {
+  if (process.env.NODE_ENV === "production") {
+    console.error("ERROR: Seed script cannot run in production.");
+    process.exit(1);
+  }
+
   const sql = neon(process.env.DATABASE_URL!);
   const db = drizzle({ client: sql, schema });
 

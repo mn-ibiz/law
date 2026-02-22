@@ -1,7 +1,17 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/get-session";
 import { getAttorneyById } from "@/lib/queries/attorneys";
 import { AttorneyForm } from "@/components/forms/attorney-form";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const attorney = await getAttorneyById(id);
+  return {
+    title: attorney ? `Edit ${attorney.name}` : "Edit Attorney",
+    description: "Update attorney profile",
+  };
+}
 
 export default async function EditAttorneyPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();

@@ -1,5 +1,11 @@
 import { requireAdmin } from "@/lib/auth/get-session";
 import { SupplierForm } from "@/components/suppliers/supplier-form";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Add Supplier",
+  description: "Register a new vendor or supplier",
+};
 
 export default async function NewSupplierPage() {
   await requireAdmin();

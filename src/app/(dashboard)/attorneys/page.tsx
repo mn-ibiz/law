@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { requireAdminOrAttorney } from "@/lib/auth/get-session";
 import { getAttorneys } from "@/lib/queries/attorneys";
 import { AttorneyDataTable } from "@/components/attorneys/attorney-data-table";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Attorneys",
+  description: "Manage attorney profiles and licensing",
+};
 
 export default async function AttorneysPage() {
   const session = await requireAdminOrAttorney();

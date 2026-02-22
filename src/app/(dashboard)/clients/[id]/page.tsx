@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { requireAdminOrAttorney } from "@/lib/auth/get-session";
@@ -7,6 +8,13 @@ import { ClientDetailTabs } from "@/components/clients/client-detail-tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const client = await getClientById(id);
+  const name = client ? `${client.firstName} ${client.lastName}` : "Client Details";
+  return { title: name, description: client ? `Client profile for ${name}` : "Client details" };
+}
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdminOrAttorney();

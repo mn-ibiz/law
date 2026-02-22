@@ -42,7 +42,6 @@ export function LoginForm() {
       } else if (result.success && result.redirectTo) {
         toast.success("Signed in successfully");
         router.push(result.redirectTo);
-        router.refresh();
       }
     } catch {
       toast.error("An unexpected error occurred");

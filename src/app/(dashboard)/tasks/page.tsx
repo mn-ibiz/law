@@ -2,6 +2,7 @@ import { requireAdminOrAttorney } from "@/lib/auth/get-session";
 import { getTasks } from "@/lib/queries/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { formatEnum } from "@/lib/utils/format-enum";
 import Link from "next/link";
 import {
   Table,
@@ -11,6 +12,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { APP_LOCALE } from "@/lib/constants/locale";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Tasks",
+  description: "Manage and track work tasks",
+};
 
 const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   pending: "outline",
@@ -76,12 +84,12 @@ export default async function TasksPage() {
                     </TableCell>
                     <TableCell>
                       <Badge variant={statusVariant[task.status] ?? "secondary"}>
-                        {task.status.replace("_", " ")}
+                        {formatEnum(task.status)}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       {task.dueDate
-                        ? new Date(task.dueDate).toLocaleDateString("en-KE")
+                        ? new Date(task.dueDate).toLocaleDateString(APP_LOCALE)
                         : "—"}
                     </TableCell>
                   </TableRow>

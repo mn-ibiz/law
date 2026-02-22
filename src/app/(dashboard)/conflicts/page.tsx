@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import { requireAdminOrAttorney } from "@/lib/auth/get-session";
 import { ConflictCheckPage } from "@/components/clients/conflict-check-page";
+
+export const metadata: Metadata = {
+  title: "Conflict Checks",
+  description: "Run and review conflict of interest checks",
+};
 
 export default async function ConflictsPage() {
   await requireAdminOrAttorney();

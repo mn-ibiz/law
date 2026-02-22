@@ -14,7 +14,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ConflictCheckDialog } from "./conflict-check-dialog";
+import { formatEnum } from "@/lib/utils/format-enum";
 import { Shield, AlertTriangle, CheckCircle, FileText } from "lucide-react";
+import { APP_LOCALE } from "@/lib/constants/locale";
 
 interface Client {
   id: string;
@@ -164,7 +166,7 @@ export function ClientDetailTabs({ client, contacts, kycDocuments, riskAssessmen
                   <dt className="text-sm text-muted-foreground">Date of Birth</dt>
                   <dd className="font-medium">
                     {client.dateOfBirth
-                      ? new Date(client.dateOfBirth).toLocaleDateString("en-KE")
+                      ? new Date(client.dateOfBirth).toLocaleDateString(APP_LOCALE)
                       : "—"}
                   </dd>
                 </div>
@@ -213,10 +215,10 @@ export function ClientDetailTabs({ client, contacts, kycDocuments, riskAssessmen
                     {contacts.map((c) => (
                       <TableRow key={c.id}>
                         <TableCell>
-                          {new Date(c.contactDate).toLocaleDateString("en-KE")}
+                          {new Date(c.contactDate).toLocaleDateString(APP_LOCALE)}
                         </TableCell>
                         <TableCell className="capitalize">
-                          {c.type.replace("_", " ")}
+                          {formatEnum(c.type)}
                         </TableCell>
                         <TableCell>{c.subject}</TableCell>
                         <TableCell>{c.contactedByName ?? "—"}</TableCell>
@@ -257,7 +259,7 @@ export function ClientDetailTabs({ client, contacts, kycDocuments, riskAssessmen
                     {kycDocuments.map((doc) => (
                       <TableRow key={doc.id}>
                         <TableCell className="capitalize">
-                          {doc.documentType.replace("_", " ")}
+                          {formatEnum(doc.documentType)}
                         </TableCell>
                         <TableCell>{doc.documentNumber ?? "—"}</TableCell>
                         <TableCell>
@@ -268,7 +270,7 @@ export function ClientDetailTabs({ client, contacts, kycDocuments, riskAssessmen
                         <TableCell>{doc.verifiedByName ?? "—"}</TableCell>
                         <TableCell>
                           {doc.expiryDate
-                            ? new Date(doc.expiryDate).toLocaleDateString("en-KE")
+                            ? new Date(doc.expiryDate).toLocaleDateString(APP_LOCALE)
                             : "—"}
                         </TableCell>
                       </TableRow>
@@ -302,7 +304,7 @@ export function ClientDetailTabs({ client, contacts, kycDocuments, riskAssessmen
                   <div>
                     <dt className="text-sm text-muted-foreground">Assessed</dt>
                     <dd className="font-medium">
-                      {new Date(riskAssessment.createdAt).toLocaleDateString("en-KE")}
+                      {new Date(riskAssessment.createdAt).toLocaleDateString(APP_LOCALE)}
                     </dd>
                   </div>
                   {riskAssessment.factors && (

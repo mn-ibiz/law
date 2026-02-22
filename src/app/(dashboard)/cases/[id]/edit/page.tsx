@@ -1,8 +1,18 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireAdminOrAttorney } from "@/lib/auth/get-session";
 import { getCaseById } from "@/lib/queries/cases";
 import { getClients } from "@/lib/queries/clients";
 import { CaseForm } from "@/components/forms/case-form";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const caseData = await getCaseById(id);
+  return {
+    title: caseData ? `Edit ${caseData.caseNumber}` : "Edit Case",
+    description: "Update case details",
+  };
+}
 
 export default async function EditCasePage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdminOrAttorney();

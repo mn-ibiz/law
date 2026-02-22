@@ -1,40 +1,53 @@
-import { pgTable, uuid, text, boolean, timestamp, index } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, boolean, timestamp, index, unique } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { eventType, taskStatus, deadlinePriority, bringUpStatus } from "./enums";
 import { users } from "./auth";
 import { cases } from "./cases";
 
-export const calendarEvents = pgTable("calendar_events", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  title: text("title").notNull(),
-  description: text("description"),
-  type: eventType("type").notNull().default("meeting"),
-  caseId: uuid("case_id").references(() => cases.id, { onDelete: "set null" }),
-  createdBy: uuid("created_by")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  location: text("location"),
-  startTime: timestamp("start_time", { withTimezone: true }).notNull(),
-  endTime: timestamp("end_time", { withTimezone: true }).notNull(),
-  allDay: boolean("all_day").notNull().default(false),
-  isCourtDate: boolean("is_court_date").notNull().default(false),
-  recurrence: text("recurrence"),
-  reminderMinutes: text("reminder_minutes"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const calendarEvents = pgTable(
+  "calendar_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    title: text("title").notNull(),
+    description: text("description"),
+    type: eventType("type").notNull().default("meeting"),
+    caseId: uuid("case_id").references(() => cases.id, { onDelete: "set null" }),
+    createdBy: uuid("created_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    location: text("location"),
+    startTime: timestamp("start_time", { withTimezone: true }).notNull(),
+    endTime: timestamp("end_time", { withTimezone: true }).notNull(),
+    allDay: boolean("all_day").notNull().default(false),
+    isCourtDate: boolean("is_court_date").notNull().default(false),
+    recurrence: text("recurrence"),
+    reminderMinutes: text("reminder_minutes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("calendar_events_start_time_idx").on(table.startTime),
+    index("calendar_events_created_by_idx").on(table.createdBy),
+  ]
+);
 
-export const eventAttendees = pgTable("event_attendees", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  eventId: uuid("event_id")
-    .notNull()
-    .references(() => calendarEvents.id, { onDelete: "cascade" }),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  responseStatus: text("response_status").default("pending"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const eventAttendees = pgTable(
+  "event_attendees",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => calendarEvents.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    responseStatus: text("response_status").default("pending"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    unique("event_attendees_event_user_unique").on(table.eventId, table.userId),
+  ]
+);
 
 export const deadlines = pgTable(
   "deadlines",
@@ -57,22 +70,29 @@ export const deadlines = pgTable(
   ]
 );
 
-export const tasks = pgTable("tasks", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  title: text("title").notNull(),
-  description: text("description"),
-  caseId: uuid("case_id").references(() => cases.id, { onDelete: "set null" }),
-  assignedTo: uuid("assigned_to").references(() => users.id, { onDelete: "set null" }),
-  createdBy: uuid("created_by")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  status: taskStatus("status").notNull().default("pending"),
-  priority: deadlinePriority("priority").notNull().default("medium"),
-  dueDate: timestamp("due_date", { withTimezone: true }),
-  completedAt: timestamp("completed_at", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const tasks = pgTable(
+  "tasks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    title: text("title").notNull(),
+    description: text("description"),
+    caseId: uuid("case_id").references(() => cases.id, { onDelete: "set null" }),
+    assignedTo: uuid("assigned_to").references(() => users.id, { onDelete: "set null" }),
+    createdBy: uuid("created_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    status: taskStatus("status").notNull().default("pending"),
+    priority: deadlinePriority("priority").notNull().default("medium"),
+    dueDate: timestamp("due_date", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("tasks_assigned_to_idx").on(table.assignedTo),
+    index("tasks_status_idx").on(table.status),
+  ]
+);
 
 export const bringUps = pgTable(
   "bring_ups",
@@ -83,7 +103,7 @@ export const bringUps = pgTable(
       .references(() => cases.id, { onDelete: "cascade" }),
     createdBy: uuid("created_by")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => users.id, { onDelete: "restrict" }),
     assignedTo: uuid("assigned_to").references(() => users.id, { onDelete: "set null" }),
     date: timestamp("date", { withTimezone: true }).notNull(),
     reason: text("reason").notNull(),

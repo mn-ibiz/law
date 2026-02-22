@@ -3,6 +3,7 @@ import { z } from "zod";
 const passwordSchema = z
   .string()
   .min(8, "Password must be at least 8 characters")
+  .max(128, "Password must be at most 128 characters")
   .regex(/[A-Z]/, "Must contain an uppercase letter")
   .regex(/[a-z]/, "Must contain a lowercase letter")
   .regex(/[0-9]/, "Must contain a number");
@@ -15,11 +16,15 @@ export const loginSchema = z.object({
 
 export const registerSchema = z
   .object({
-    name: z.string().min(2, "Name must be at least 2 characters"),
+    name: z.string().min(2, "Name must be at least 2 characters").max(255),
     email: z.string().email("Invalid email address"),
     password: passwordSchema,
     confirmPassword: z.string(),
-    phone: z.string().optional(),
+    phone: z
+      .string()
+      .max(20)
+      .regex(/^\+?[\d\s\-()]+$/, "Invalid phone number format")
+      .optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",

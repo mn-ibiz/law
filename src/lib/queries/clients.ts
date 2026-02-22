@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { db } from "@/lib/db";
 import { clients, clientContacts } from "@/lib/db/schema/clients";
 import { users } from "@/lib/db/schema/auth";
@@ -19,12 +20,13 @@ export async function getClients(filters: ClientFilters = {}) {
   if (type) conditions.push(eq(clients.type, type as "individual" | "organization"));
 
   if (search) {
+    const escaped = search.replace(/[%_\\]/g, "\\$&");
     conditions.push(
       or(
-        ilike(clients.firstName, `%${search}%`),
-        ilike(clients.lastName, `%${search}%`),
-        ilike(clients.email, `%${search}%`),
-        ilike(clients.companyName, `%${search}%`)
+        ilike(clients.firstName, `%${escaped}%`),
+        ilike(clients.lastName, `%${escaped}%`),
+        ilike(clients.email, `%${escaped}%`),
+        ilike(clients.companyName, `%${escaped}%`)
       )
     );
   }
@@ -61,7 +63,7 @@ export async function getClients(filters: ClientFilters = {}) {
   };
 }
 
-export async function getClientById(id: string) {
+export const getClientById = cache(async (id: string) => {
   const result = await db
     .select()
     .from(clients)
@@ -69,7 +71,7 @@ export async function getClientById(id: string) {
     .limit(1);
 
   return result[0] ?? null;
-}
+});
 
 export async function getClientContacts(clientId: string) {
   return db

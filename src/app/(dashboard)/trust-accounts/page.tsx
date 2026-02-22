@@ -6,6 +6,12 @@ import { formatKES } from "@/lib/utils/format";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Trust Accounts",
+  description: "Manage client trust accounts",
+};
 
 export default async function TrustAccountsPage() {
   await requireAdmin();

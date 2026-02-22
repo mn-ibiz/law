@@ -1,13 +1,20 @@
-import { requireAuth } from "@/lib/auth/get-session";
+import { requireRole } from "@/lib/auth/get-session";
 import { getPortalCases } from "@/lib/queries/portal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { formatEnum } from "@/lib/utils/format-enum";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "My Cases",
+  description: "View your active cases and matters",
+};
 
 export default async function PortalCasesPage() {
-  const session = await requireAuth();
+  const session = await requireRole("client");
   const cases = await getPortalCases(session.user.id as string);
 
   return (
@@ -36,8 +43,8 @@ export default async function PortalCasesPage() {
                   <TableRow key={c.id}>
                     <TableCell className="font-mono">{c.caseNumber}</TableCell>
                     <TableCell className="font-medium">{c.title}</TableCell>
-                    <TableCell className="capitalize">{c.caseType.replace("_", " ")}</TableCell>
-                    <TableCell><Badge variant="outline">{c.status.replace("_", " ")}</Badge></TableCell>
+                    <TableCell className="capitalize">{formatEnum(c.caseType)}</TableCell>
+                    <TableCell><Badge variant="outline">{formatEnum(c.status)}</Badge></TableCell>
                   </TableRow>
                 ))}
               </TableBody>

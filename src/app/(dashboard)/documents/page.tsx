@@ -6,6 +6,14 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { FileText } from "lucide-react";
+import { formatEnum } from "@/lib/utils/format-enum";
+import { APP_LOCALE } from "@/lib/constants/locale";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Documents",
+  description: "Manage legal documents and files",
+};
 
 const statusVariant: Record<string, "default" | "secondary" | "outline"> = {
   draft: "outline",
@@ -50,13 +58,13 @@ export default async function DocumentsPage() {
                 {docs.map((doc) => (
                   <TableRow key={doc.id}>
                     <TableCell className="font-medium">{doc.title}</TableCell>
-                    <TableCell className="capitalize">{doc.category.replace("_", " ")}</TableCell>
+                    <TableCell className="capitalize">{formatEnum(doc.category)}</TableCell>
                     <TableCell className="font-mono text-xs">{doc.caseNumber ?? "—"}</TableCell>
                     <TableCell>
                       <Badge variant={statusVariant[doc.status] ?? "secondary"}>{doc.status}</Badge>
                     </TableCell>
                     <TableCell>{doc.uploadedByName}</TableCell>
-                    <TableCell>{new Date(doc.createdAt).toLocaleDateString("en-KE")}</TableCell>
+                    <TableCell>{new Date(doc.createdAt).toLocaleDateString(APP_LOCALE)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

@@ -4,30 +4,15 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { z } from "zod";
+import { createSupplierSchema, type CreateSupplierInput } from "@/lib/validators/supplier";
 import { createSupplier, updateSupplier } from "@/lib/actions/suppliers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 
-const supplierFormSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  contactPerson: z.string().optional(),
-  email: z.string().email().optional().or(z.literal("")),
-  phone: z.string().optional(),
-  address: z.string().optional(),
-  kraPin: z.string().optional(),
-  bankName: z.string().optional(),
-  bankAccountNumber: z.string().optional(),
-  bankBranch: z.string().optional(),
-  category: z.string().optional(),
-});
-
-type SupplierFormData = z.infer<typeof supplierFormSchema>;
-
 interface SupplierFormProps {
-  defaultValues?: Partial<SupplierFormData>;
+  defaultValues?: Partial<CreateSupplierInput>;
   supplierId?: string;
 }
 
@@ -35,8 +20,8 @@ export function SupplierForm({ defaultValues, supplierId }: SupplierFormProps) {
   const router = useRouter();
   const isEditing = !!supplierId;
 
-  const form = useForm<SupplierFormData>({
-    resolver: zodResolver(supplierFormSchema),
+  const form = useForm<CreateSupplierInput>({
+    resolver: zodResolver(createSupplierSchema),
     defaultValues: {
       name: "",
       contactPerson: "",
@@ -52,19 +37,22 @@ export function SupplierForm({ defaultValues, supplierId }: SupplierFormProps) {
     },
   });
 
-  async function onSubmit(data: SupplierFormData) {
-    const result = isEditing
-      ? await updateSupplier(supplierId, data)
-      : await createSupplier(data);
+  async function onSubmit(data: CreateSupplierInput) {
+    try {
+      const result = isEditing
+        ? await updateSupplier(supplierId, data)
+        : await createSupplier(data);
 
-    if (result.error) {
-      toast.error(result.error);
-      return;
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success(isEditing ? "Supplier updated" : "Supplier created");
+      router.push("/suppliers");
+    } catch {
+      toast.error("An unexpected error occurred");
     }
-
-    toast.success(isEditing ? "Supplier updated" : "Supplier created");
-    router.push("/suppliers");
-    router.refresh();
   }
 
   return (

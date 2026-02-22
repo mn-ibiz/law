@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { requireAdminOrAttorney } from "@/lib/auth/get-session";
@@ -6,6 +7,16 @@ import { CaseDetailTabs } from "@/components/cases/case-detail-tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
+import { formatEnum } from "@/lib/utils/format-enum";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const caseData = await getCaseById(id);
+  return {
+    title: caseData ? `${caseData.caseNumber} — ${caseData.title}` : "Case Details",
+    description: caseData ? `Details for case ${caseData.caseNumber}` : "Case details",
+  };
+}
 
 const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   open: "outline",
@@ -43,7 +54,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold tracking-tight">{caseData.title}</h1>
             <Badge variant={statusVariant[caseData.status] ?? "secondary"}>
-              {caseData.status.replace("_", " ")}
+              {formatEnum(caseData.status)}
             </Badge>
             <Badge variant={priorityVariant[caseData.priority] ?? "secondary"}>
               {caseData.priority}

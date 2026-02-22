@@ -6,6 +6,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { APP_LOCALE } from "@/lib/constants/locale";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Messages",
+  description: "Internal messaging and communication",
+};
 
 export default async function MessagesPage() {
   const session = await requireAuth();
@@ -47,7 +54,7 @@ export default async function MessagesPage() {
                         <TableCell className="font-medium">{m.senderName}</TableCell>
                         <TableCell>{m.subject ?? "(no subject)"}</TableCell>
                         <TableCell><Badge variant="outline">{m.status}</Badge></TableCell>
-                        <TableCell>{new Date(m.createdAt).toLocaleString("en-KE")}</TableCell>
+                        <TableCell>{new Date(m.createdAt).toLocaleString(APP_LOCALE)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -75,7 +82,7 @@ export default async function MessagesPage() {
                       <TableRow key={m.id}>
                         <TableCell className="font-medium">{m.receiverName}</TableCell>
                         <TableCell>{m.subject ?? "(no subject)"}</TableCell>
-                        <TableCell>{new Date(m.createdAt).toLocaleString("en-KE")}</TableCell>
+                        <TableCell>{new Date(m.createdAt).toLocaleString(APP_LOCALE)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

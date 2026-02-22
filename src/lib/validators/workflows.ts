@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export const createWorkflowTemplateSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  description: z.string().optional(),
+  name: z.string().min(1, "Name is required").max(255),
+  description: z.string().max(5000).optional(),
   triggerType: z.enum([
     "case_status_change",
     "deadline_approaching",
@@ -29,7 +29,7 @@ export const createWorkflowRuleSchema = z.object({
   ]),
   actionConfig: z.string().optional(),
   conditionConfig: z.string().optional(),
-  order: z.string().optional(),
+  order: z.number().int().optional(),
 });
 
 export type CreateWorkflowRuleInput = z.infer<typeof createWorkflowRuleSchema>;

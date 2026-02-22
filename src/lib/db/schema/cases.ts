@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, boolean, timestamp, numeric, integer, index } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, boolean, timestamp, numeric, integer, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { caseStatus, casePriority, billingType, casePartyRole, assignmentRole } from "./enums";
 import { users } from "./auth";
@@ -31,7 +31,7 @@ export const cases = pgTable(
     estimatedValue: numeric("estimated_value", { precision: 14, scale: 2 }),
     description: text("description"),
     notes: text("notes"),
-    pipelineStageId: uuid("pipeline_stage_id"),
+    pipelineStageId: uuid("pipeline_stage_id").references(() => pipelineStages.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
@@ -43,18 +43,26 @@ export const cases = pgTable(
   ]
 );
 
-export const caseAssignments = pgTable("case_assignments", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  caseId: uuid("case_id")
-    .notNull()
-    .references(() => cases.id, { onDelete: "cascade" }),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  role: assignmentRole("role").notNull().default("assigned"),
-  assignedAt: timestamp("assigned_at", { withTimezone: true }).defaultNow().notNull(),
-  unassignedAt: timestamp("unassigned_at", { withTimezone: true }),
-});
+export const caseAssignments = pgTable(
+  "case_assignments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    caseId: uuid("case_id")
+      .notNull()
+      .references(() => cases.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    role: assignmentRole("role").notNull().default("assigned"),
+    assignedAt: timestamp("assigned_at", { withTimezone: true }).defaultNow().notNull(),
+    unassignedAt: timestamp("unassigned_at", { withTimezone: true }),
+  },
+  (table) => [
+    index("case_assignments_user_id_idx").on(table.userId),
+    index("case_assignments_case_id_idx").on(table.caseId),
+    uniqueIndex("case_assignments_case_user_idx").on(table.caseId, table.userId),
+  ]
+);
 
 export const caseNotes = pgTable("case_notes", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -63,7 +71,7 @@ export const caseNotes = pgTable("case_notes", {
     .references(() => cases.id, { onDelete: "cascade" }),
   authorId: uuid("author_id")
     .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+    .references(() => users.id, { onDelete: "restrict" }),
   content: text("content").notNull(),
   isPrivate: boolean("is_private").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),

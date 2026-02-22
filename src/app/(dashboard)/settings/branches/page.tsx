@@ -5,6 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Branches",
+  description: "Manage firm branch offices",
+};
 
 export default async function BranchesPage() {
   await requireAdmin();

@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Timer } from "lucide-react";
+import { APP_LOCALE } from "@/lib/constants/locale";
 
 interface TimeEntry {
   id: string;
@@ -47,7 +48,7 @@ export function AttorneyTimeEntries({ data }: { data: TimeEntry[] }) {
                       {Number(entry.hours).toFixed(1)}h
                     </td>
                     <td className="py-2 text-muted-foreground">
-                      {new Date(entry.date).toLocaleDateString("en-KE", {
+                      {new Date(entry.date).toLocaleDateString(APP_LOCALE, {
                         month: "short",
                         day: "numeric",
                       })}

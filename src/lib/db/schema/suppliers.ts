@@ -1,5 +1,6 @@
 import { pgTable, uuid, text, boolean, timestamp, numeric } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import { supplierInvoiceStatus } from "./enums";
 import { users } from "./auth";
 
 export const suppliers = pgTable("suppliers", {
@@ -32,7 +33,7 @@ export const supplierInvoices = pgTable("supplier_invoices", {
   invoiceDate: timestamp("invoice_date", { withTimezone: true }).notNull(),
   dueDate: timestamp("due_date", { withTimezone: true }),
   paidAt: timestamp("paid_at", { withTimezone: true }),
-  status: text("status").notNull().default("pending"),
+  status: supplierInvoiceStatus("status").notNull().default("pending"),
   fileUrl: text("file_url"),
   createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),

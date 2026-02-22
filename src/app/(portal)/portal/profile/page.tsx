@@ -1,10 +1,17 @@
-import { requireAuth } from "@/lib/auth/get-session";
+import { requireRole } from "@/lib/auth/get-session";
 import { getUserById } from "@/lib/queries/settings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { APP_LOCALE } from "@/lib/constants/locale";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "My Profile",
+  description: "Your account information",
+};
 
 export default async function PortalProfilePage() {
-  const session = await requireAuth();
+  const session = await requireRole("client");
   const user = await getUserById(session.user.id as string);
 
   if (!user) {
@@ -59,7 +66,7 @@ export default async function PortalProfilePage() {
             <div>
               <dt className="text-sm font-medium text-muted-foreground">Member Since</dt>
               <dd className="text-sm mt-1">
-                {new Date(user.createdAt).toLocaleDateString("en-KE")}
+                {new Date(user.createdAt).toLocaleDateString(APP_LOCALE)}
               </dd>
             </div>
           </dl>

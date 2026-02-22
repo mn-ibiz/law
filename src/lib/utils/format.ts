@@ -1,5 +1,8 @@
+import { APP_LOCALE } from "@/lib/constants/locale";
+
 export function formatKES(amount: number): string {
-  return new Intl.NumberFormat("en-KE", {
+  if (!Number.isFinite(amount)) return "KES 0";
+  return new Intl.NumberFormat(APP_LOCALE, {
     style: "currency",
     currency: "KES",
     minimumFractionDigits: 0,
@@ -8,10 +11,11 @@ export function formatKES(amount: number): string {
 }
 
 export function formatNumber(n: number): string {
-  return new Intl.NumberFormat("en-KE").format(n);
+  return new Intl.NumberFormat(APP_LOCALE).format(n);
 }
 
-export function formatRelativeDate(date: Date): string {
+export function formatRelativeDate(date: Date | null | undefined): string {
+  if (!date) return "\u2014";
   const now = new Date();
   const diffMs = date.getTime() - now.getTime();
   const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
@@ -22,7 +26,7 @@ export function formatRelativeDate(date: Date): string {
   if (diffDays > 0 && diffDays <= 7) return `in ${diffDays} days`;
   if (diffDays < 0 && diffDays >= -7) return `${Math.abs(diffDays)} days ago`;
 
-  return date.toLocaleDateString("en-KE", {
+  return date.toLocaleDateString(APP_LOCALE, {
     month: "short",
     day: "numeric",
     year: "numeric",

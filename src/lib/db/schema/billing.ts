@@ -4,6 +4,7 @@ import { invoiceStatus, paymentMethod, trustAccountType, trustTransactionType, q
 import { users } from "./auth";
 import { cases } from "./cases";
 import { clients } from "./clients";
+import { timeEntries, expenses } from "./time-expenses";
 
 export const invoices = pgTable(
   "invoices",
@@ -16,7 +17,7 @@ export const invoices = pgTable(
       .references(() => clients.id, { onDelete: "restrict" }),
     createdBy: uuid("created_by")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => users.id, { onDelete: "restrict" }),
     status: invoiceStatus("status").notNull().default("draft"),
     subtotal: numeric("subtotal", { precision: 14, scale: 2 }).notNull().default("0"),
     vatRate: numeric("vat_rate", { precision: 5, scale: 2 }).default("16"),
@@ -47,8 +48,8 @@ export const invoiceLineItems = pgTable("invoice_line_items", {
   quantity: numeric("quantity", { precision: 10, scale: 2 }).notNull().default("1"),
   unitPrice: numeric("unit_price", { precision: 12, scale: 2 }).notNull(),
   amount: numeric("amount", { precision: 14, scale: 2 }).notNull(),
-  timeEntryId: uuid("time_entry_id"),
-  expenseId: uuid("expense_id"),
+  timeEntryId: uuid("time_entry_id").references(() => timeEntries.id, { onDelete: "set null" }),
+  expenseId: uuid("expense_id").references(() => expenses.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
@@ -93,7 +94,7 @@ export const trustTransactions = pgTable("trust_transactions", {
   caseId: uuid("case_id").references(() => cases.id, { onDelete: "set null" }),
   performedBy: uuid("performed_by")
     .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+    .references(() => users.id, { onDelete: "restrict" }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
@@ -106,7 +107,7 @@ export const quotes = pgTable("quotes", {
   caseId: uuid("case_id").references(() => cases.id, { onDelete: "set null" }),
   createdBy: uuid("created_by")
     .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+    .references(() => users.id, { onDelete: "restrict" }),
   status: quoteStatus("status").notNull().default("draft"),
   subtotal: numeric("subtotal", { precision: 14, scale: 2 }).notNull().default("0"),
   vatAmount: numeric("vat_amount", { precision: 14, scale: 2 }).notNull().default("0"),
@@ -138,7 +139,7 @@ export const creditNotes = pgTable("credit_notes", {
   reason: text("reason").notNull(),
   createdBy: uuid("created_by")
     .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+    .references(() => users.id, { onDelete: "restrict" }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 

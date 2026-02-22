@@ -1,8 +1,9 @@
+import { cache } from "react";
 import { db } from "@/lib/db";
 import { cases, caseAssignments, caseNotes, caseTimeline, caseParties, pipelineStages } from "@/lib/db/schema/cases";
 import { clients } from "@/lib/db/schema/clients";
 import { users } from "@/lib/db/schema/auth";
-import { eq, ilike, or, and, sql, desc, asc } from "drizzle-orm";
+import { eq, ilike, or, and, sql, desc, asc, isNotNull } from "drizzle-orm";
 
 interface CaseFilters {
   search?: string;
@@ -23,11 +24,12 @@ export async function getCases(filters: CaseFilters = {}) {
   if (clientId) conditions.push(eq(cases.clientId, clientId));
 
   if (search) {
+    const escaped = search.replace(/[%_\\]/g, "\\$&");
     conditions.push(
       or(
-        ilike(cases.title, `%${search}%`),
-        ilike(cases.caseNumber, `%${search}%`),
-        ilike(cases.opposingParty, `%${search}%`)
+        ilike(cases.title, `%${escaped}%`),
+        ilike(cases.caseNumber, `%${escaped}%`),
+        ilike(cases.opposingParty, `%${escaped}%`)
       )
     );
   }
@@ -41,7 +43,7 @@ export async function getCases(filters: CaseFilters = {}) {
       priority: cases.priority,
       caseType: cases.caseType,
       billingType: cases.billingType,
-      clientName: sql<string>`${clients.firstName} || ' ' || ${clients.lastName}`,
+      clientName: sql<string>`COALESCE(${clients.firstName}, '') || ' ' || COALESCE(${clients.lastName}, '')`,
       clientId: cases.clientId,
       createdAt: cases.createdAt,
     })
@@ -57,6 +59,7 @@ export async function getCases(filters: CaseFilters = {}) {
   const countResult = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(cases)
+    .innerJoin(clients, eq(cases.clientId, clients.id))
     .where(conditions.length > 0 ? and(...conditions) : undefined);
 
   return {
@@ -67,7 +70,7 @@ export async function getCases(filters: CaseFilters = {}) {
   };
 }
 
-export async function getCaseById(id: string) {
+export const getCaseById = cache(async (id: string) => {
   const result = await db
     .select({
       id: cases.id,
@@ -92,7 +95,7 @@ export async function getCaseById(id: string) {
       description: cases.description,
       notes: cases.notes,
       clientId: cases.clientId,
-      clientName: sql<string>`${clients.firstName} || ' ' || ${clients.lastName}`,
+      clientName: sql<string>`COALESCE(${clients.firstName}, '') || ' ' || COALESCE(${clients.lastName}, '')`,
       createdAt: cases.createdAt,
       updatedAt: cases.updatedAt,
     })
@@ -102,7 +105,7 @@ export async function getCaseById(id: string) {
     .limit(1);
 
   return result[0] ?? null;
-}
+});
 
 export async function getCaseAssignments(caseId: string) {
   return db
@@ -115,7 +118,7 @@ export async function getCaseAssignments(caseId: string) {
     })
     .from(caseAssignments)
     .innerJoin(users, eq(caseAssignments.userId, users.id))
-    .where(eq(caseAssignments.caseId, caseId))
+    .where(and(eq(caseAssignments.caseId, caseId), sql`${caseAssignments.unassignedAt} IS NULL`))
     .orderBy(asc(caseAssignments.assignedAt));
 }
 
@@ -131,7 +134,8 @@ export async function getCaseNotes(caseId: string) {
     .from(caseNotes)
     .innerJoin(users, eq(caseNotes.authorId, users.id))
     .where(eq(caseNotes.caseId, caseId))
-    .orderBy(desc(caseNotes.createdAt));
+    .orderBy(desc(caseNotes.createdAt))
+    .limit(200);
 }
 
 export async function getCaseTimeline(caseId: string) {
@@ -148,7 +152,8 @@ export async function getCaseTimeline(caseId: string) {
     .from(caseTimeline)
     .leftJoin(users, eq(caseTimeline.userId, users.id))
     .where(eq(caseTimeline.caseId, caseId))
-    .orderBy(desc(caseTimeline.createdAt));
+    .orderBy(desc(caseTimeline.createdAt))
+    .limit(200);
 }
 
 export async function getCaseParties(caseId: string) {
@@ -167,7 +172,9 @@ export async function getPipelineStages() {
 }
 
 export async function getCasesByPipelineStage() {
-  const stages = await getPipelineStages();
+  // Fetch all stages and all relevant cases in two queries instead of N+1
+  const stages = await db.select().from(pipelineStages).orderBy(pipelineStages.order);
+
   const allCases = await db
     .select({
       id: cases.id,
@@ -176,29 +183,45 @@ export async function getCasesByPipelineStage() {
       status: cases.status,
       priority: cases.priority,
       pipelineStageId: cases.pipelineStageId,
-      clientName: sql<string>`${clients.firstName} || ' ' || ${clients.lastName}`,
+      clientName: sql<string>`COALESCE(${clients.firstName} || ' ' || ${clients.lastName}, 'Unknown')`,
     })
     .from(cases)
-    .innerJoin(clients, eq(cases.clientId, clients.id))
-    .where(
-      or(
-        eq(cases.status, "open"),
-        eq(cases.status, "in_progress"),
-        eq(cases.status, "hearing")
-      )
-    );
+    .leftJoin(clients, eq(cases.clientId, clients.id))
+    .where(isNotNull(cases.pipelineStageId));
+
+  // Group cases by pipeline stage
+  const casesByStage = new Map<string, typeof allCases>();
+  for (const c of allCases) {
+    const stageId = c.pipelineStageId!;
+    if (!casesByStage.has(stageId)) {
+      casesByStage.set(stageId, []);
+    }
+    const stageCases = casesByStage.get(stageId)!;
+    if (stageCases.length < 50) {
+      stageCases.push(c);
+    }
+  }
 
   return stages.map((stage) => ({
     ...stage,
-    cases: allCases.filter((c) => c.pipelineStageId === stage.id),
+    cases: casesByStage.get(stage.id) ?? [],
   }));
 }
 
 export async function generateCaseNumber(): Promise<string> {
   const year = new Date().getFullYear();
-  const result = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(cases);
-  const num = (result[0]?.count ?? 0) + 1;
-  return `CASE-${year}-${String(num).padStart(4, "0")}`;
+  const prefix = `CASE-${year}-`;
+  const [result] = await db
+    .select({ maxNum: sql<string>`MAX(${cases.caseNumber})` })
+    .from(cases)
+    .where(sql`${cases.caseNumber} LIKE ${prefix + '%'}`);
+
+  const maxNum = result?.maxNum;
+  let next = 1;
+  if (maxNum) {
+    const parts = maxNum.split("-");
+    const lastNum = parseInt(parts[parts.length - 1], 10);
+    if (!isNaN(lastNum)) next = lastNum + 1;
+  }
+  return `${prefix}${String(next).padStart(4, "0")}`;
 }

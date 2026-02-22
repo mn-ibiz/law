@@ -4,22 +4,29 @@ import { messageStatus, notificationType } from "./enums";
 import { users } from "./auth";
 import { cases } from "./cases";
 
-export const messages = pgTable("messages", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  senderId: uuid("sender_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  recipientId: uuid("recipient_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  caseId: uuid("case_id").references(() => cases.id, { onDelete: "set null" }),
-  parentMessageId: uuid("parent_message_id"),
-  subject: text("subject"),
-  body: text("body").notNull(),
-  status: messageStatus("status").notNull().default("sent"),
-  readAt: timestamp("read_at", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const messages = pgTable(
+  "messages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    senderId: uuid("sender_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    recipientId: uuid("recipient_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    caseId: uuid("case_id").references(() => cases.id, { onDelete: "set null" }),
+    parentMessageId: uuid("parent_message_id").references(() => messages.id),
+    subject: text("subject"),
+    body: text("body").notNull(),
+    status: messageStatus("status").notNull().default("sent"),
+    readAt: timestamp("read_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("messages_sender_id_idx").on(table.senderId),
+    index("messages_recipient_id_idx").on(table.recipientId),
+  ]
+);
 
 export const notifications = pgTable(
   "notifications",

@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatKES } from "@/lib/utils/format";
+import { APP_LOCALE } from "@/lib/constants/locale";
 
 interface Attorney {
   id: string;
@@ -74,7 +75,7 @@ export function AttorneyDetailTabs({ attorney }: { attorney: Attorney }) {
                 <dt className="text-sm text-muted-foreground">Date Admitted</dt>
                 <dd className="font-medium">
                   {attorney.dateAdmitted
-                    ? new Date(attorney.dateAdmitted).toLocaleDateString("en-KE")
+                    ? new Date(attorney.dateAdmitted).toLocaleDateString(APP_LOCALE)
                     : "—"}
                 </dd>
               </div>

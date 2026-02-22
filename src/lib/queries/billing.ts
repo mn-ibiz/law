@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { db } from "@/lib/db";
 import { invoices, invoiceLineItems, payments, quotes, creditNotes } from "@/lib/db/schema/billing";
 import { cases } from "@/lib/db/schema/cases";
@@ -33,10 +34,11 @@ export async function getInvoices(filters: InvoiceFilters = {}) {
     .innerJoin(clients, eq(invoices.clientId, clients.id))
     .leftJoin(cases, eq(invoices.caseId, cases.id))
     .where(conditions.length > 0 ? and(...conditions) : undefined)
-    .orderBy(desc(invoices.createdAt));
+    .orderBy(desc(invoices.createdAt))
+    .limit(500);
 }
 
-export async function getInvoiceById(id: string) {
+export const getInvoiceById = cache(async (id: string) => {
   const result = await db
     .select({
       id: invoices.id,
@@ -63,7 +65,7 @@ export async function getInvoiceById(id: string) {
     .limit(1);
 
   return result[0] ?? null;
-}
+});
 
 export async function getInvoiceLineItems(invoiceId: string) {
   return db.select().from(invoiceLineItems).where(eq(invoiceLineItems.invoiceId, invoiceId));
@@ -99,12 +101,24 @@ export async function getQuotes() {
     })
     .from(quotes)
     .innerJoin(clients, eq(quotes.clientId, clients.id))
-    .orderBy(desc(quotes.createdAt));
+    .orderBy(desc(quotes.createdAt))
+    .limit(500);
 }
 
 export async function generateInvoiceNumber(): Promise<string> {
   const year = new Date().getFullYear();
-  const result = await db.select({ count: sql<number>`count(*)::int` }).from(invoices);
-  const num = (result[0]?.count ?? 0) + 1;
-  return `INV-${year}-${String(num).padStart(4, "0")}`;
+  const prefix = `INV-${year}-`;
+  const [result] = await db
+    .select({ maxNum: sql<string>`MAX(${invoices.invoiceNumber})` })
+    .from(invoices)
+    .where(sql`${invoices.invoiceNumber} LIKE ${prefix + '%'}`);
+
+  const maxNum = result?.maxNum;
+  let next = 1;
+  if (maxNum) {
+    const parts = maxNum.split("-");
+    const lastNum = parseInt(parts[parts.length - 1], 10);
+    if (!isNaN(lastNum)) next = lastNum + 1;
+  }
+  return `${prefix}${String(next).padStart(4, "0")}`;
 }

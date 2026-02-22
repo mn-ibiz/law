@@ -15,7 +15,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Law Firm Registry",
+  title: {
+    default: "Law Firm Registry",
+    template: "%s | Law Firm Registry",
+  },
   description: "Comprehensive law firm management system for Kenya",
 };
 
@@ -25,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers>
           {children}

@@ -10,7 +10,7 @@ export const timeEntries = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     userId: uuid("user_id")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => users.id, { onDelete: "restrict" }),
     caseId: uuid("case_id").references(() => cases.id, { onDelete: "set null" }),
     description: text("description").notNull(),
     date: timestamp("date", { withTimezone: true }).notNull(),
@@ -19,7 +19,7 @@ export const timeEntries = pgTable(
     amount: numeric("amount", { precision: 12, scale: 2 }),
     isBillable: boolean("is_billable").notNull().default(true),
     isBilled: boolean("is_billed").notNull().default(false),
-    invoiceId: uuid("invoice_id"),
+    invoiceId: uuid("invoice_id"), // FK to invoices managed via ORM relations to avoid circular imports
     timerStart: timestamp("timer_start", { withTimezone: true }),
     timerEnd: timestamp("timer_end", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -32,30 +32,37 @@ export const timeEntries = pgTable(
   ]
 );
 
-export const expenses = pgTable("expenses", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  caseId: uuid("case_id").references(() => cases.id, { onDelete: "set null" }),
-  category: expenseCategory("category").notNull(),
-  description: text("description").notNull(),
-  amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
-  date: timestamp("date", { withTimezone: true }).notNull(),
-  receiptUrl: text("receipt_url"),
-  isBillable: boolean("is_billable").notNull().default(true),
-  isBilled: boolean("is_billed").notNull().default(false),
-  invoiceId: uuid("invoice_id"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const expenses = pgTable(
+  "expenses",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    caseId: uuid("case_id").references(() => cases.id, { onDelete: "set null" }),
+    category: expenseCategory("category").notNull(),
+    description: text("description").notNull(),
+    amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+    date: timestamp("date", { withTimezone: true }).notNull(),
+    receiptUrl: text("receipt_url"),
+    isBillable: boolean("is_billable").notNull().default(true),
+    isBilled: boolean("is_billed").notNull().default(false),
+    invoiceId: uuid("invoice_id"), // FK to invoices managed via ORM relations to avoid circular imports
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("expenses_user_id_idx").on(table.userId),
+    index("expenses_date_idx").on(table.date),
+  ]
+);
 
 export const requisitions = pgTable("requisitions", {
   id: uuid("id").primaryKey().defaultRandom(),
   requisitionNumber: text("requisition_number").notNull().unique(),
   requestedBy: uuid("requested_by")
     .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+    .references(() => users.id, { onDelete: "restrict" }),
   approvedBy: uuid("approved_by").references(() => users.id, { onDelete: "set null" }),
   caseId: uuid("case_id").references(() => cases.id, { onDelete: "set null" }),
   description: text("description").notNull(),

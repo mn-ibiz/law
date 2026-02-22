@@ -3,10 +3,18 @@ import { getInvoices } from "@/lib/queries/billing";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatKES } from "@/lib/utils/format";
+import { formatEnum } from "@/lib/utils/format-enum";
+import { APP_LOCALE } from "@/lib/constants/locale";
 import Link from "next/link";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Billing",
+  description: "Invoices, payments, and fee notes",
+};
 
 const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   draft: "outline",
@@ -64,11 +72,11 @@ export default async function BillingPage() {
                     <TableCell>{formatKES(Number(inv.totalAmount))}</TableCell>
                     <TableCell>{formatKES(Number(inv.paidAmount))}</TableCell>
                     <TableCell>
-                      {inv.dueDate ? new Date(inv.dueDate).toLocaleDateString("en-KE") : "—"}
+                      {inv.dueDate ? new Date(inv.dueDate).toLocaleDateString(APP_LOCALE) : "—"}
                     </TableCell>
                     <TableCell>
                       <Badge variant={statusVariant[inv.status] ?? "secondary"}>
-                        {inv.status.replace("_", " ")}
+                        {formatEnum(inv.status)}
                       </Badge>
                     </TableCell>
                   </TableRow>

@@ -9,6 +9,7 @@ import {
   Tooltip,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatEnum } from "@/lib/utils/format-enum";
 
 const STATUS_COLORS: Record<string, string> = {
   open: "#3b82f6",
@@ -25,7 +26,7 @@ interface CaseStatusChartProps {
 
 export function CaseStatusChart({ data }: CaseStatusChartProps) {
   const chartData = data.map((d) => ({
-    name: d.status.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+    name: formatEnum(d.status),
     value: d.count,
     status: d.status,
   }));

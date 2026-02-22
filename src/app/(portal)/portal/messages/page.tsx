@@ -1,4 +1,4 @@
-import { requireAuth } from "@/lib/auth/get-session";
+import { requireRole } from "@/lib/auth/get-session";
 import { getPortalMessages } from "@/lib/queries/portal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,9 +10,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { APP_LOCALE } from "@/lib/constants/locale";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Messages",
+  description: "View messages from your legal team",
+};
 
 export default async function PortalMessagesPage() {
-  const session = await requireAuth();
+  const session = await requireRole("client");
   const messageList = await getPortalMessages(session.user.id as string);
 
   return (
@@ -50,7 +57,7 @@ export default async function PortalMessagesPage() {
                       {msg.body}
                     </TableCell>
                     <TableCell>
-                      {new Date(msg.createdAt).toLocaleDateString("en-KE")}
+                      {new Date(msg.createdAt).toLocaleDateString(APP_LOCALE)}
                     </TableCell>
                     <TableCell>
                       {msg.readAt ? (

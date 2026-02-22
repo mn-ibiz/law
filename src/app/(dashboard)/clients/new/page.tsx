@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import { requireAdminOrAttorney } from "@/lib/auth/get-session";
 import { ClientForm } from "@/components/forms/client-form";
+
+export const metadata: Metadata = {
+  title: "Add Client",
+  description: "Register a new client",
+};
 
 export default async function NewClientPage() {
   await requireAdminOrAttorney();
