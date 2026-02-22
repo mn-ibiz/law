@@ -1,6 +1,14 @@
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema/auth";
-import { practiceAreas, billingRates, firmSettings } from "@/lib/db/schema/settings";
+import {
+  practiceAreas,
+  billingRates,
+  firmSettings,
+  customFields,
+  tags,
+  emailTemplates,
+  smsTemplates,
+} from "@/lib/db/schema/settings";
 import { branches, branchUsers } from "@/lib/db/schema/branches";
 import { eq, desc, sql } from "drizzle-orm";
 
@@ -20,7 +28,21 @@ export async function getUsers() {
 }
 
 export async function getUserById(id: string) {
-  const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+  const result = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      phone: users.phone,
+      role: users.role,
+      avatar: users.avatar,
+      isActive: users.isActive,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
+    })
+    .from(users)
+    .where(eq(users.id, id))
+    .limit(1);
   return result[0] ?? null;
 }
 
@@ -57,4 +79,34 @@ export async function getBranchWithUsers(branchId: string) {
     .where(eq(branchUsers.branchId, branchId));
 
   return { ...branch[0], users: assignedUsers };
+}
+
+export async function getCustomFields(entityType?: string) {
+  if (entityType) {
+    return db
+      .select()
+      .from(customFields)
+      .where(eq(customFields.entityType, entityType))
+      .orderBy(customFields.order);
+  }
+  return db.select().from(customFields).orderBy(customFields.entityType, customFields.order);
+}
+
+export async function getTags(entityType?: string) {
+  if (entityType) {
+    return db
+      .select()
+      .from(tags)
+      .where(eq(tags.entityType, entityType))
+      .orderBy(tags.name);
+  }
+  return db.select().from(tags).orderBy(tags.name);
+}
+
+export async function getEmailTemplates() {
+  return db.select().from(emailTemplates).orderBy(emailTemplates.name);
+}
+
+export async function getSmsTemplates() {
+  return db.select().from(smsTemplates).orderBy(smsTemplates.name);
 }

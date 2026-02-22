@@ -72,9 +72,10 @@ export function Sidebar() {
               {group.items
                 .filter((item) => !item.adminOnly || role === "admin")
                 .map((item) => {
+                  const baseHref = item.href.split("?")[0];
                   const isActive =
-                    pathname === item.href ||
-                    (item.href !== "/dashboard" && pathname.startsWith(item.href + "/"));
+                    pathname === baseHref ||
+                    (baseHref !== "/dashboard" && pathname.startsWith(baseHref + "/"));
                   const Icon = item.icon;
 
                   const linkContent = (

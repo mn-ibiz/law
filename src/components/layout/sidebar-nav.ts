@@ -19,6 +19,7 @@ import {
   BarChart3,
   Settings,
   User,
+  Truck,
   type LucideIcon,
 } from "lucide-react";
 
@@ -47,7 +48,7 @@ export const dashboardNav: NavGroup[] = [
     items: [
       { label: "Attorneys", href: "/attorneys", icon: Users },
       { label: "Clients", href: "/clients", icon: UserCheck },
-      { label: "Branches", href: "/branches", icon: Building2, adminOnly: true },
+      { label: "Branches", href: "/settings/branches", icon: Building2, adminOnly: true },
     ],
   },
   {
@@ -64,12 +65,13 @@ export const dashboardNav: NavGroup[] = [
   {
     label: "Finance",
     items: [
-      { label: "Time Tracking", href: "/time-tracking", icon: Timer },
-      { label: "Expenses", href: "/expenses", icon: Receipt },
+      { label: "Time Tracking", href: "/time-expenses", icon: Timer },
+      { label: "Expenses", href: "/time-expenses?tab=expenses", icon: Receipt },
       { label: "Billing", href: "/billing", icon: CreditCard },
       { label: "Trust Accounts", href: "/trust-accounts", icon: Landmark },
       { label: "Petty Cash", href: "/petty-cash", icon: Wallet },
       { label: "Requisitions", href: "/requisitions", icon: ClipboardList },
+      { label: "Suppliers", href: "/suppliers", icon: Truck, adminOnly: true },
     ],
   },
   {

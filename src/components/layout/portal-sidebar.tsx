@@ -24,9 +24,10 @@ export function PortalSidebar() {
       <ScrollArea className="flex-1 py-2">
         <nav className="space-y-1 px-2">
           {portalNav.map((item) => {
+            const baseHref = item.href.split("?")[0];
             const isActive =
-              pathname === item.href ||
-              (item.href !== "/portal" && pathname.startsWith(item.href + "/"));
+              pathname === baseHref ||
+              (baseHref !== "/portal" && pathname.startsWith(baseHref + "/"));
             const Icon = item.icon;
 
             return (
