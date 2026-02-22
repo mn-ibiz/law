@@ -59,10 +59,10 @@ development_status:
   # Epic 3: Dashboards & Global Search (3 stories)
   # Dependencies: Epic 2
   # ============================================
-  epic-3: backlog
-  3-1-role-based-dashboards: ready-for-dev
-  3-2-dashboard-charts: ready-for-dev
-  3-3-global-search: ready-for-dev
+  epic-3: done
+  3-1-role-based-dashboards: done
+  3-2-dashboard-charts: done
+  3-3-global-search: done
   epic-3-retrospective: optional
 
   # ============================================

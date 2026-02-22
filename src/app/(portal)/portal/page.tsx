@@ -1,8 +1,10 @@
 import { requireRole } from "@/lib/auth/get-session";
+import { ClientDashboard } from "@/components/dashboard/client-dashboard";
 
 export default async function PortalPage() {
   const session = await requireRole("client");
   const name = session.user?.name ?? "User";
+  const userId = session.user?.id as string;
 
   return (
     <div className="space-y-6">
@@ -12,7 +14,7 @@ export default async function PortalPage() {
           Welcome, {name}. View your cases, documents, and invoices.
         </p>
       </div>
-      {/* Portal widgets will be added in later epics */}
+      <ClientDashboard userId={userId} />
     </div>
   );
 }
