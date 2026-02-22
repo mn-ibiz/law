@@ -39,10 +39,10 @@ development_status:
   # Epic 1: Project Foundation (3 stories)
   # Dependencies: None — root epic
   # ============================================
-  epic-1: in-progress
+  epic-1: done
   1-1-project-initialization: done
   1-2-database-schema: done
-  1-3-seed-data: ready-for-dev
+  1-3-seed-data: done
   epic-1-retrospective: optional
 
   # ============================================

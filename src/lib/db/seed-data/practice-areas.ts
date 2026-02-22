@@ -1,0 +1,17 @@
+export const practiceAreaData = [
+  { name: "Civil Litigation", description: "Disputes between individuals or organizations including torts, contracts, and property disputes" },
+  { name: "Criminal Law", description: "Defense and prosecution of criminal offenses under Kenyan penal code" },
+  { name: "Family Law", description: "Divorce, custody, maintenance, adoption, and matrimonial property" },
+  { name: "Corporate/Commercial", description: "Company formation, mergers, acquisitions, commercial contracts, and corporate governance" },
+  { name: "Conveyancing/Property", description: "Land transactions, property transfers, leases, and real estate law" },
+  { name: "Employment/Labour", description: "Employment contracts, disputes, unfair dismissal, and labour relations" },
+  { name: "Environment/Land", description: "Environmental law, land disputes, and natural resource management" },
+  { name: "Intellectual Property", description: "Patents, trademarks, copyrights, and trade secrets" },
+  { name: "Tax Law", description: "Tax compliance, disputes with KRA, tax planning, and VAT matters" },
+  { name: "Banking/Finance", description: "Banking regulations, financial transactions, securities, and debt recovery" },
+  { name: "Insurance Law", description: "Insurance claims, disputes, regulatory compliance, and policy interpretation" },
+  { name: "Constitutional Law", description: "Constitutional rights, judicial review, and public interest litigation" },
+  { name: "Alternative Dispute Resolution", description: "Mediation, arbitration, and negotiation" },
+  { name: "Immigration Law", description: "Work permits, visas, citizenship, and immigration compliance" },
+  { name: "Probate/Succession", description: "Wills, estates, succession, and administration of deceased persons' property" },
+];
