@@ -101,20 +101,20 @@ development_status:
   # Epic 7: Kenya Courts & Bring-Ups (3 stories)
   # Dependencies: Epic 6
   # ============================================
-  epic-7: backlog
-  7-1-kenya-court-hierarchy: ready-for-dev
-  7-2-court-filing-service: ready-for-dev
-  7-3-file-bring-up-system: ready-for-dev
+  epic-7: done
+  7-1-kenya-court-hierarchy: done
+  7-2-court-filing-service: done
+  7-3-file-bring-up-system: done
   epic-7-retrospective: optional
 
   # ============================================
   # Epic 8: Calendar & Scheduling (3 stories)
   # Dependencies: Epic 6
   # ============================================
-  epic-8: backlog
-  8-1-calendar-views-court-calendar: ready-for-dev
-  8-2-events-deadline-tracker: ready-for-dev
-  8-3-task-management: ready-for-dev
+  epic-8: done
+  8-1-calendar-views-court-calendar: done
+  8-2-events-deadline-tracker: done
+  8-3-task-management: done
   epic-8-retrospective: optional
 
   # ============================================
