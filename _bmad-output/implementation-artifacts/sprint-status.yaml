@@ -79,11 +79,11 @@ development_status:
   # Epic 5: Client Management & KYC (4 stories)
   # Dependencies: Epic 2
   # ============================================
-  epic-5: backlog
-  5-1-client-intake-crm: ready-for-dev
-  5-2-kyc-aml-compliance: ready-for-dev
-  5-3-conflict-of-interest: ready-for-dev
-  5-4-online-intake-form-builder: ready-for-dev
+  epic-5: done
+  5-1-client-intake-crm: done
+  5-2-kyc-aml-compliance: done
+  5-3-conflict-of-interest: done
+  5-4-online-intake-form-builder: done
   epic-5-retrospective: optional
 
   # ============================================
