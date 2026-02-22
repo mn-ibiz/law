@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, boolean, timestamp, numeric, index } from "drizzle-orm/pg-core";
+import { pgTable, pgEnum, uuid, text, boolean, timestamp, numeric, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { attorneyTitle, licenseStatus } from "./enums";
 import { users } from "./auth";
@@ -80,8 +80,30 @@ export const cpdRecords = pgTable("cpd_records", {
   units: numeric("units", { precision: 5, scale: 2 }).notNull(),
   completionDate: timestamp("completion_date", { withTimezone: true }).notNull(),
   certificateUrl: text("certificate_url"),
+  isLskProgram: boolean("is_lsk_program").notNull().default(false),
   year: text("year").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const disciplinaryStatus = pgEnum("disciplinary_status", [
+  "pending",
+  "resolved",
+  "dismissed",
+]);
+
+export const disciplinaryRecords = pgTable("disciplinary_records", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  attorneyId: uuid("attorney_id")
+    .notNull()
+    .references(() => attorneys.id, { onDelete: "cascade" }),
+  date: timestamp("date", { withTimezone: true }).notNull(),
+  caseReference: text("case_reference").notNull(),
+  status: disciplinaryStatus("status").notNull().default("pending"),
+  outcome: text("outcome"),
+  notes: text("notes"),
+  createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export const attorneysRelations = relations(attorneys, ({ one, many }) => ({
@@ -90,6 +112,7 @@ export const attorneysRelations = relations(attorneys, ({ one, many }) => ({
   licenses: many(attorneyLicenses),
   practisingCertificates: many(practisingCertificates),
   cpdRecords: many(cpdRecords),
+  disciplinaryRecords: many(disciplinaryRecords),
 }));
 
 export const attorneyPracticeAreasRelations = relations(attorneyPracticeAreas, ({ one }) => ({
@@ -115,4 +138,15 @@ export const practisingCertificatesRelations = relations(practisingCertificates,
 
 export const cpdRecordsRelations = relations(cpdRecords, ({ one }) => ({
   attorney: one(attorneys, { fields: [cpdRecords.attorneyId], references: [attorneys.id] }),
+}));
+
+export const disciplinaryRecordsRelations = relations(disciplinaryRecords, ({ one }) => ({
+  attorney: one(attorneys, {
+    fields: [disciplinaryRecords.attorneyId],
+    references: [attorneys.id],
+  }),
+  createdByUser: one(users, {
+    fields: [disciplinaryRecords.createdBy],
+    references: [users.id],
+  }),
 }));

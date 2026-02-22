@@ -69,10 +69,10 @@ development_status:
   # Epic 4: Attorney Management (3 stories)
   # Dependencies: Epic 2
   # ============================================
-  epic-4: backlog
-  4-1-attorney-crud: ready-for-dev
-  4-2-practising-certificates-cpd: ready-for-dev
-  4-3-attorney-performance-disciplinary: ready-for-dev
+  epic-4: done
+  4-1-attorney-crud: done
+  4-2-practising-certificates-cpd: done
+  4-3-attorney-performance-disciplinary: done
   epic-4-retrospective: optional
 
   # ============================================

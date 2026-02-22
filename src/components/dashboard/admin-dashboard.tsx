@@ -13,6 +13,7 @@ import { CaseStatusChart } from "./charts/case-status-chart";
 import { RecentCasesTable } from "./widgets/recent-cases-table";
 import { UpcomingDeadlines } from "./widgets/upcoming-deadlines";
 import { OverdueInvoicesTable } from "./widgets/overdue-invoices-table";
+import { ComplianceWidget } from "./widgets/compliance-widget";
 import { DashboardSkeleton } from "./dashboard-skeleton";
 import { formatKES, formatNumber } from "@/lib/utils/format";
 import { getAdminDashboardStats } from "@/lib/queries/dashboard";
@@ -107,6 +108,9 @@ export function AdminDashboard() {
       </Suspense>
       <Suspense>
         <AdminWidgets />
+      </Suspense>
+      <Suspense>
+        <ComplianceWidget />
       </Suspense>
     </div>
   );
