@@ -1,0 +1,110 @@
+import { db } from "@/lib/db";
+import { invoices, invoiceLineItems, payments, quotes, creditNotes } from "@/lib/db/schema/billing";
+import { cases } from "@/lib/db/schema/cases";
+import { clients } from "@/lib/db/schema/clients";
+import { users } from "@/lib/db/schema/auth";
+import { eq, desc, sql, and } from "drizzle-orm";
+
+interface InvoiceFilters {
+  status?: string;
+  clientId?: string;
+  caseId?: string;
+}
+
+export async function getInvoices(filters: InvoiceFilters = {}) {
+  const conditions = [];
+  if (filters.status) conditions.push(eq(invoices.status, filters.status as "draft" | "sent" | "viewed" | "partially_paid" | "paid" | "overdue" | "cancelled" | "written_off"));
+  if (filters.clientId) conditions.push(eq(invoices.clientId, filters.clientId));
+  if (filters.caseId) conditions.push(eq(invoices.caseId, filters.caseId));
+
+  return db
+    .select({
+      id: invoices.id,
+      invoiceNumber: invoices.invoiceNumber,
+      status: invoices.status,
+      totalAmount: invoices.totalAmount,
+      paidAmount: invoices.paidAmount,
+      dueDate: invoices.dueDate,
+      createdAt: invoices.createdAt,
+      clientName: sql<string>`${clients.firstName} || ' ' || ${clients.lastName}`,
+      caseNumber: cases.caseNumber,
+    })
+    .from(invoices)
+    .innerJoin(clients, eq(invoices.clientId, clients.id))
+    .leftJoin(cases, eq(invoices.caseId, cases.id))
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .orderBy(desc(invoices.createdAt));
+}
+
+export async function getInvoiceById(id: string) {
+  const result = await db
+    .select({
+      id: invoices.id,
+      invoiceNumber: invoices.invoiceNumber,
+      status: invoices.status,
+      subtotal: invoices.subtotal,
+      vatRate: invoices.vatRate,
+      vatAmount: invoices.vatAmount,
+      totalAmount: invoices.totalAmount,
+      paidAmount: invoices.paidAmount,
+      currency: invoices.currency,
+      dueDate: invoices.dueDate,
+      notes: invoices.notes,
+      createdAt: invoices.createdAt,
+      clientId: invoices.clientId,
+      caseId: invoices.caseId,
+      clientName: sql<string>`${clients.firstName} || ' ' || ${clients.lastName}`,
+      caseNumber: cases.caseNumber,
+    })
+    .from(invoices)
+    .innerJoin(clients, eq(invoices.clientId, clients.id))
+    .leftJoin(cases, eq(invoices.caseId, cases.id))
+    .where(eq(invoices.id, id))
+    .limit(1);
+
+  return result[0] ?? null;
+}
+
+export async function getInvoiceLineItems(invoiceId: string) {
+  return db.select().from(invoiceLineItems).where(eq(invoiceLineItems.invoiceId, invoiceId));
+}
+
+export async function getInvoicePayments(invoiceId: string) {
+  return db
+    .select({
+      id: payments.id,
+      amount: payments.amount,
+      method: payments.method,
+      reference: payments.reference,
+      mpesaTransactionId: payments.mpesaTransactionId,
+      paymentDate: payments.paymentDate,
+      receivedByName: users.name,
+    })
+    .from(payments)
+    .leftJoin(users, eq(payments.receivedBy, users.id))
+    .where(eq(payments.invoiceId, invoiceId))
+    .orderBy(desc(payments.paymentDate));
+}
+
+export async function getQuotes() {
+  return db
+    .select({
+      id: quotes.id,
+      quoteNumber: quotes.quoteNumber,
+      status: quotes.status,
+      totalAmount: quotes.totalAmount,
+      validUntil: quotes.validUntil,
+      createdAt: quotes.createdAt,
+      clientName: sql<string>`${clients.firstName} || ' ' || ${clients.lastName}`,
+    })
+    .from(quotes)
+    .innerJoin(clients, eq(quotes.clientId, clients.id))
+    .orderBy(desc(quotes.createdAt));
+}
+
+export async function generateInvoiceNumber(): Promise<string> {
+  const year = new Date().getFullYear();
+  const result = await db.select({ count: sql<number>`count(*)::int` }).from(invoices);
+  const num = (result[0]?.count ?? 0) + 1;
+  return `INV-${year}-${String(num).padStart(4, "0")}`;
+}

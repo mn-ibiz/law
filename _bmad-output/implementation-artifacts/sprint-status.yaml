@@ -121,41 +121,41 @@ development_status:
   # Epic 9: Document Management (3 stories)
   # Dependencies: Epic 6
   # ============================================
-  epic-9: backlog
-  9-1-document-upload-management: ready-for-dev
-  9-2-document-versioning-templates: ready-for-dev
-  9-3-esignature-integration: ready-for-dev
+  epic-9: done
+  9-1-document-upload-management: done
+  9-2-document-versioning-templates: done
+  9-3-esignature-integration: done
   epic-9-retrospective: optional
 
   # ============================================
   # Epic 10: Time & Expense Tracking (3 stories)
   # Dependencies: Epic 6
   # ============================================
-  epic-10: backlog
-  10-1-time-entry-live-timer: ready-for-dev
-  10-2-weekly-timesheet-expenses: ready-for-dev
-  10-3-requisitions-purchase-orders-suppliers: ready-for-dev
+  epic-10: done
+  10-1-time-entry-live-timer: done
+  10-2-weekly-timesheet-expenses: done
+  10-3-requisitions-purchase-orders-suppliers: done
   epic-10-retrospective: optional
 
   # ============================================
   # Epic 11: Billing & Fee Notes (4 stories)
   # Dependencies: Epic 10
   # ============================================
-  epic-11: backlog
-  11-1-quotes-fee-note-generation: ready-for-dev
-  11-2-kenya-vat-fee-note-pdf: ready-for-dev
-  11-3-fee-note-approval-credit-notes: ready-for-dev
-  11-4-payment-recording-mpesa: ready-for-dev
+  epic-11: done
+  11-1-quotes-fee-note-generation: done
+  11-2-kenya-vat-fee-note-pdf: done
+  11-3-fee-note-approval-credit-notes: done
+  11-4-payment-recording-mpesa: done
   epic-11-retrospective: optional
 
   # ============================================
   # Epic 12: Trust Accounts & Financial Ops (3 stories)
   # Dependencies: Epic 11
   # ============================================
-  epic-12: backlog
-  12-1-trust-client-accounts: ready-for-dev
-  12-2-petty-cash-management: ready-for-dev
-  12-3-bank-reconciliation: ready-for-dev
+  epic-12: done
+  12-1-trust-client-accounts: done
+  12-2-petty-cash-management: done
+  12-3-bank-reconciliation: done
   epic-12-retrospective: optional
 
   # ============================================
