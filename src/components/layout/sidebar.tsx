@@ -69,7 +69,7 @@ export function Sidebar() {
       )}
 
       {/* Navigation */}
-      <ScrollArea className="flex-1 py-3">
+      <ScrollArea className="flex-1 overflow-hidden py-3">
         <nav className="space-y-1 px-2">
           {dashboardNav.map((group, groupIdx) => (
             <div key={group.label}>
