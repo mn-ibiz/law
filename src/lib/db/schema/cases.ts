@@ -10,6 +10,7 @@ export const cases = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     caseNumber: text("case_number").notNull().unique(),
+    fileNumber: text("file_number"),
     title: text("title").notNull(),
     clientId: uuid("client_id")
       .notNull()
@@ -42,6 +43,7 @@ export const cases = pgTable(
     index("cases_status_idx").on(table.status),
     index("cases_client_id_idx").on(table.clientId),
     index("cases_priority_idx").on(table.priority),
+    index("cases_file_number_idx").on(table.fileNumber),
   ]
 );
 

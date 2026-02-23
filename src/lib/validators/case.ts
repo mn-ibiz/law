@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const createCaseSchema = z.object({
   title: z.string().min(1, "Title is required").max(255),
+  fileNumber: z.string().max(50, "File number too long").optional(),
   clientId: z.string().uuid("Invalid client"),
   caseType: z.string().min(1, "Case type is required").max(255),
   practiceArea: z.string().max(255).optional(),

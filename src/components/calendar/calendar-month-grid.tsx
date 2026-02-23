@@ -13,7 +13,7 @@ import {
   format,
 } from "date-fns";
 import { cn } from "@/lib/utils";
-import { getDotColor } from "./event-type-colors";
+import { getDotColor, getBlockColor } from "./event-type-colors";
 import { CalendarDaySheet } from "./calendar-day-sheet";
 import type { SerializedCalendarEvent } from "./calendar-types";
 import { deserializeEvents, type CalendarEvent } from "./calendar-types";
@@ -120,7 +120,7 @@ export function CalendarMonthGrid({ events: serializedEvents, currentMonth }: Ca
                     <div
                       key={event.id}
                       className={cn(
-                        "h-1.5 w-1.5 rounded-full sm:h-2 sm:w-2",
+                        "h-2 w-2 rounded-full sm:h-2.5 sm:w-2.5",
                         getDotColor(event.type)
                       )}
                       title={event.title}
@@ -137,23 +137,20 @@ export function CalendarMonthGrid({ events: serializedEvents, currentMonth }: Ca
 
                 {/* Event titles (visible on larger screens) */}
                 <div className="hidden w-full sm:block">
-                  {dayEvents.slice(0, 2).map((event) => (
-                    <div
-                      key={event.id}
-                      className={cn(
-                        "mt-0.5 flex items-center gap-1 truncate rounded px-1 py-0.5 text-[10px] leading-tight",
-                        "bg-muted/60"
-                      )}
-                    >
-                      <span
+                  {dayEvents.slice(0, 2).map((event) => {
+                    const blockColor = getBlockColor(event.type);
+                    return (
+                      <div
+                        key={event.id}
                         className={cn(
-                          "inline-block h-1.5 w-1.5 shrink-0 rounded-full",
-                          getDotColor(event.type)
+                          "mt-0.5 flex items-center gap-1 truncate rounded border-l-2 px-1.5 py-0.5 text-[11px] font-medium leading-tight",
+                          blockColor
                         )}
-                      />
-                      <span className="truncate">{event.title}</span>
-                    </div>
-                  ))}
+                      >
+                        <span className="truncate">{event.title}</span>
+                      </div>
+                    );
+                  })}
                   {dayEvents.length > 2 && (
                     <span className="mt-0.5 block text-[10px] text-muted-foreground px-1">
                       +{dayEvents.length - 2} more

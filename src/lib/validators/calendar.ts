@@ -3,7 +3,7 @@ import { z } from "zod";
 export const createEventSchema = z.object({
   title: z.string().min(1, "Title is required").max(255),
   description: z.string().max(5000).optional(),
-  type: z.enum(["court_hearing", "meeting", "deadline", "reminder", "consultation", "deposition", "other"]),
+  type: z.enum(["court_hearing", "meeting", "deadline", "reminder", "consultation", "deposition", "mediation", "arbitration", "filing_deadline", "client_meeting", "internal_meeting", "court_mention", "site_visit", "training", "other"]),
   caseId: z.string().optional(),
   location: z.string().max(255).optional(),
   startTime: z.string().min(1, "Start time is required"),

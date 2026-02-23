@@ -35,6 +35,7 @@ export function CaseForm({ defaultValues, caseId, clients }: CaseFormProps) {
     resolver: zodResolver(createCaseSchema),
     defaultValues: {
       title: "",
+      fileNumber: "",
       clientId: "",
       caseType: "",
       practiceArea: "",
@@ -84,6 +85,14 @@ export function CaseForm({ defaultValues, caseId, clients }: CaseFormProps) {
               <Input id="title" {...form.register("title")} />
               {form.formState.errors.title && (
                 <p className="text-sm text-destructive">{form.formState.errors.title.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="fileNumber">File Number</Label>
+              <Input id="fileNumber" {...form.register("fileNumber")} placeholder="e.g. FN/2024/001" />
+              {form.formState.errors.fileNumber && (
+                <p className="text-sm text-destructive">{form.formState.errors.fileNumber.message}</p>
               )}
             </div>
 

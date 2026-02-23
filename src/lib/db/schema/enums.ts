@@ -105,6 +105,14 @@ export const eventType = pgEnum("event_type", [
   "reminder",
   "consultation",
   "deposition",
+  "mediation",
+  "arbitration",
+  "filing_deadline",
+  "client_meeting",
+  "internal_meeting",
+  "court_mention",
+  "site_visit",
+  "training",
   "other",
 ]);
 export const taskStatus = pgEnum("task_status", [

@@ -12,15 +12,18 @@ import {
 import { MoreHorizontal } from "lucide-react";
 import { formatEnum } from "@/lib/utils/format-enum";
 import { CaseStatusBadge, PriorityBadge } from "@/components/shared/status-badges";
+import { APP_LOCALE } from "@/lib/constants/locale";
 
 export interface CaseRow {
   id: string;
   caseNumber: string;
+  fileNumber: string | null;
   title: string;
   status: string;
   priority: string;
   caseType: string;
   billingType: string;
+  dateFiled: Date | null;
   clientName: string;
   clientId: string;
   createdAt: Date;
@@ -35,12 +38,19 @@ export const caseColumns: ColumnDef<CaseRow>[] = [
       </span>
     ),
     cell: ({ row }) => (
-      <Link
-        href={`/cases/${row.original.id}`}
-        className="font-mono font-medium text-primary hover:underline"
-      >
-        {row.getValue("caseNumber")}
-      </Link>
+      <div>
+        <Link
+          href={`/cases/${row.original.id}`}
+          className="font-mono font-medium text-primary hover:underline"
+        >
+          {row.getValue("caseNumber")}
+        </Link>
+        {row.original.fileNumber && (
+          <p className="font-mono text-xs text-muted-foreground">
+            {row.original.fileNumber}
+          </p>
+        )}
+      </div>
     ),
   },
   {
@@ -51,9 +61,14 @@ export const caseColumns: ColumnDef<CaseRow>[] = [
       </span>
     ),
     cell: ({ row }) => (
-      <span className="max-w-[200px] truncate block font-medium">
-        {row.getValue("title")}
-      </span>
+      <div className="max-w-[220px]">
+        <span className="truncate block font-medium">
+          {row.getValue("title")}
+        </span>
+        <span className="text-xs text-muted-foreground">
+          {formatEnum(row.original.caseType)}
+        </span>
+      </div>
     ),
   },
   {
@@ -73,17 +88,26 @@ export const caseColumns: ColumnDef<CaseRow>[] = [
     ),
   },
   {
-    accessorKey: "caseType",
+    accessorKey: "dateFiled",
     header: () => (
       <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        Type
+        Date Filed
       </span>
     ),
-    cell: ({ row }) => (
-      <span className="text-sm text-muted-foreground">
-        {formatEnum(row.getValue("caseType") as string)}
-      </span>
-    ),
+    cell: ({ row }) => {
+      const dateFiled = row.original.dateFiled;
+      return dateFiled ? (
+        <span className="text-sm text-muted-foreground">
+          {new Date(dateFiled).toLocaleDateString(APP_LOCALE, {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          })}
+        </span>
+      ) : (
+        <span className="text-sm text-muted-foreground/50">&mdash;</span>
+      );
+    },
   },
   {
     accessorKey: "status",
@@ -93,6 +117,7 @@ export const caseColumns: ColumnDef<CaseRow>[] = [
       </span>
     ),
     cell: ({ row }) => <CaseStatusBadge status={row.getValue("status") as string} />,
+    filterFn: "equals",
   },
   {
     accessorKey: "priority",
@@ -102,6 +127,7 @@ export const caseColumns: ColumnDef<CaseRow>[] = [
       </span>
     ),
     cell: ({ row }) => <PriorityBadge priority={row.getValue("priority") as string} />,
+    filterFn: "equals",
   },
   {
     id: "actions",

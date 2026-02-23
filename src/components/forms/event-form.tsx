@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -20,6 +21,21 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+} from "@/components/ui/command";
+import { ChevronsUpDown, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const NONE_VALUE = "__none__";
 
@@ -30,6 +46,14 @@ const EVENT_TYPES = [
   "reminder",
   "consultation",
   "deposition",
+  "mediation",
+  "arbitration",
+  "filing_deadline",
+  "client_meeting",
+  "internal_meeting",
+  "court_mention",
+  "site_visit",
+  "training",
   "other",
 ] as const;
 
@@ -37,8 +61,22 @@ interface EventFormProps {
   cases: { id: string; caseNumber: string; title: string }[];
 }
 
+function getTodayDate(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function addOneHour(time: string): string {
+  const [h, m] = time.split(":").map(Number);
+  const newH = (h + 1) % 24;
+  return `${String(newH).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
 export function EventForm({ cases }: EventFormProps) {
   const router = useRouter();
+  const [caseOpen, setCaseOpen] = useState(false);
+
+  const todayStr = getTodayDate();
 
   const form = useForm<CreateEventInput>({
     resolver: zodResolver(createEventSchema),
@@ -54,6 +92,72 @@ export function EventForm({ cases }: EventFormProps) {
       isCourtDate: false,
     },
   });
+
+  // Split date/time state managed separately, then composed into startTime/endTime
+  const [startDate, setStartDate] = useState(todayStr);
+  const [startTime, setStartTime] = useState("");
+  const [endDate, setEndDate] = useState(todayStr);
+  const [endTime, setEndTime] = useState("");
+
+  const allDay = form.watch("allDay");
+  const selectedCaseId = form.watch("caseId");
+
+  // Find the selected case for display
+  const selectedCase = useMemo(
+    () => cases.find((c) => c.id === selectedCaseId),
+    [cases, selectedCaseId]
+  );
+
+  // Compose datetime-local strings for form submission
+  function composeDatetime(date: string, time: string): string {
+    if (!date) return "";
+    if (!time) return `${date}T00:00`;
+    return `${date}T${time}`;
+  }
+
+  // Sync composed values into form when date/time changes
+  function handleStartDateChange(val: string) {
+    setStartDate(val);
+    // Auto-fill end date to same day
+    if (!endDate || endDate < val) {
+      setEndDate(val);
+    }
+    form.setValue("startTime", composeDatetime(val, startTime));
+    form.setValue("endTime", composeDatetime(endDate || val, endTime));
+  }
+
+  function handleStartTimeChange(val: string) {
+    setStartTime(val);
+    form.setValue("startTime", composeDatetime(startDate, val));
+    // Auto-fill end time to +1 hour
+    if (!endTime) {
+      const auto = addOneHour(val);
+      setEndTime(auto);
+      form.setValue("endTime", composeDatetime(endDate || startDate, auto));
+    }
+  }
+
+  function handleEndDateChange(val: string) {
+    setEndDate(val);
+    form.setValue("endTime", composeDatetime(val, endTime));
+  }
+
+  function handleEndTimeChange(val: string) {
+    setEndTime(val);
+    form.setValue("endTime", composeDatetime(endDate || startDate, val));
+  }
+
+  // When allDay toggled on, set times to midnight
+  function handleAllDayChange(checked: boolean) {
+    form.setValue("allDay", checked);
+    if (checked) {
+      form.setValue("startTime", composeDatetime(startDate, "00:00"));
+      form.setValue("endTime", composeDatetime(endDate || startDate, "23:59"));
+    } else {
+      form.setValue("startTime", composeDatetime(startDate, startTime));
+      form.setValue("endTime", composeDatetime(endDate || startDate, endTime));
+    }
+  }
 
   async function onSubmit(data: CreateEventInput) {
     try {
@@ -109,49 +213,119 @@ export function EventForm({ cases }: EventFormProps) {
 
             <div className="space-y-2">
               <Label>Link to Case (optional)</Label>
-              <Select
-                value={form.watch("caseId") || NONE_VALUE}
-                onValueChange={(val) =>
-                  form.setValue("caseId", val === NONE_VALUE ? undefined : val)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select case" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NONE_VALUE}>None</SelectItem>
-                  {cases.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.caseNumber} - {c.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={caseOpen} onOpenChange={setCaseOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={caseOpen}
+                    className="w-full justify-between font-normal"
+                  >
+                    {selectedCase
+                      ? `${selectedCase.caseNumber} - ${selectedCase.title.length > 25 ? selectedCase.title.slice(0, 25) + "..." : selectedCase.title}`
+                      : "Select case..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[320px] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search cases..." />
+                    <CommandList>
+                      <CommandEmpty>No cases found.</CommandEmpty>
+                      <CommandGroup>
+                        <CommandItem
+                          value="none"
+                          onSelect={() => {
+                            form.setValue("caseId", undefined);
+                            setCaseOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              !selectedCaseId ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          None
+                        </CommandItem>
+                        {cases.map((c) => (
+                          <CommandItem
+                            key={c.id}
+                            value={`${c.caseNumber} ${c.title}`}
+                            onSelect={() => {
+                              form.setValue("caseId", c.id);
+                              setCaseOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                selectedCaseId === c.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            <div className="min-w-0 flex-1">
+                              <span className="font-mono text-xs">{c.caseNumber}</span>
+                              <span className="ml-1.5 text-muted-foreground truncate">
+                                {c.title.length > 30 ? c.title.slice(0, 30) + "..." : c.title}
+                              </span>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
+            {/* Date inputs */}
             <div className="space-y-2">
-              <Label htmlFor="startTime">Start Time *</Label>
+              <Label htmlFor="startDate">Start Date *</Label>
               <Input
-                id="startTime"
-                type="datetime-local"
-                {...form.register("startTime")}
+                id="startDate"
+                type="date"
+                value={startDate}
+                onChange={(e) => handleStartDateChange(e.target.value)}
               />
-              {form.formState.errors.startTime && (
-                <p className="text-sm text-destructive">{form.formState.errors.startTime.message}</p>
-              )}
             </div>
 
+            {!allDay && (
+              <div className="space-y-2">
+                <Label htmlFor="startTimeInput">Start Time *</Label>
+                <Input
+                  id="startTimeInput"
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => handleStartTimeChange(e.target.value)}
+                />
+              </div>
+            )}
+
             <div className="space-y-2">
-              <Label htmlFor="endTime">End Time *</Label>
+              <Label htmlFor="endDate">End Date *</Label>
               <Input
-                id="endTime"
-                type="datetime-local"
-                {...form.register("endTime")}
+                id="endDate"
+                type="date"
+                value={endDate}
+                onChange={(e) => handleEndDateChange(e.target.value)}
               />
-              {form.formState.errors.endTime && (
-                <p className="text-sm text-destructive">{form.formState.errors.endTime.message}</p>
-              )}
             </div>
+
+            {!allDay && (
+              <div className="space-y-2">
+                <Label htmlFor="endTimeInput">End Time *</Label>
+                <Input
+                  id="endTimeInput"
+                  type="time"
+                  value={endTime}
+                  onChange={(e) => handleEndTimeChange(e.target.value)}
+                />
+              </div>
+            )}
+
+            {/* Hidden actual fields for form validation */}
+            <input type="hidden" {...form.register("startTime")} />
+            <input type="hidden" {...form.register("endTime")} />
 
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="location">Location</Label>
@@ -166,8 +340,8 @@ export function EventForm({ cases }: EventFormProps) {
             <div className="flex items-center gap-2">
               <Checkbox
                 id="allDay"
-                checked={form.watch("allDay")}
-                onCheckedChange={(checked) => form.setValue("allDay", checked === true)}
+                checked={allDay}
+                onCheckedChange={(checked) => handleAllDayChange(checked === true)}
               />
               <Label htmlFor="allDay" className="cursor-pointer">All Day Event</Label>
             </div>
@@ -181,6 +355,13 @@ export function EventForm({ cases }: EventFormProps) {
               <Label htmlFor="isCourtDate" className="cursor-pointer">Court Date</Label>
             </div>
           </div>
+
+          {form.formState.errors.startTime && (
+            <p className="text-sm text-destructive">{form.formState.errors.startTime.message}</p>
+          )}
+          {form.formState.errors.endTime && (
+            <p className="text-sm text-destructive">{form.formState.errors.endTime.message}</p>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>

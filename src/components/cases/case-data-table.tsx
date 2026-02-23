@@ -9,9 +9,18 @@ import {
   getFilteredRowModel,
   flexRender,
   type SortingState,
+  type ColumnFiltersState,
 } from "@tanstack/react-table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -20,7 +29,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { EmptyState } from "@/components/shared/empty-state";
 import { caseColumns, type CaseRow } from "./case-columns";
+import { Search, X, Briefcase } from "lucide-react";
+import { formatEnum } from "@/lib/utils/format-enum";
+
+const ALL_VALUE = "__all__";
+
+const STATUS_OPTIONS = ["open", "in_progress", "hearing", "resolved", "closed", "archived"];
+const PRIORITY_OPTIONS = ["low", "medium", "high", "urgent"];
 
 interface CaseDataTableProps {
   data: CaseRow[];
@@ -29,6 +46,7 @@ interface CaseDataTableProps {
 export function CaseDataTable({ data }: CaseDataTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
   const table = useReactTable({
     data,
@@ -39,18 +57,89 @@ export function CaseDataTable({ data }: CaseDataTableProps) {
     getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
-    state: { sorting, globalFilter },
+    onColumnFiltersChange: setColumnFilters,
+    state: { sorting, globalFilter, columnFilters },
   });
+
+  const statusFilter = columnFilters.find((f) => f.id === "status")?.value as string | undefined;
+  const priorityFilter = columnFilters.find((f) => f.id === "priority")?.value as string | undefined;
+  const hasFilters = globalFilter || statusFilter || priorityFilter;
+
+  function clearFilters() {
+    setGlobalFilter("");
+    setColumnFilters([]);
+  }
+
+  const pageIndex = table.getState().pagination.pageIndex;
+  const pageCount = table.getPageCount();
 
   return (
     <div className="space-y-4">
-      <Input
-        placeholder="Search cases..."
-        value={globalFilter}
-        onChange={(e) => setGlobalFilter(e.target.value)}
-        className="max-w-sm"
-      />
-      <div className="rounded-lg border shadow-sm">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative max-w-sm flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search cases..."
+            value={globalFilter}
+            onChange={(e) => setGlobalFilter(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <Select
+            value={statusFilter ?? ALL_VALUE}
+            onValueChange={(val) => {
+              setColumnFilters((prev) => {
+                const next = prev.filter((f) => f.id !== "status");
+                if (val !== ALL_VALUE) next.push({ id: "status", value: val });
+                return next;
+              });
+            }}
+          >
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="All Statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_VALUE}>All Statuses</SelectItem>
+              {STATUS_OPTIONS.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {formatEnum(s)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={priorityFilter ?? ALL_VALUE}
+            onValueChange={(val) => {
+              setColumnFilters((prev) => {
+                const next = prev.filter((f) => f.id !== "priority");
+                if (val !== ALL_VALUE) next.push({ id: "priority", value: val });
+                return next;
+              });
+            }}
+          >
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="All Priorities" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_VALUE}>All Priorities</SelectItem>
+              {PRIORITY_OPTIONS.map((p) => (
+                <SelectItem key={p} value={p}>
+                  {formatEnum(p)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {hasFilters && (
+            <Button variant="ghost" size="sm" onClick={clearFilters}>
+              <X className="mr-1 h-3.5 w-3.5" />
+              Clear
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <Card className="shadow-sm">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -81,14 +170,29 @@ export function CaseDataTable({ data }: CaseDataTableProps) {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={caseColumns.length} className="h-24 text-center">
-                  No cases found.
+                <TableCell colSpan={caseColumns.length} className="h-48">
+                  {hasFilters ? (
+                    <EmptyState
+                      icon={Search}
+                      title="No matching cases"
+                      description="Try adjusting your search or filter criteria."
+                    />
+                  ) : (
+                    <EmptyState
+                      icon={Briefcase}
+                      title="No cases yet"
+                      description="Create your first case to get started."
+                      actionLabel="New Case"
+                      actionHref="/cases/new"
+                    />
+                  )}
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
-      </div>
+      </Card>
+
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
           {table.getFilteredRowModel().rows.length} case(s) total
@@ -102,6 +206,11 @@ export function CaseDataTable({ data }: CaseDataTableProps) {
           >
             Previous
           </Button>
+          {pageCount > 0 && (
+            <span className="text-sm text-muted-foreground">
+              Page {pageIndex + 1} of {pageCount}
+            </span>
+          )}
           <Button
             variant="outline"
             size="sm"

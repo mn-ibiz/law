@@ -29,6 +29,13 @@
       "when": 1771939200000,
       "tag": "0003_full_text_search",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1771858457584,
+      "tag": "0004_huge_johnny_storm",
+      "breakpoints": true
     }
   ]
 }

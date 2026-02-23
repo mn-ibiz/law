@@ -47,6 +47,7 @@ export default async function EditCasePage({ params }: { params: Promise<{ id: s
         caseId={id}
         defaultValues={{
           title: caseData.title,
+          fileNumber: caseData.fileNumber ?? undefined,
           clientId: caseData.clientId,
           caseType: caseData.caseType,
           practiceArea: caseData.practiceArea ?? undefined,

@@ -29,6 +29,7 @@ export async function getCases(filters: CaseFilters = {}) {
       or(
         ilike(cases.title, `%${escaped}%`),
         ilike(cases.caseNumber, `%${escaped}%`),
+        ilike(cases.fileNumber, `%${escaped}%`),
         ilike(cases.opposingParty, `%${escaped}%`)
       )
     );
@@ -38,11 +39,13 @@ export async function getCases(filters: CaseFilters = {}) {
     .select({
       id: cases.id,
       caseNumber: cases.caseNumber,
+      fileNumber: cases.fileNumber,
       title: cases.title,
       status: cases.status,
       priority: cases.priority,
       caseType: cases.caseType,
       billingType: cases.billingType,
+      dateFiled: cases.dateFiled,
       clientName: sql<string>`COALESCE(${clients.firstName}, '') || ' ' || COALESCE(${clients.lastName}, '')`,
       clientId: cases.clientId,
       createdAt: cases.createdAt,
@@ -70,11 +73,28 @@ export async function getCases(filters: CaseFilters = {}) {
   };
 }
 
+export async function getCaseStats() {
+  const now = new Date();
+  const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const [result] = await db
+    .select({
+      total: sql<number>`count(*)::int`,
+      open: sql<number>`count(*) FILTER (WHERE ${cases.status} IN ('open', 'in_progress', 'hearing'))::int`,
+      highPriority: sql<number>`count(*) FILTER (WHERE ${cases.priority} IN ('high', 'urgent'))::int`,
+      closedThisMonth: sql<number>`count(*) FILTER (WHERE ${cases.status} = 'closed' AND ${cases.updatedAt} >= ${firstOfMonth.toISOString()})::int`,
+    })
+    .from(cases);
+
+  return result ?? { total: 0, open: 0, highPriority: 0, closedThisMonth: 0 };
+}
+
 export const getCaseById = cache(async (id: string) => {
   const result = await db
     .select({
       id: cases.id,
       caseNumber: cases.caseNumber,
+      fileNumber: cases.fileNumber,
       title: cases.title,
       status: cases.status,
       priority: cases.priority,
