@@ -57,22 +57,16 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
         </p>
       </div>
 
-      {/* Two-column layout: main content + sticky sidebar */}
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <div className="min-w-0">
-          <CaseDetailTabs
-            caseData={caseData}
-            assignments={assignments}
-            notes={notes}
-            timeline={timeline}
-            parties={parties}
-            documents={documents}
-          />
-        </div>
-        <div className="hidden lg:block">
-          <CaseSummarySidebar caseData={caseData} assignments={assignments} />
-        </div>
-      </div>
+      {/* Tabs row spans full width; content + sidebar are aligned below */}
+      <CaseDetailTabs
+        caseData={caseData}
+        assignments={assignments}
+        notes={notes}
+        timeline={timeline}
+        parties={parties}
+        documents={documents}
+        sidebar={<CaseSummarySidebar caseData={caseData} assignments={assignments} />}
+      />
     </div>
   );
 }

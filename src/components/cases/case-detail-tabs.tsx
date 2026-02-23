@@ -91,6 +91,7 @@ interface CaseDetailTabsProps {
   timeline: TimelineEvent[];
   parties: Party[];
   documents: Doc[];
+  sidebar?: React.ReactNode;
 }
 
 function TabCount({ count }: { count: number }) {
@@ -127,9 +128,11 @@ export function CaseDetailTabs({
   timeline,
   parties,
   documents,
+  sidebar,
 }: CaseDetailTabsProps) {
   return (
-    <Tabs defaultValue="details" className="space-y-4">
+    <Tabs defaultValue="details">
+      {/* Tab bar spans full width */}
       <TabsList>
         <TabsTrigger value="details">
           <Scale className="mr-1.5 h-3.5 w-3.5" />
@@ -160,8 +163,12 @@ export function CaseDetailTabs({
         </TabsTrigger>
       </TabsList>
 
+      {/* Two-column layout: tab content + sidebar start at same level */}
+      <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_320px]">
+        <div className="min-w-0">
+
       {/* ── Details ── */}
-      <TabsContent value="details">
+      <TabsContent value="details" className="mt-0">
         <Card>
           <CardContent className="p-6 space-y-6">
             {/* Case Info */}
@@ -233,12 +240,12 @@ export function CaseDetailTabs({
       </TabsContent>
 
       {/* ── Documents ── */}
-      <TabsContent value="documents">
+      <TabsContent value="documents" className="mt-0">
         <CaseDocumentsTab caseId={caseData.id} documents={documents} />
       </TabsContent>
 
       {/* ── Assignments ── */}
-      <TabsContent value="assignments">
+      <TabsContent value="assignments" className="mt-0">
         {assignments.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">
             No attorneys assigned.
@@ -270,7 +277,7 @@ export function CaseDetailTabs({
       </TabsContent>
 
       {/* ── Parties ── */}
-      <TabsContent value="parties">
+      <TabsContent value="parties" className="mt-0">
         {parties.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">
             No parties added.
@@ -298,7 +305,7 @@ export function CaseDetailTabs({
       </TabsContent>
 
       {/* ── Notes ── */}
-      <TabsContent value="notes">
+      <TabsContent value="notes" className="mt-0">
         {notes.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">
             No notes added.
@@ -335,7 +342,7 @@ export function CaseDetailTabs({
       </TabsContent>
 
       {/* ── Timeline ── */}
-      <TabsContent value="timeline">
+      <TabsContent value="timeline" className="mt-0">
         {timeline.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">
             No activity recorded.
@@ -378,6 +385,16 @@ export function CaseDetailTabs({
           </div>
         )}
       </TabsContent>
+
+        </div>{/* end left column */}
+
+        {/* Sidebar — aligned with tab content */}
+        {sidebar && (
+          <div className="hidden lg:block">
+            {sidebar}
+          </div>
+        )}
+      </div>{/* end grid */}
     </Tabs>
   );
 }
