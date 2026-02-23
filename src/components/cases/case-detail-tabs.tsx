@@ -1,20 +1,14 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Separator } from "@/components/ui/separator";
 import { formatKES } from "@/lib/utils/format";
 import { formatEnum } from "@/lib/utils/format-enum";
-import { Clock, Users, MessageSquare } from "lucide-react";
+import { Clock, Users, MessageSquare, FileText, Scale } from "lucide-react";
 import { APP_LOCALE } from "@/lib/constants/locale";
+import { CaseDocumentsTab } from "./case-documents-tab";
 
 interface CaseDetail {
   id: string;
@@ -77,286 +71,312 @@ interface Party {
   phone: string | null;
 }
 
+interface Doc {
+  id: string;
+  title: string;
+  category: string;
+  status: string;
+  fileName: string;
+  fileSize: number | null;
+  fileUrl: string;
+  mimeType: string | null;
+  createdAt: Date;
+  uploadedByName: string | null;
+}
+
 interface CaseDetailTabsProps {
   caseData: CaseDetail;
   assignments: Assignment[];
   notes: Note[];
   timeline: TimelineEvent[];
   parties: Party[];
+  documents: Doc[];
 }
 
-export function CaseDetailTabs({ caseData, assignments, notes, timeline, parties }: CaseDetailTabsProps) {
+function TabCount({ count }: { count: number }) {
+  if (count === 0) return null;
+  return (
+    <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-muted px-1.5 text-[10px] font-semibold tabular-nums">
+      {count}
+    </span>
+  );
+}
+
+function DL({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-0.5">
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd className="text-sm font-medium">{children}</dd>
+    </div>
+  );
+}
+
+const timelineEventColors: Record<string, string> = {
+  status_change: "bg-blue-500",
+  note_added: "bg-emerald-500",
+  assignment: "bg-purple-500",
+  filing: "bg-amber-500",
+  hearing: "bg-rose-500",
+  document: "bg-cyan-500",
+};
+
+export function CaseDetailTabs({
+  caseData,
+  assignments,
+  notes,
+  timeline,
+  parties,
+  documents,
+}: CaseDetailTabsProps) {
   return (
     <Tabs defaultValue="details" className="space-y-4">
       <TabsList>
-        <TabsTrigger value="details">Details</TabsTrigger>
-        <TabsTrigger value="assignments">Assignments</TabsTrigger>
-        <TabsTrigger value="parties">Parties</TabsTrigger>
-        <TabsTrigger value="notes">Notes</TabsTrigger>
-        <TabsTrigger value="timeline">Timeline</TabsTrigger>
+        <TabsTrigger value="details">
+          <Scale className="mr-1.5 h-3.5 w-3.5" />
+          Details
+        </TabsTrigger>
+        <TabsTrigger value="documents">
+          <FileText className="mr-1.5 h-3.5 w-3.5" />
+          Documents
+          <TabCount count={documents.length} />
+        </TabsTrigger>
+        <TabsTrigger value="assignments">
+          <Users className="mr-1.5 h-3.5 w-3.5" />
+          Assignments
+          <TabCount count={assignments.length} />
+        </TabsTrigger>
+        <TabsTrigger value="parties">
+          Parties
+          <TabCount count={parties.length} />
+        </TabsTrigger>
+        <TabsTrigger value="notes">
+          <MessageSquare className="mr-1.5 h-3.5 w-3.5" />
+          Notes
+          <TabCount count={notes.length} />
+        </TabsTrigger>
+        <TabsTrigger value="timeline">
+          <Clock className="mr-1.5 h-3.5 w-3.5" />
+          Timeline
+        </TabsTrigger>
       </TabsList>
 
+      {/* ── Details ── */}
       <TabsContent value="details">
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Case Information</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <dl className="grid gap-3">
-                <div>
-                  <dt className="text-sm text-muted-foreground">Case Type</dt>
-                  <dd className="font-medium capitalize">{formatEnum(caseData.caseType)}</dd>
-                </div>
+        <Card>
+          <CardContent className="p-6 space-y-6">
+            {/* Case Info */}
+            <div>
+              <h3 className="text-sm font-semibold mb-3">Case Information</h3>
+              <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <DL label="Case Type">{formatEnum(caseData.caseType)}</DL>
                 {caseData.practiceArea && (
-                  <div>
-                    <dt className="text-sm text-muted-foreground">Practice Area</dt>
-                    <dd className="font-medium">{caseData.practiceArea}</dd>
-                  </div>
-                )}
-                {caseData.description && (
-                  <div>
-                    <dt className="text-sm text-muted-foreground">Description</dt>
-                    <dd className="font-medium whitespace-pre-wrap">{caseData.description}</dd>
-                  </div>
+                  <DL label="Practice Area">{caseData.practiceArea}</DL>
                 )}
                 {caseData.dateFiled && (
-                  <div>
-                    <dt className="text-sm text-muted-foreground">Date Filed</dt>
-                    <dd className="font-medium">
-                      {new Date(caseData.dateFiled).toLocaleDateString(APP_LOCALE)}
-                    </dd>
-                  </div>
+                  <DL label="Date Filed">
+                    {new Date(caseData.dateFiled).toLocaleDateString(APP_LOCALE)}
+                  </DL>
                 )}
                 {caseData.statuteOfLimitations && (
-                  <div>
-                    <dt className="text-sm text-muted-foreground">Statute of Limitations</dt>
-                    <dd className="font-medium">
-                      {new Date(caseData.statuteOfLimitations).toLocaleDateString(APP_LOCALE)}
-                    </dd>
-                  </div>
+                  <DL label="Statute of Limitations">
+                    {new Date(caseData.statuteOfLimitations).toLocaleDateString(APP_LOCALE)}
+                  </DL>
                 )}
                 {caseData.estimatedValue && (
-                  <div>
-                    <dt className="text-sm text-muted-foreground">Estimated Value</dt>
-                    <dd className="font-medium">{formatKES(Number(caseData.estimatedValue))}</dd>
-                  </div>
+                  <DL label="Estimated Value">{formatKES(Number(caseData.estimatedValue))}</DL>
                 )}
               </dl>
-            </CardContent>
-          </Card>
+              {caseData.description && (
+                <div className="mt-4">
+                  <dt className="text-xs text-muted-foreground mb-1">Description</dt>
+                  <dd className="text-sm whitespace-pre-wrap leading-relaxed">
+                    {caseData.description}
+                  </dd>
+                </div>
+              )}
+            </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Court & Opposition</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <dl className="grid gap-3">
-                <div>
-                  <dt className="text-sm text-muted-foreground">Court</dt>
-                  <dd className="font-medium">{caseData.courtName ?? "—"}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-muted-foreground">Court Case #</dt>
-                  <dd className="font-medium">{caseData.courtCaseNumber ?? "—"}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-muted-foreground">Judge</dt>
-                  <dd className="font-medium">{caseData.judge ?? "—"}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-muted-foreground">Opposing Party</dt>
-                  <dd className="font-medium">{caseData.opposingParty ?? "—"}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-muted-foreground">Opposing Counsel</dt>
-                  <dd className="font-medium">{caseData.opposingCounsel ?? "—"}</dd>
-                </div>
+            <Separator />
+
+            {/* Court & Opposition */}
+            <div>
+              <h3 className="text-sm font-semibold mb-3">Court &amp; Opposition</h3>
+              <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <DL label="Court">{caseData.courtName ?? "—"}</DL>
+                <DL label="Court Case #">{caseData.courtCaseNumber ?? "—"}</DL>
+                <DL label="Judge">{caseData.judge ?? "—"}</DL>
+                <DL label="Opposing Party">{caseData.opposingParty ?? "—"}</DL>
+                <DL label="Opposing Counsel">{caseData.opposingCounsel ?? "—"}</DL>
               </dl>
-            </CardContent>
-          </Card>
+            </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Billing</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <dl className="grid gap-3">
-                <div>
-                  <dt className="text-sm text-muted-foreground">Billing Type</dt>
-                  <dd className="font-medium capitalize">{formatEnum(caseData.billingType)}</dd>
-                </div>
+            <Separator />
+
+            {/* Billing */}
+            <div>
+              <h3 className="text-sm font-semibold mb-3">Billing</h3>
+              <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <DL label="Billing Type">{formatEnum(caseData.billingType)}</DL>
                 {caseData.hourlyRate && (
-                  <div>
-                    <dt className="text-sm text-muted-foreground">Hourly Rate</dt>
-                    <dd className="font-medium">{formatKES(Number(caseData.hourlyRate))}/hr</dd>
-                  </div>
+                  <DL label="Hourly Rate">{formatKES(Number(caseData.hourlyRate))}/hr</DL>
                 )}
                 {caseData.flatFeeAmount && (
-                  <div>
-                    <dt className="text-sm text-muted-foreground">Flat Fee</dt>
-                    <dd className="font-medium">{formatKES(Number(caseData.flatFeeAmount))}</dd>
-                  </div>
+                  <DL label="Flat Fee">{formatKES(Number(caseData.flatFeeAmount))}</DL>
                 )}
                 {caseData.contingencyPercentage && (
-                  <div>
-                    <dt className="text-sm text-muted-foreground">Contingency</dt>
-                    <dd className="font-medium">{caseData.contingencyPercentage}%</dd>
-                  </div>
+                  <DL label="Contingency">{caseData.contingencyPercentage}%</DL>
                 )}
               </dl>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
       </TabsContent>
 
+      {/* ── Documents ── */}
+      <TabsContent value="documents">
+        <CaseDocumentsTab caseId={caseData.id} documents={documents} />
+      </TabsContent>
+
+      {/* ── Assignments ── */}
       <TabsContent value="assignments">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Case Assignments
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {assignments.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No attorneys assigned.</p>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Attorney</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Assigned</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {assignments.map((a) => (
-                    <TableRow key={a.id}>
-                      <TableCell className="font-medium">{a.userName}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="capitalize">
-                          {formatEnum(a.role)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
+        {assignments.length === 0 ? (
+          <p className="py-8 text-center text-sm text-muted-foreground">
+            No attorneys assigned.
+          </p>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {assignments.map((a) => (
+              <Card key={a.id}>
+                <CardContent className="flex items-center gap-3 p-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+                    {(a.userName ?? "?").charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate">{a.userName}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <Badge variant="outline" className="text-[10px]">
+                        {formatEnum(a.role)}
+                      </Badge>
+                      <span className="text-[10px] text-muted-foreground">
                         {new Date(a.assignedAt).toLocaleDateString(APP_LOCALE)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </TabsContent>
 
+      {/* ── Parties ── */}
       <TabsContent value="parties">
-        <Card>
-          <CardHeader>
-            <CardTitle>Case Parties</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {parties.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No parties added.</p>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Phone</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {parties.map((p) => (
-                    <TableRow key={p.id}>
-                      <TableCell className="font-medium">{p.name}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="capitalize">
-                          {formatEnum(p.role)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{p.email ?? "—"}</TableCell>
-                      <TableCell>{p.phone ?? "—"}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+        {parties.length === 0 ? (
+          <p className="py-8 text-center text-sm text-muted-foreground">
+            No parties added.
+          </p>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {parties.map((p) => (
+              <Card key={p.id}>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <p className="text-sm font-medium">{p.name}</p>
+                    <Badge variant="outline" className="text-[10px]">
+                      {formatEnum(p.role)}
+                    </Badge>
+                  </div>
+                  <div className="space-y-0.5 text-xs text-muted-foreground">
+                    {p.email && <p>{p.email}</p>}
+                    {p.phone && <p>{p.phone}</p>}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </TabsContent>
 
+      {/* ── Notes ── */}
       <TabsContent value="notes">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" />
-              Case Notes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {notes.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No notes added.</p>
-            ) : (
-              <div className="space-y-4">
-                {notes.map((n) => (
-                  <div key={n.id} className="rounded-md border p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">{n.authorName}</span>
-                      <div className="flex items-center gap-2">
-                        {n.isPrivate && <Badge variant="secondary">Private</Badge>}
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(n.createdAt).toLocaleString(APP_LOCALE)}
-                        </span>
-                      </div>
+        {notes.length === 0 ? (
+          <p className="py-8 text-center text-sm text-muted-foreground">
+            No notes added.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {notes.map((n) => (
+              <Card key={n.id}>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
+                      {(n.authorName ?? "?").charAt(0).toUpperCase()}
                     </div>
-                    <p className="text-sm whitespace-pre-wrap">{n.content}</p>
+                    <span className="text-sm font-medium">{n.authorName}</span>
+                    <div className="ml-auto flex items-center gap-2">
+                      {n.isPrivate && (
+                        <Badge variant="secondary" className="text-[10px]">
+                          Private
+                        </Badge>
+                      )}
+                      <span className="text-[10px] text-muted-foreground">
+                        {new Date(n.createdAt).toLocaleString(APP_LOCALE)}
+                      </span>
+                    </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed pl-9">
+                    {n.content}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </TabsContent>
 
+      {/* ── Timeline ── */}
       <TabsContent value="timeline">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Activity Timeline
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {timeline.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No activity recorded.</p>
-            ) : (
-              <div className="space-y-4">
-                {timeline.map((e) => (
-                  <div key={e.id} className="flex gap-4 border-l-2 pl-4 pb-4">
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{e.title}</p>
-                      {e.description && (
-                        <p className="text-sm text-muted-foreground">{e.description}</p>
-                      )}
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(e.createdAt).toLocaleString(APP_LOCALE)}
+        {timeline.length === 0 ? (
+          <p className="py-8 text-center text-sm text-muted-foreground">
+            No activity recorded.
+          </p>
+        ) : (
+          <div className="relative ml-3 border-l border-border pl-6 space-y-6">
+            {timeline.map((e) => {
+              const dotColor =
+                timelineEventColors[e.eventType] ?? "bg-muted-foreground";
+              return (
+                <div key={e.id} className="relative">
+                  {/* Dot */}
+                  <div
+                    className={`absolute -left-[calc(1.5rem+5px)] top-1.5 h-2.5 w-2.5 rounded-full ring-2 ring-background ${dotColor}`}
+                  />
+                  <div>
+                    <p className="text-sm font-medium">{e.title}</p>
+                    {e.description && (
+                      <p className="text-sm text-muted-foreground mt-0.5">
+                        {e.description}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-[10px] text-muted-foreground">
+                        {new Date(e.createdAt).toLocaleString(APP_LOCALE)}
+                      </span>
+                      {e.userName && (
+                        <span className="text-[10px] text-muted-foreground">
+                          by {e.userName}
                         </span>
-                        {e.userName && (
-                          <span className="text-xs text-muted-foreground">by {e.userName}</span>
-                        )}
-                      </div>
+                      )}
+                      <Badge variant="outline" className="text-[10px]">
+                        {formatEnum(e.eventType)}
+                      </Badge>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </TabsContent>
     </Tabs>
   );

@@ -30,6 +30,8 @@ export async function getDocuments(filters: DocFilters = {}) {
       status: documents.status,
       fileName: documents.fileName,
       fileSize: documents.fileSize,
+      fileUrl: documents.fileUrl,
+      mimeType: documents.mimeType,
       createdAt: documents.createdAt,
       caseNumber: cases.caseNumber,
       uploadedByName: users.name,

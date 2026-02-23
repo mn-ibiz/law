@@ -22,7 +22,7 @@ export const createDocumentRecordSchema = z.object({
   clientId: z.string().uuid().optional(),
   category: z.enum(["pleading", "correspondence", "contract", "evidence", "court_order", "filing", "template", "other"]),
   description: z.string().max(5000).optional(),
-  fileUrl: z.string().url().max(2000),
+  fileUrl: z.string().min(1).max(2000),
   fileName: z.string().min(1).max(255),
   fileSize: z.number().positive().optional(),
   mimeType: z.string().max(100).optional(),
