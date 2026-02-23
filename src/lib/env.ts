@@ -19,6 +19,14 @@ const envSchema = z.object({
     ),
   AUTH_URL: z.string().url().optional(),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+  ICAL_SECRET: z.string().min(16).optional(),
+  // Email (Resend)
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.string().email().optional(),
+  // SMS (Africa's Talking)
+  AT_API_KEY: z.string().optional(),
+  AT_USERNAME: z.string().optional(),
+  AT_SENDER_ID: z.string().optional(),
 });
 
 function validateEnv() {

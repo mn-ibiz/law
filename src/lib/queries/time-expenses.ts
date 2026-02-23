@@ -46,6 +46,27 @@ export async function getWeeklyTimesheet(userId: string, weekStart: Date) {
   return getTimeEntries({ userId, startDate: weekStart, endDate: weekEnd });
 }
 
+export async function getWeeklyTimeEntries(userId: string, weekStart: string, weekEnd: string) {
+  return db
+    .select({
+      id: timeEntries.id,
+      caseId: timeEntries.caseId,
+      date: timeEntries.date,
+      hours: timeEntries.hours,
+      description: timeEntries.description,
+      isBillable: timeEntries.isBillable,
+    })
+    .from(timeEntries)
+    .where(
+      and(
+        eq(timeEntries.userId, userId),
+        sql`${timeEntries.date} >= ${weekStart}::timestamptz`,
+        sql`${timeEntries.date} <= ${weekEnd}::timestamptz`
+      )
+    )
+    .orderBy(timeEntries.date);
+}
+
 export async function getExpenses(filters: { userId?: string; caseId?: string } = {}) {
   const conditions = [];
   if (filters.userId) conditions.push(eq(expenses.userId, filters.userId));

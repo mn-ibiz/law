@@ -67,3 +67,22 @@ export async function getDocumentVersions(documentId: string) {
     .where(eq(documentVersions.documentId, documentId))
     .orderBy(desc(documentVersions.versionNumber));
 }
+
+export async function getPendingReviewDocuments() {
+  return db
+    .select({
+      id: documents.id,
+      title: documents.title,
+      fileName: documents.fileName,
+      fileUrl: documents.fileUrl,
+      category: documents.category,
+      description: documents.description,
+      reviewStatus: documents.reviewStatus,
+      createdAt: documents.createdAt,
+      uploaderName: users.name,
+    })
+    .from(documents)
+    .innerJoin(users, eq(documents.uploadedBy, users.id))
+    .where(eq(documents.reviewStatus, "pending_review"))
+    .orderBy(desc(documents.createdAt));
+}

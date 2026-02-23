@@ -10,6 +10,8 @@ import {
 import { StatCard } from "@/components/shared/stat-card";
 import { RevenueChart } from "./charts/revenue-chart";
 import { CaseStatusChart } from "./charts/case-status-chart";
+import { ARAgingChart } from "./charts/ar-aging-chart";
+import { KPICards } from "./widgets/kpi-cards";
 import { RecentCasesTable } from "./widgets/recent-cases-table";
 import { UpcomingDeadlines } from "./widgets/upcoming-deadlines";
 import { OverdueInvoicesTable } from "./widgets/overdue-invoices-table";
@@ -24,58 +26,82 @@ import {
   getUpcomingDeadlines,
   getOverdueInvoices,
 } from "@/lib/queries/dashboard-charts";
+import { getUtilizationRate, getRealizationRate, getCollectionRate, getARAgingBuckets } from "@/lib/queries/kpi";
 
 async function AdminStats() {
   const stats = await getAdminDashboardStats();
 
   return (
-    <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
       <StatCard
         label="Active Cases"
         value={formatNumber(stats.activeCases)}
         icon={Briefcase}
+        color="blue"
       />
       <StatCard
         label="Total Clients"
         value={formatNumber(stats.totalClients)}
         icon={Users}
+        color="purple"
       />
       <StatCard
         label="Revenue This Month"
         value={formatKES(stats.revenueThisMonth)}
         icon={Banknote}
+        color="emerald"
       />
       <StatCard
         label="Outstanding Invoices"
         value={formatKES(stats.outstandingInvoices)}
         icon={FileWarning}
+        color="amber"
       />
       <StatCard
         label="Active Attorneys"
         value={formatNumber(stats.activeAttorneys)}
         icon={UserCheck}
+        color="cyan"
       />
       <StatCard
         label="Overdue Deadlines"
         value={formatNumber(stats.overdueDeadlines)}
         icon={AlertTriangle}
         description={stats.overdueDeadlines > 0 ? "Requires attention" : "All on track"}
+        color="rose"
       />
     </div>
   );
 }
 
+async function AdminKPIs() {
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const [utilization, realization, collection] = await Promise.all([
+    getUtilizationRate(startOfMonth, now),
+    getRealizationRate(startOfMonth, now),
+    getCollectionRate(startOfMonth, now),
+  ]);
+
+  return <KPICards utilization={utilization} realization={realization} collection={collection} />;
+}
+
 async function AdminCharts() {
-  const [revenue, caseStatus] = await Promise.all([
+  const [revenue, caseStatus, arAging] = await Promise.all([
     getMonthlyRevenue(),
     getCaseStatusDistribution(),
+    getARAgingBuckets(),
   ]);
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      <RevenueChart data={revenue} />
-      <CaseStatusChart data={caseStatus} />
-    </div>
+    <>
+      <div className="grid gap-4 md:grid-cols-2">
+        <RevenueChart data={revenue} />
+        <CaseStatusChart data={caseStatus} />
+      </div>
+      <ARAgingChart data={arAging} />
+    </>
   );
 }
 
@@ -102,6 +128,9 @@ export function AdminDashboard() {
     <div className="space-y-6">
       <Suspense fallback={<DashboardSkeleton cards={6} />}>
         <AdminStats />
+      </Suspense>
+      <Suspense fallback={<DashboardSkeleton cards={3} />}>
+        <AdminKPIs />
       </Suspense>
       <Suspense fallback={<DashboardSkeleton cards={0} />}>
         <AdminCharts />

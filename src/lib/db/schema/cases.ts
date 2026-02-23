@@ -3,6 +3,7 @@ import { relations } from "drizzle-orm";
 import { caseStatus, casePriority, billingType, casePartyRole, assignmentRole } from "./enums";
 import { users } from "./auth";
 import { clients } from "./clients";
+import { practiceAreas } from "./settings";
 
 export const cases = pgTable(
   "cases",
@@ -32,6 +33,7 @@ export const cases = pgTable(
     description: text("description"),
     notes: text("notes"),
     pipelineStageId: uuid("pipeline_stage_id").references(() => pipelineStages.id, { onDelete: "set null" }),
+    stageEnteredAt: timestamp("stage_entered_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
@@ -112,6 +114,41 @@ export const pipelineStages = pgTable("pipeline_stages", {
   order: integer("order").notNull(),
   color: text("color"),
   isDefault: boolean("is_default").notNull().default(false),
+  practiceAreaId: uuid("practice_area_id").references(() => practiceAreas.id, { onDelete: "cascade" }),
+  maxDurationDays: integer("max_duration_days"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const caseStageHistory = pgTable(
+  "case_stage_history",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    caseId: uuid("case_id")
+      .notNull()
+      .references(() => cases.id, { onDelete: "cascade" }),
+    stageId: uuid("stage_id")
+      .notNull()
+      .references(() => pipelineStages.id, { onDelete: "cascade" }),
+    enteredAt: timestamp("entered_at", { withTimezone: true }).notNull(),
+    exitedAt: timestamp("exited_at", { withTimezone: true }),
+    movedBy: uuid("moved_by").references(() => users.id, { onDelete: "set null" }),
+  },
+  (table) => [
+    index("case_stage_history_case_id_idx").on(table.caseId),
+    index("case_stage_history_stage_id_idx").on(table.stageId),
+    index("case_stage_history_entered_at_idx").on(table.enteredAt),
+  ]
+);
+
+export const stageAutomations = pgTable("stage_automations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  stageId: uuid("stage_id")
+    .notNull()
+    .references(() => pipelineStages.id, { onDelete: "cascade" }),
+  triggerOn: text("trigger_on").notNull(), // "enter" | "exit"
+  actionType: text("action_type").notNull(), // "send_notification" | "create_task" | "update_status"
+  actionConfig: text("action_config"), // JSON string
+  isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
@@ -125,6 +162,7 @@ export const casesRelations = relations(cases, ({ one, many }) => ({
   notes: many(caseNotes),
   timeline: many(caseTimeline),
   parties: many(caseParties),
+  stageHistory: many(caseStageHistory),
 }));
 
 export const caseAssignmentsRelations = relations(caseAssignments, ({ one }) => ({
@@ -144,4 +182,23 @@ export const caseTimelineRelations = relations(caseTimeline, ({ one }) => ({
 
 export const casePartiesRelations = relations(caseParties, ({ one }) => ({
   case: one(cases, { fields: [caseParties.caseId], references: [cases.id] }),
+}));
+
+export const pipelineStagesRelations = relations(pipelineStages, ({ one, many }) => ({
+  practiceArea: one(practiceAreas, {
+    fields: [pipelineStages.practiceAreaId],
+    references: [practiceAreas.id],
+  }),
+  automations: many(stageAutomations),
+  history: many(caseStageHistory),
+}));
+
+export const caseStageHistoryRelations = relations(caseStageHistory, ({ one }) => ({
+  case: one(cases, { fields: [caseStageHistory.caseId], references: [cases.id] }),
+  stage: one(pipelineStages, { fields: [caseStageHistory.stageId], references: [pipelineStages.id] }),
+  movedByUser: one(users, { fields: [caseStageHistory.movedBy], references: [users.id] }),
+}));
+
+export const stageAutomationsRelations = relations(stageAutomations, ({ one }) => ({
+  stage: one(pipelineStages, { fields: [stageAutomations.stageId], references: [pipelineStages.id] }),
 }));

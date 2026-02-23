@@ -10,9 +10,11 @@ import {
   emailTemplates,
   smsTemplates,
 } from "@/lib/db/schema/settings";
+import { users } from "@/lib/db/schema/auth";
 import { auth } from "@/lib/auth/auth";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import {
   practiceAreaSchema,
   billingRateSchema,
@@ -36,6 +38,34 @@ export async function createPracticeArea(data: unknown) {
     const result = await db.insert(practiceAreas).values(validated.data).returning();
     revalidatePath("/settings/practice-areas");
     return { data: result[0] };
+  });
+}
+
+export async function updatePracticeArea(id: string, data: unknown) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || session.user.role !== "admin") return { error: "Unauthorized" };
+
+    const validated = practiceAreaSchema.safeParse(data);
+    if (!validated.success) return { error: validated.error.issues[0].message };
+
+    await db.update(practiceAreas).set(validated.data).where(eq(practiceAreas.id, id));
+    revalidatePath("/settings/practice-areas");
+    return { success: true };
+  });
+}
+
+export async function togglePracticeAreaActive(id: string) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || session.user.role !== "admin") return { error: "Unauthorized" };
+
+    const existing = await db.select({ isActive: practiceAreas.isActive }).from(practiceAreas).where(eq(practiceAreas.id, id)).limit(1);
+    if (!existing[0]) return { error: "Practice area not found" };
+
+    await db.update(practiceAreas).set({ isActive: !existing[0].isActive }).where(eq(practiceAreas.id, id));
+    revalidatePath("/settings/practice-areas");
+    return { success: true };
   });
 }
 
@@ -243,6 +273,49 @@ export async function deleteSmsTemplate(id: string) {
 
     await db.delete(smsTemplates).where(eq(smsTemplates.id, id));
     revalidatePath("/settings");
+    return { success: true };
+  });
+}
+
+// --- User Management ---
+const changeUserRoleSchema = z.object({
+  role: z.enum(["admin", "attorney", "client"]),
+});
+
+export async function changeUserRole(userId: string, data: unknown) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || session.user.role !== "admin") return { error: "Unauthorized" };
+
+    const validated = changeUserRoleSchema.safeParse(data);
+    if (!validated.success) return { error: validated.error.issues[0].message };
+
+    // Prevent admin from changing their own role
+    if (userId === session.user.id) {
+      return { error: "Cannot change your own role" };
+    }
+
+    await db.update(users).set({ role: validated.data.role, updatedAt: new Date() }).where(eq(users.id, userId));
+    revalidatePath("/settings/users");
+    return { success: true };
+  });
+}
+
+export async function toggleUserActive(userId: string) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || session.user.role !== "admin") return { error: "Unauthorized" };
+
+    // Prevent admin from deactivating themselves
+    if (userId === session.user.id) {
+      return { error: "Cannot deactivate your own account" };
+    }
+
+    const existing = await db.select({ isActive: users.isActive }).from(users).where(eq(users.id, userId)).limit(1);
+    if (!existing[0]) return { error: "User not found" };
+
+    await db.update(users).set({ isActive: !existing[0].isActive, updatedAt: new Date() }).where(eq(users.id, userId));
+    revalidatePath("/settings/users");
     return { success: true };
   });
 }

@@ -9,6 +9,7 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { safeAction } from "@/lib/utils/safe-action";
 import { validateId } from "@/lib/utils/validate-id";
+import { z } from "zod";
 
 export async function createClient(data: unknown) {
   return safeAction(async () => {
@@ -22,13 +23,14 @@ export async function createClient(data: unknown) {
       return { error: validated.error.issues[0].message };
     }
 
-    const { dateOfBirth, ...rest } = validated.data;
+    const { dateOfBirth, followUpDate, ...rest } = validated.data;
 
     const result = await db
       .insert(clients)
       .values({
         ...rest,
         dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
+        followUpDate: followUpDate ? new Date(followUpDate) : undefined,
       })
       .returning();
 
@@ -57,13 +59,14 @@ export async function updateClient(id: string, data: unknown) {
       return { error: validated.error.issues[0].message };
     }
 
-    const { dateOfBirth, ...rest } = validated.data;
+    const { dateOfBirth, followUpDate, ...rest } = validated.data;
 
     const result = await db
       .update(clients)
       .set({
         ...rest,
         dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
+        followUpDate: followUpDate ? new Date(followUpDate) : undefined,
         updatedAt: new Date(),
       })
       .where(eq(clients.id, id))
@@ -136,5 +139,29 @@ export async function addContactLog(clientId: string, data: unknown) {
 
     revalidatePath(`/clients/${clientId}`);
     return { data: result[0] };
+  });
+}
+
+export async function updateClientPipelineStage(clientId: string, status: string) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    const statusSchema = z.enum(["active", "inactive", "prospective"]);
+    const parsed = statusSchema.safeParse(status);
+    if (!parsed.success) return { error: "Invalid status" };
+
+    if (!validateId(clientId)) return { error: "Invalid ID" };
+
+    await db
+      .update(clients)
+      .set({ status: parsed.data, updatedAt: new Date() })
+      .where(eq(clients.id, clientId));
+
+    revalidatePath("/clients");
+    revalidatePath("/clients/pipeline");
+    return { success: true };
   });
 }

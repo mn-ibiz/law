@@ -24,6 +24,12 @@ export const createClientSchema = z.object({
   state: z.string().max(255).optional(),
   zipCode: z.string().max(20).optional(),
   notes: z.string().max(5000).optional(),
+  isPep: z.boolean().optional(),
+  pepDetails: z.string().max(5000).optional(),
+  leadSource: z.enum(["referral", "website", "walk_in", "advertising", "social_media", "event", "other"]).optional(),
+  leadScore: z.number().int().min(0).max(100).optional(),
+  followUpDate: z.string().optional(),
+  lostReason: z.string().max(5000).optional(),
 });
 
 export const updateClientSchema = createClientSchema.partial();

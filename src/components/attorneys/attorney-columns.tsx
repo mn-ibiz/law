@@ -2,7 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
+import { ActiveBadge } from "@/components/shared/status-badges";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -49,7 +49,7 @@ export const attorneyColumns: ColumnDef<AttorneyRow>[] = [
   {
     accessorKey: "department",
     header: "Department",
-    cell: ({ row }) => row.getValue("department") ?? "—",
+    cell: ({ row }) => row.getValue("department") ?? "\u2014",
   },
   {
     accessorKey: "barNumber",
@@ -58,15 +58,13 @@ export const attorneyColumns: ColumnDef<AttorneyRow>[] = [
   {
     accessorKey: "lskNumber",
     header: "LSK Number",
-    cell: ({ row }) => row.getValue("lskNumber") ?? "—",
+    cell: ({ row }) => row.getValue("lskNumber") ?? "\u2014",
   },
   {
     accessorKey: "isActive",
     header: "Status",
     cell: ({ row }) => (
-      <Badge variant={row.getValue("isActive") ? "default" : "secondary"}>
-        {row.getValue("isActive") ? "Active" : "Inactive"}
-      </Badge>
+      <ActiveBadge active={row.getValue("isActive")} />
     ),
   },
   {
@@ -74,7 +72,7 @@ export const attorneyColumns: ColumnDef<AttorneyRow>[] = [
     header: "Rate",
     cell: ({ row }) => {
       const rate = row.getValue("hourlyRate") as string | null;
-      return rate ? formatKES(Number(rate)) : "—";
+      return rate ? formatKES(Number(rate)) : "\u2014";
     },
   },
   {

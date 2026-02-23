@@ -129,6 +129,30 @@ export async function getAuditLogs(limit = 100) {
     .limit(limit);
 }
 
+export async function getFirmBranding() {
+  const settings = await db
+    .select({ key: firmSettings.key, value: firmSettings.value })
+    .from(firmSettings)
+    .where(
+      inArray(firmSettings.key, [
+        "firm_logo_url",
+        "firm_name",
+        "firm_primary_color",
+        "firm_accent_color",
+      ])
+    );
+  const map: Record<string, string> = {};
+  for (const s of settings) {
+    if (s.value) map[s.key] = s.value;
+  }
+  return {
+    logoUrl: map.firm_logo_url || null,
+    firmName: map.firm_name || null,
+    primaryColor: map.firm_primary_color || null,
+    accentColor: map.firm_accent_color || null,
+  };
+}
+
 export async function getRecentDataOperations(limit = 50) {
   return db
     .select({

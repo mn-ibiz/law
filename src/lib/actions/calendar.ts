@@ -8,6 +8,8 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { safeAction } from "@/lib/utils/safe-action";
+import { generateDeadlinesFromCourtDate } from "@/lib/actions/courts";
+import { dispatchWorkflowEvent } from "@/lib/workflows/engine";
 
 export async function createEvent(data: unknown) {
   return safeAction(async () => {
@@ -33,6 +35,16 @@ export async function createEvent(data: unknown) {
         createdBy: session.user.id,
       })
       .returning();
+
+    // Auto-generate court rule deadlines for court hearings
+    if (validated.data.type === "court_hearing" && validated.data.caseId) {
+      generateDeadlinesFromCourtDate(
+        validated.data.caseId,
+        new Date(validated.data.startTime),
+        null, // courtId not available on event, use general rules
+        session.user.id
+      ).catch(console.error);
+    }
 
     revalidatePath("/calendar");
     return { data: result[0] };
@@ -141,6 +153,15 @@ export async function updateTaskStatus(id: string, status: "pending" | "in_progr
       })
       .where(eq(tasks.id, idParsed.data));
 
+    // Fire workflow event when task is completed (fire-and-forget)
+    if (statusParsed.data === "completed") {
+      dispatchWorkflowEvent("task_completed", {
+        entityId: idParsed.data,
+        entityType: "task",
+        userId: session.user.id,
+      }).catch(console.error);
+    }
+
     revalidatePath("/tasks");
     return { success: true };
   });
@@ -181,6 +202,174 @@ export async function removeEventAttendee(id: string) {
     }
 
     await db.delete(eventAttendees).where(eq(eventAttendees.id, idParsed.data));
+    revalidatePath("/calendar");
+    return { success: true };
+  });
+}
+
+// --- Delete Actions ---
+
+export async function deleteTask(id: string) {
+  return safeAction(async () => {
+    const idParsed = z.string().uuid().safeParse(id);
+    if (!idParsed.success) return { error: "Invalid task ID" };
+
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    await db.delete(tasks).where(eq(tasks.id, idParsed.data));
+    revalidatePath("/tasks");
+    return { success: true };
+  });
+}
+
+export async function deleteDeadline(id: string) {
+  return safeAction(async () => {
+    const idParsed = z.string().uuid().safeParse(id);
+    if (!idParsed.success) return { error: "Invalid deadline ID" };
+
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    await db.delete(deadlines).where(eq(deadlines.id, idParsed.data));
+    revalidatePath("/deadlines");
+    return { success: true };
+  });
+}
+
+export async function deleteEvent(id: string) {
+  return safeAction(async () => {
+    const idParsed = z.string().uuid().safeParse(id);
+    if (!idParsed.success) return { error: "Invalid event ID" };
+
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    await db.delete(calendarEvents).where(eq(calendarEvents.id, idParsed.data));
+    revalidatePath("/calendar");
+    return { success: true };
+  });
+}
+
+// --- Update Actions ---
+
+export async function updateTask(id: string, data: unknown) {
+  return safeAction(async () => {
+    const idParsed = z.string().uuid().safeParse(id);
+    if (!idParsed.success) return { error: "Invalid task ID" };
+
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    const updateSchema = z.object({
+      title: z.string().min(1).optional(),
+      description: z.string().optional(),
+      priority: z.enum(["low", "medium", "high", "critical"]).optional(),
+      dueDate: z.string().optional(),
+      assignedTo: z.string().uuid().optional().nullable(),
+    });
+
+    const validated = updateSchema.safeParse(data);
+    if (!validated.success) return { error: validated.error.issues[0].message };
+
+    const { dueDate, ...rest } = validated.data;
+
+    await db
+      .update(tasks)
+      .set({
+        ...rest,
+        dueDate: dueDate ? new Date(dueDate) : undefined,
+        updatedAt: new Date(),
+      })
+      .where(eq(tasks.id, idParsed.data));
+
+    revalidatePath("/tasks");
+    return { success: true };
+  });
+}
+
+export async function updateDeadline(id: string, data: unknown) {
+  return safeAction(async () => {
+    const idParsed = z.string().uuid().safeParse(id);
+    if (!idParsed.success) return { error: "Invalid deadline ID" };
+
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    const updateSchema = z.object({
+      title: z.string().min(1).optional(),
+      description: z.string().optional(),
+      priority: z.enum(["low", "medium", "high", "critical"]).optional(),
+      dueDate: z.string().optional(),
+      assignedTo: z.string().uuid().optional().nullable(),
+      isStatutory: z.boolean().optional(),
+    });
+
+    const validated = updateSchema.safeParse(data);
+    if (!validated.success) return { error: validated.error.issues[0].message };
+
+    const { dueDate, ...rest } = validated.data;
+
+    await db
+      .update(deadlines)
+      .set({
+        ...rest,
+        dueDate: dueDate ? new Date(dueDate) : undefined,
+        updatedAt: new Date(),
+      })
+      .where(eq(deadlines.id, idParsed.data));
+
+    revalidatePath("/deadlines");
+    return { success: true };
+  });
+}
+
+export async function updateEvent(id: string, data: unknown) {
+  return safeAction(async () => {
+    const idParsed = z.string().uuid().safeParse(id);
+    if (!idParsed.success) return { error: "Invalid event ID" };
+
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    const updateSchema = z.object({
+      title: z.string().min(1).optional(),
+      description: z.string().optional(),
+      type: z.enum(["court_hearing", "meeting", "deadline", "reminder", "consultation", "deposition", "other"]).optional(),
+      startTime: z.string().optional(),
+      endTime: z.string().optional(),
+      location: z.string().optional(),
+      allDay: z.boolean().optional(),
+      isCourtDate: z.boolean().optional(),
+    });
+
+    const validated = updateSchema.safeParse(data);
+    if (!validated.success) return { error: validated.error.issues[0].message };
+
+    const { startTime, endTime, ...rest } = validated.data;
+
+    await db
+      .update(calendarEvents)
+      .set({
+        ...rest,
+        startTime: startTime ? new Date(startTime) : undefined,
+        endTime: endTime ? new Date(endTime) : undefined,
+        updatedAt: new Date(),
+      })
+      .where(eq(calendarEvents.id, idParsed.data));
+
     revalidatePath("/calendar");
     return { success: true };
   });

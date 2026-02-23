@@ -33,6 +33,21 @@ export const createQuoteSchema = z.object({
   notes: z.string().max(5000).optional(),
 });
 
+export const createQuoteWithLineItemsSchema = z.object({
+  caseId: z.string().uuid().optional(),
+  clientId: z.string().uuid("Invalid client"),
+  validUntil: z.string().min(1, "Validity date required"),
+  notes: z.string().max(5000).optional(),
+  lineItems: z.array(
+    z.object({
+      description: z.string().min(1, "Description is required").max(5000),
+      quantity: z.number().min(0.01),
+      rate: z.number().min(0),
+      amount: z.number(),
+    })
+  ).min(1, "At least one line item required"),
+});
+
 export const createReceiptSchema = z.object({
   paymentId: z.string().uuid(),
   issuedTo: z.string().min(1).max(255),
@@ -48,5 +63,6 @@ export const createCreditNoteSchema = z.object({
 export type CreateInvoiceInput = z.infer<typeof createInvoiceSchema>;
 export type RecordPaymentInput = z.infer<typeof recordPaymentSchema>;
 export type CreateQuoteInput = z.infer<typeof createQuoteSchema>;
+export type CreateQuoteWithLineItemsInput = z.infer<typeof createQuoteWithLineItemsSchema>;
 export type CreateReceiptInput = z.infer<typeof createReceiptSchema>;
 export type CreateCreditNoteInput = z.infer<typeof createCreditNoteSchema>;

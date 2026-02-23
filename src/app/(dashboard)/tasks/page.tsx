@@ -1,9 +1,12 @@
 import { requireAdminOrAttorney } from "@/lib/auth/get-session";
 import { getTasks } from "@/lib/queries/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { formatEnum } from "@/lib/utils/format-enum";
+import { Button } from "@/components/ui/button";
+import { TaskStatusBadge, PriorityBadge } from "@/components/shared/status-badges";
+import { TaskRowActions } from "@/components/tasks/task-row-actions";
 import Link from "next/link";
+import { Plus, CheckSquare } from "lucide-react";
+import { EmptyState } from "@/components/shared/empty-state";
 import {
   Table,
   TableBody,
@@ -20,52 +23,53 @@ export const metadata: Metadata = {
   description: "Manage and track work tasks",
 };
 
-const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  pending: "outline",
-  in_progress: "default",
-  completed: "secondary",
-  cancelled: "secondary",
-};
-
-const priorityVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  low: "secondary",
-  medium: "outline",
-  high: "default",
-  critical: "destructive",
-};
-
 export default async function TasksPage() {
   await requireAdminOrAttorney();
   const taskList = await getTasks();
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Tasks</h1>
-        <p className="text-muted-foreground">Manage and track work tasks.</p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Tasks</h1>
+          <p className="text-muted-foreground">Manage and track work tasks.</p>
+        </div>
+        <Button size="sm" asChild>
+          <Link href="/tasks/new">
+            <Plus className="h-3.5 w-3.5 mr-1.5" />
+            New Task
+          </Link>
+        </Button>
       </div>
-      <Card>
+      <Card className="shadow-sm">
         <CardHeader>
           <CardTitle>All Tasks</CardTitle>
         </CardHeader>
         <CardContent>
           {taskList.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No tasks created.</p>
+            <EmptyState
+              icon={CheckSquare}
+              title="No tasks yet"
+              description="Create your first task to start tracking work across cases and team members."
+              actionLabel="New Task"
+              actionHref="/tasks/new"
+            />
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Case</TableHead>
-                  <TableHead>Assigned To</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Due Date</TableHead>
+                  <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Title</TableHead>
+                  <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Case</TableHead>
+                  <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Assigned To</TableHead>
+                  <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Priority</TableHead>
+                  <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Status</TableHead>
+                  <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Due Date</TableHead>
+                  <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {taskList.map((task) => (
-                  <TableRow key={task.id}>
+                  <TableRow key={task.id} className="transition-colors hover:bg-muted/50">
                     <TableCell className="font-medium">{task.title}</TableCell>
                     <TableCell>
                       {task.caseId ? (
@@ -78,19 +82,27 @@ export default async function TasksPage() {
                     </TableCell>
                     <TableCell>{task.assignedToName ?? "Unassigned"}</TableCell>
                     <TableCell>
-                      <Badge variant={priorityVariant[task.priority] ?? "secondary"}>
-                        {task.priority}
-                      </Badge>
+                      <PriorityBadge priority={task.priority} />
                     </TableCell>
                     <TableCell>
-                      <Badge variant={statusVariant[task.status] ?? "secondary"}>
-                        {formatEnum(task.status)}
-                      </Badge>
+                      <TaskStatusBadge status={task.status} />
                     </TableCell>
                     <TableCell>
                       {task.dueDate
                         ? new Date(task.dueDate).toLocaleDateString(APP_LOCALE)
                         : "—"}
+                    </TableCell>
+                    <TableCell>
+                      <TaskRowActions
+                        task={{
+                          id: task.id,
+                          title: task.title,
+                          description: task.description,
+                          priority: task.priority,
+                          dueDate: task.dueDate,
+                          status: task.status,
+                        }}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}

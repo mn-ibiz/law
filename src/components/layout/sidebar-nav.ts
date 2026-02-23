@@ -22,6 +22,7 @@ import {
   Truck,
   Gavel,
   ShieldAlert,
+  ScrollText,
   type LucideIcon,
 } from "lucide-react";
 
@@ -63,6 +64,7 @@ export const dashboardNav: NavGroup[] = [
       { label: "Bring-Ups", href: "/bring-ups", icon: Bell },
       { label: "Documents", href: "/documents", icon: FileText },
       { label: "Courts", href: "/courts", icon: Gavel },
+      { label: "Cause Lists", href: "/cause-lists", icon: ScrollText },
       { label: "Conflicts", href: "/conflicts", icon: ShieldAlert },
     ],
   },

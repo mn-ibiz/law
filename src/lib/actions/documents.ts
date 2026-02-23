@@ -2,12 +2,14 @@
 
 import { db } from "@/lib/db";
 import { documents, documentTemplates, documentVersions } from "@/lib/db/schema/documents";
+import { clients } from "@/lib/db/schema/clients";
 import { auth } from "@/lib/auth/auth";
-import { createTemplateSchema, createDocumentRecordSchema, createDocumentVersionSchema } from "@/lib/validators/document";
+import { createTemplateSchema, createDocumentRecordSchema, createDocumentVersionSchema, clientUploadDocumentSchema } from "@/lib/validators/document";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { safeAction } from "@/lib/utils/safe-action";
+import { dispatchWorkflowEvent } from "@/lib/workflows/engine";
 
 export async function createDocumentRecord(data: unknown) {
   return safeAction(async () => {
@@ -28,6 +30,13 @@ export async function createDocumentRecord(data: unknown) {
         uploadedBy: session.user.id,
       })
       .returning();
+
+    // Fire workflow event for document upload (fire-and-forget)
+    dispatchWorkflowEvent("document_uploaded", {
+      entityId: result[0].id,
+      entityType: "document",
+      userId: session.user.id,
+    }).catch(console.error);
 
     revalidatePath("/documents");
     return { data: result[0] };
@@ -79,6 +88,22 @@ export async function createTemplate(data: unknown) {
   });
 }
 
+export async function deleteDocument(id: string) {
+  return safeAction(async () => {
+    const idParsed = z.string().uuid().safeParse(id);
+    if (!idParsed.success) return { error: "Invalid document ID" };
+
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    await db.delete(documents).where(eq(documents.id, idParsed.data));
+    revalidatePath("/documents");
+    return { success: true };
+  });
+}
+
 // --- Document Versions ---
 export async function createDocumentVersion(data: unknown) {
   return safeAction(async () => {
@@ -102,5 +127,96 @@ export async function createDocumentVersion(data: unknown) {
 
     revalidatePath("/documents");
     return { data: result[0] };
+  });
+}
+
+// --- Client Document Upload ---
+export async function clientUploadDocument(data: unknown) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user) return { error: "Unauthorized" };
+
+    const validated = clientUploadDocumentSchema.safeParse(data);
+    if (!validated.success) {
+      return { error: validated.error.issues[0].message };
+    }
+
+    // Get client record for this user
+    const [client] = await db
+      .select({ id: clients.id })
+      .from(clients)
+      .where(eq(clients.userId, session.user.id))
+      .limit(1);
+
+    const result = await db
+      .insert(documents)
+      .values({
+        ...validated.data,
+        uploadedBy: session.user.id,
+        clientId: client?.id,
+        status: "draft",
+        reviewStatus: "pending_review",
+      })
+      .returning();
+
+    revalidatePath("/portal/documents");
+    revalidatePath("/documents/review");
+    return { data: result[0] };
+  });
+}
+
+export async function approveDocument(documentId: string) {
+  return safeAction(async () => {
+    const idParsed = z.string().uuid().safeParse(documentId);
+    if (!idParsed.success) return { error: "Invalid document ID" };
+
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    await db
+      .update(documents)
+      .set({
+        reviewStatus: "approved",
+        reviewedBy: session.user.id,
+        reviewedAt: new Date(),
+        status: "final",
+        updatedAt: new Date(),
+      })
+      .where(eq(documents.id, idParsed.data));
+
+    revalidatePath("/documents/review");
+    revalidatePath("/portal/documents");
+    return { success: true };
+  });
+}
+
+export async function rejectDocument(documentId: string, notes: string) {
+  return safeAction(async () => {
+    const idParsed = z.string().uuid().safeParse(documentId);
+    if (!idParsed.success) return { error: "Invalid document ID" };
+
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    const safeNotes = (notes ?? "").slice(0, 5000);
+
+    await db
+      .update(documents)
+      .set({
+        reviewStatus: "rejected",
+        reviewedBy: session.user.id,
+        reviewedAt: new Date(),
+        reviewNotes: safeNotes,
+        updatedAt: new Date(),
+      })
+      .where(eq(documents.id, idParsed.data));
+
+    revalidatePath("/documents/review");
+    revalidatePath("/portal/documents");
+    return { success: true };
   });
 }

@@ -8,6 +8,27 @@
       "when": 1771718311463,
       "tag": "0000_wakeful_mimic",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1771851945149,
+      "tag": "0001_secret_mach_iv",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771852814696,
+      "tag": "0002_special_forge",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1771939200000,
+      "tag": "0003_full_text_search",
+      "breakpoints": true
     }
   ]
 }

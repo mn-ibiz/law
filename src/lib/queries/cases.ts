@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { cases, caseAssignments, caseNotes, caseTimeline, caseParties, pipelineStages } from "@/lib/db/schema/cases";
 import { clients } from "@/lib/db/schema/clients";
 import { users } from "@/lib/db/schema/auth";
-import { eq, ilike, or, and, sql, desc, asc, isNotNull } from "drizzle-orm";
+import { eq, ilike, or, and, sql, desc, asc, isNotNull, inArray } from "drizzle-orm";
 
 interface CaseFilters {
   search?: string;
@@ -171,9 +171,21 @@ export async function getPipelineStages() {
     .orderBy(asc(pipelineStages.order));
 }
 
-export async function getCasesByPipelineStage() {
-  // Fetch all stages and all relevant cases in two queries instead of N+1
-  const stages = await db.select().from(pipelineStages).orderBy(pipelineStages.order);
+export async function getCasesByPipelineStage(practiceAreaId?: string | null) {
+  // Fetch stages filtered by practice area (null = default/universal stages)
+  const stageCondition = practiceAreaId
+    ? eq(pipelineStages.practiceAreaId, practiceAreaId)
+    : sql`${pipelineStages.practiceAreaId} IS NULL`;
+
+  const stages = await db
+    .select()
+    .from(pipelineStages)
+    .where(stageCondition)
+    .orderBy(pipelineStages.order);
+
+  if (stages.length === 0) return [];
+
+  const stageIds = stages.map((s) => s.id);
 
   const allCases = await db
     .select({
@@ -183,11 +195,12 @@ export async function getCasesByPipelineStage() {
       status: cases.status,
       priority: cases.priority,
       pipelineStageId: cases.pipelineStageId,
+      stageEnteredAt: cases.stageEnteredAt,
       clientName: sql<string>`COALESCE(${clients.firstName} || ' ' || ${clients.lastName}, 'Unknown')`,
     })
     .from(cases)
     .leftJoin(clients, eq(cases.clientId, clients.id))
-    .where(isNotNull(cases.pipelineStageId));
+    .where(inArray(cases.pipelineStageId, stageIds));
 
   // Group cases by pipeline stage
   const casesByStage = new Map<string, typeof allCases>();

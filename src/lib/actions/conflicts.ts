@@ -129,6 +129,115 @@ export async function searchConflicts(query: string) {
   });
 }
 
+export interface ConflictMatch {
+  type: string;
+  name: string;
+  detail: string;
+}
+
+export interface ConflictCheckResult {
+  hasConflict: boolean;
+  matches: ConflictMatch[];
+}
+
+/**
+ * Internal helper: run a conflict check against existing clients and cases.
+ * Does NOT require auth — caller is responsible for authorization.
+ */
+export async function runConflictCheck(query: string): Promise<ConflictCheckResult> {
+  if (!query || query.length < 2) return { hasConflict: false, matches: [] };
+
+  // Escape LIKE-special characters to prevent pattern injection
+  const escaped = query.replace(/[%_\\]/g, "\\$&");
+  const pattern = `%${escaped}%`;
+  const matches: ConflictMatch[] = [];
+
+  // Search clients by name and company name
+  const clientMatches = await db
+    .select({
+      id: clients.id,
+      firstName: clients.firstName,
+      lastName: clients.lastName,
+      companyName: clients.companyName,
+    })
+    .from(clients)
+    .where(
+      or(
+        ilike(clients.firstName, pattern),
+        ilike(clients.lastName, pattern),
+        ilike(clients.companyName, pattern)
+      )
+    )
+    .limit(20);
+
+  for (const c of clientMatches) {
+    const name = `${c.firstName} ${c.lastName}`;
+    matches.push({
+      type: "client",
+      name,
+      detail: c.companyName
+        ? `Client (${c.companyName})`
+        : "Client",
+    });
+  }
+
+  // Search opposing parties and opposing counsel in cases
+  const caseMatches = await db
+    .select({
+      id: cases.id,
+      caseNumber: cases.caseNumber,
+      opposingParty: cases.opposingParty,
+      opposingCounsel: cases.opposingCounsel,
+    })
+    .from(cases)
+    .where(
+      or(
+        ilike(cases.opposingParty, pattern),
+        ilike(cases.opposingCounsel, pattern)
+      )
+    )
+    .limit(20);
+
+  for (const c of caseMatches) {
+    if (c.opposingParty?.toLowerCase().includes(query.toLowerCase())) {
+      matches.push({
+        type: "opposing_party",
+        name: c.opposingParty!,
+        detail: `Opposing party in case ${c.caseNumber}`,
+      });
+    }
+    if (c.opposingCounsel?.toLowerCase().includes(query.toLowerCase())) {
+      matches.push({
+        type: "opposing_counsel",
+        name: c.opposingCounsel!,
+        detail: `Opposing counsel in case ${c.caseNumber}`,
+      });
+    }
+  }
+
+  // Search case parties
+  const partyMatches = await db
+    .select({
+      id: caseParties.id,
+      name: caseParties.name,
+      caseId: caseParties.caseId,
+      role: caseParties.role,
+    })
+    .from(caseParties)
+    .where(ilike(caseParties.name, pattern))
+    .limit(20);
+
+  for (const p of partyMatches) {
+    matches.push({
+      type: "case_party",
+      name: p.name,
+      detail: `Case party (${p.role})`,
+    });
+  }
+
+  return { hasConflict: matches.length > 0, matches };
+}
+
 export async function resolveConflict(
   clientId: string,
   searchQuery: string,

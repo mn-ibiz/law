@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth/auth";
 import { NextResponse } from "next/server";
 
 const publicRoutes = ["/", "/login", "/register", "/forgot-password", "/intake", "/forbidden", "/intake/success"];
-const publicPrefixes = ["/api/auth"];
+const publicPrefixes = ["/api/auth", "/api/calendar/ical"];
 const adminOnlyPaths = ["/settings"];
 
 export default auth((req) => {
@@ -38,7 +38,8 @@ export default auth((req) => {
       pathname.startsWith("/bring-ups") || pathname.startsWith("/trust-accounts") ||
       pathname.startsWith("/petty-cash") || pathname.startsWith("/requisitions") ||
       pathname.startsWith("/suppliers") || pathname.startsWith("/notifications") ||
-      pathname.startsWith("/conflicts") || pathname.startsWith("/courts")) {
+      pathname.startsWith("/conflicts") || pathname.startsWith("/courts") ||
+      pathname.startsWith("/cause-lists") || pathname.startsWith("/search")) {
     if (role === "client") {
       return NextResponse.redirect(new URL("/portal", req.url));
     }

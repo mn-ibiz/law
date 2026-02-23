@@ -1,6 +1,6 @@
-import { pgTable, uuid, text, timestamp, index } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, index, boolean, integer } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-import { clientType, clientStatus, kycStatus, riskLevel, contactType, conflictSeverity } from "./enums";
+import { clientType, clientStatus, kycStatus, riskLevel, contactType, conflictSeverity, leadSource } from "./enums";
 import { users } from "./auth";
 
 export const clients = pgTable(
@@ -36,6 +36,12 @@ export const clients = pgTable(
     zipCode: text("zip_code"),
     referralSource: text("referral_source"),
     notes: text("notes"),
+    isPep: boolean("is_pep").notNull().default(false),
+    pepDetails: text("pep_details"),
+    leadSource: leadSource("lead_source"),
+    leadScore: integer("lead_score").notNull().default(0),
+    followUpDate: timestamp("follow_up_date", { withTimezone: true }),
+    lostReason: text("lost_reason"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },

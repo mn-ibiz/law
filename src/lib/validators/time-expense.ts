@@ -25,6 +25,17 @@ export const createRequisitionSchema = z.object({
   justification: z.string().max(5000).optional(),
 });
 
+export const batchTimeEntrySchema = z.object({
+  entries: z.array(z.object({
+    caseId: z.string().uuid("Invalid case"),
+    date: z.string().min(1, "Date is required"),
+    hours: z.number().min(0).max(24),
+    description: z.string().max(5000).optional(),
+    isBillable: z.boolean().optional(),
+  })).min(1, "At least one entry is required").max(100),
+});
+
 export type CreateTimeEntryInput = z.infer<typeof createTimeEntrySchema>;
 export type CreateExpenseInput = z.infer<typeof createExpenseSchema>;
 export type CreateRequisitionInput = z.infer<typeof createRequisitionSchema>;
+export type BatchTimeEntryInput = z.infer<typeof batchTimeEntrySchema>;

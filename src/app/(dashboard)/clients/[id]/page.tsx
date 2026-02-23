@@ -8,6 +8,7 @@ import { ClientDetailTabs } from "@/components/clients/client-detail-tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
+import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -34,15 +35,23 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     prospective: "outline",
   };
 
+  const clientName = client.type === "organization" && client.companyName
+    ? client.companyName
+    : `${client.firstName} ${client.lastName}`;
+
   return (
     <div className="space-y-6">
+      <PageBreadcrumb
+        items={[
+          { label: "Clients", href: "/clients" },
+          { label: clientName },
+        ]}
+      />
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">
-              {client.type === "organization" && client.companyName
-                ? client.companyName
-                : `${client.firstName} ${client.lastName}`}
+              {clientName}
             </h1>
             <p className="text-muted-foreground">{client.email}</p>
           </div>

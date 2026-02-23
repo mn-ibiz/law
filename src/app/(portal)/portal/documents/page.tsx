@@ -7,11 +7,12 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { APP_LOCALE } from "@/lib/constants/locale";
+import { DocumentUploadForm } from "@/components/portal/document-upload-form";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "My Documents",
-  description: "View documents related to your cases",
+  description: "View and upload documents related to your cases",
 };
 
 export default async function PortalDocumentsPage() {
@@ -22,8 +23,11 @@ export default async function PortalDocumentsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">My Documents</h1>
-        <p className="text-muted-foreground">View documents related to your cases.</p>
+        <p className="text-muted-foreground">View and upload documents related to your cases.</p>
       </div>
+
+      <DocumentUploadForm />
+
       <Card>
         <CardHeader><CardTitle>Documents</CardTitle></CardHeader>
         <CardContent>

@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { courts, courtStations, courtFilings, serviceOfDocuments } from "@/lib/db/schema/courts";
+import { courts, courtStations, courtFilings, serviceOfDocuments, causeLists, causeListEntries, courtRules } from "@/lib/db/schema/courts";
 import { cases } from "@/lib/db/schema/cases";
 import { users } from "@/lib/db/schema/auth";
 import { eq, desc, asc, sql, and } from "drizzle-orm";
@@ -40,6 +40,48 @@ export async function getCourtFilings(caseId: string) {
     .orderBy(desc(courtFilings.createdAt));
 }
 
+export async function getAllCourtFilings() {
+  return db
+    .select({
+      id: courtFilings.id,
+      filingType: courtFilings.filingType,
+      filingNumber: courtFilings.filingNumber,
+      status: courtFilings.status,
+      filingDate: courtFilings.filingDate,
+      notes: courtFilings.notes,
+      createdAt: courtFilings.createdAt,
+      courtName: courts.name,
+      caseNumber: cases.caseNumber,
+      filedByName: users.name,
+    })
+    .from(courtFilings)
+    .leftJoin(courts, eq(courtFilings.courtId, courts.id))
+    .innerJoin(cases, eq(courtFilings.caseId, cases.id))
+    .innerJoin(users, eq(courtFilings.filedBy, users.id))
+    .orderBy(desc(courtFilings.createdAt))
+    .limit(500);
+}
+
+export async function getAllServiceOfDocuments() {
+  return db
+    .select({
+      id: serviceOfDocuments.id,
+      documentTitle: serviceOfDocuments.documentTitle,
+      servedTo: serviceOfDocuments.servedTo,
+      method: serviceOfDocuments.method,
+      serviceDate: serviceOfDocuments.serviceDate,
+      notes: serviceOfDocuments.notes,
+      createdAt: serviceOfDocuments.createdAt,
+      caseNumber: cases.caseNumber,
+      servedByName: users.name,
+    })
+    .from(serviceOfDocuments)
+    .innerJoin(cases, eq(serviceOfDocuments.caseId, cases.id))
+    .leftJoin(users, eq(serviceOfDocuments.servedBy, users.id))
+    .orderBy(desc(serviceOfDocuments.createdAt))
+    .limit(500);
+}
+
 export async function getCourtHierarchy() {
   const courtList = await db.select().from(courts).where(eq(courts.isActive, true)).orderBy(asc(courts.level));
   const stationList = await db.select().from(courtStations).where(eq(courtStations.isActive, true));
@@ -48,4 +90,75 @@ export async function getCourtHierarchy() {
     ...court,
     stations: stationList.filter((s) => s.courtId === court.id),
   }));
+}
+
+export async function getCauseLists(filters: { courtId?: string; dateFrom?: string; dateTo?: string } = {}) {
+  const conditions = [];
+  if (filters.courtId) conditions.push(eq(causeLists.courtId, filters.courtId));
+  if (filters.dateFrom) conditions.push(sql`${causeLists.date} >= ${filters.dateFrom}`);
+  if (filters.dateTo) conditions.push(sql`${causeLists.date} <= ${filters.dateTo}`);
+
+  return db
+    .select({
+      id: causeLists.id,
+      courtId: causeLists.courtId,
+      date: causeLists.date,
+      judge: causeLists.judge,
+      courtRoom: causeLists.courtRoom,
+      notes: causeLists.notes,
+      createdAt: causeLists.createdAt,
+      courtName: courts.name,
+    })
+    .from(causeLists)
+    .leftJoin(courts, eq(causeLists.courtId, courts.id))
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .orderBy(desc(causeLists.date));
+}
+
+export async function getCauseListEntries(causeListId: string) {
+  return db
+    .select()
+    .from(causeListEntries)
+    .where(eq(causeListEntries.causeListId, causeListId))
+    .orderBy(causeListEntries.order);
+}
+
+export async function getUpcomingCauseLists(limit = 5) {
+  return db
+    .select({
+      id: causeLists.id,
+      date: causeLists.date,
+      judge: causeLists.judge,
+      courtRoom: causeLists.courtRoom,
+      courtName: courts.name,
+    })
+    .from(causeLists)
+    .leftJoin(courts, eq(causeLists.courtId, courts.id))
+    .where(sql`${causeLists.date} >= NOW()`)
+    .orderBy(causeLists.date)
+    .limit(limit);
+}
+
+export async function getCourtRules(courtId?: string) {
+  const conditions = [];
+  if (courtId) conditions.push(eq(courtRules.courtId, courtId));
+
+  return db
+    .select({
+      id: courtRules.id,
+      courtId: courtRules.courtId,
+      name: courtRules.name,
+      description: courtRules.description,
+      triggerEvent: courtRules.triggerEvent,
+      offsetDays: courtRules.offsetDays,
+      deadlineTitle: courtRules.deadlineTitle,
+      priority: courtRules.priority,
+      isStatutory: courtRules.isStatutory,
+      isActive: courtRules.isActive,
+      courtName: courts.name,
+    })
+    .from(courtRules)
+    .leftJoin(courts, eq(courtRules.courtId, courts.id))
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .orderBy(courtRules.name);
 }

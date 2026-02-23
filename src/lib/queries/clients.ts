@@ -42,6 +42,7 @@ export async function getClients(filters: ClientFilters = {}) {
       phone: clients.phone,
       companyName: clients.companyName,
       county: clients.county,
+      isPep: clients.isPep,
       createdAt: clients.createdAt,
     })
     .from(clients)
@@ -72,6 +73,41 @@ export const getClientById = cache(async (id: string) => {
 
   return result[0] ?? null;
 });
+
+export async function getClientsByPipelineStage() {
+  const result = await db
+    .select({
+      id: clients.id,
+      firstName: clients.firstName,
+      lastName: clients.lastName,
+      email: clients.email,
+      phone: clients.phone,
+      companyName: clients.companyName,
+      status: clients.status,
+      type: clients.type,
+      leadSource: clients.leadSource,
+      leadScore: clients.leadScore,
+      followUpDate: clients.followUpDate,
+      createdAt: clients.createdAt,
+    })
+    .from(clients)
+    .orderBy(desc(clients.createdAt));
+
+  const grouped: Record<string, typeof result> = {
+    prospective: [],
+    active: [],
+    inactive: [],
+  };
+
+  for (const client of result) {
+    const stage = client.status ?? "active";
+    if (grouped[stage]) {
+      grouped[stage].push(client);
+    }
+  }
+
+  return grouped;
+}
 
 export async function getClientContacts(clientId: string) {
   return db

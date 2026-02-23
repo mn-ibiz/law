@@ -2,7 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
+import { ActiveBadge } from "@/components/shared/status-badges";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,7 +10,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, ShieldAlert } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export interface ClientRow {
   id: string;
@@ -22,14 +23,9 @@ export interface ClientRow {
   phone: string;
   companyName: string | null;
   county: string | null;
+  isPep: boolean;
   createdAt: Date;
 }
-
-const statusVariant: Record<string, "default" | "secondary" | "outline"> = {
-  active: "default",
-  inactive: "secondary",
-  prospective: "outline",
-};
 
 export const clientColumns: ColumnDef<ClientRow>[] = [
   {
@@ -66,7 +62,21 @@ export const clientColumns: ColumnDef<ClientRow>[] = [
   {
     accessorKey: "county",
     header: "County",
-    cell: ({ row }) => row.getValue("county") ?? "—",
+    cell: ({ row }) => row.getValue("county") ?? "\u2014",
+  },
+  {
+    accessorKey: "isPep",
+    header: "PEP",
+    cell: ({ row }) => {
+      const isPep = row.original.isPep;
+      if (!isPep) return null;
+      return (
+        <Badge variant="destructive" className="gap-1 text-[11px]">
+          <ShieldAlert className="h-3 w-3" />
+          PEP
+        </Badge>
+      );
+    },
   },
   {
     accessorKey: "status",
@@ -74,9 +84,7 @@ export const clientColumns: ColumnDef<ClientRow>[] = [
     cell: ({ row }) => {
       const status = row.getValue("status") as string;
       return (
-        <Badge variant={statusVariant[status] ?? "secondary"}>
-          {status}
-        </Badge>
+        <ActiveBadge active={status === "active"} />
       );
     },
   },

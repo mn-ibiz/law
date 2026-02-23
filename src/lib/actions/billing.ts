@@ -2,15 +2,20 @@
 
 import { db } from "@/lib/db";
 import { invoices, invoiceLineItems, payments, quotes, receipts, creditNotes } from "@/lib/db/schema/billing";
+import { clients } from "@/lib/db/schema/clients";
 import { auth } from "@/lib/auth/auth";
 import { createAuditLog } from "@/lib/utils/audit";
-import { createInvoiceSchema, recordPaymentSchema, createQuoteSchema, createReceiptSchema, createCreditNoteSchema } from "@/lib/validators/billing";
+import { createInvoiceSchema, recordPaymentSchema, createQuoteSchema, createQuoteWithLineItemsSchema, createReceiptSchema, createCreditNoteSchema } from "@/lib/validators/billing";
 import { generateInvoiceNumber } from "@/lib/queries/billing";
 import { eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { safeAction } from "@/lib/utils/safe-action";
 import { validateId } from "@/lib/utils/validate-id";
 import { withUniqueRetry } from "@/lib/utils/with-retry";
+import { sendEmail } from "@/lib/email/send-email";
+import { invoiceDeliveryEmailHtml } from "@/lib/email/templates/invoice-delivery";
+import { APP_LOCALE } from "@/lib/constants/locale";
+import { dispatchWorkflowEvent } from "@/lib/workflows/engine";
 
 export async function createInvoice(data: unknown) {
   return safeAction(async () => {
@@ -72,6 +77,14 @@ export async function createInvoice(data: unknown) {
       { invoiceNumber: result[0].invoiceNumber, totalAmount }
     );
 
+    // Fire workflow event for invoice creation (fire-and-forget)
+    dispatchWorkflowEvent("invoice_created", {
+      entityId: result[0].id,
+      entityType: "invoice",
+      userId: session.user.id,
+      data: { clientId: validated.data.clientId },
+    }).catch(console.error);
+
     revalidatePath("/billing");
     return { data: result[0] };
   });
@@ -91,11 +104,49 @@ export async function sendInvoice(id: string) {
       .update(invoices)
       .set({ status: "sent", sentAt: new Date(), updatedAt: new Date() })
       .where(sql`${invoices.id} = ${id} AND ${invoices.status} = 'draft'`)
-      .returning({ id: invoices.id });
+      .returning({
+        id: invoices.id,
+        invoiceNumber: invoices.invoiceNumber,
+        totalAmount: invoices.totalAmount,
+        dueDate: invoices.dueDate,
+        clientId: invoices.clientId,
+      });
 
     if (result.length === 0) {
       return { error: "Invoice not found or not in draft status" };
     }
+
+    // Send invoice email (fire-and-forget)
+    const invoice = result[0];
+    db.select({
+      email: clients.email,
+      firstName: clients.firstName,
+      lastName: clients.lastName,
+    })
+      .from(clients)
+      .where(eq(clients.id, invoice.clientId))
+      .limit(1)
+      .then(([client]) => {
+        if (!client?.email) return;
+        const formattedAmount = Number(invoice.totalAmount).toLocaleString(APP_LOCALE, {
+          style: "currency",
+          currency: "KES",
+        });
+        const formattedDue = invoice.dueDate
+          ? new Date(invoice.dueDate).toLocaleDateString(APP_LOCALE)
+          : "N/A";
+        return sendEmail({
+          to: client.email,
+          subject: `Invoice ${invoice.invoiceNumber}`,
+          html: invoiceDeliveryEmailHtml({
+            clientName: `${client.firstName} ${client.lastName}`,
+            invoiceNumber: invoice.invoiceNumber,
+            amount: formattedAmount,
+            dueDate: formattedDue,
+          }),
+        });
+      })
+      .catch((err) => console.error("Invoice email failed:", err));
 
     revalidatePath("/billing");
     return { success: true };
@@ -148,6 +199,14 @@ export async function recordPayment(data: unknown) {
       })
       .returning();
 
+    // Fire workflow event for payment received (fire-and-forget)
+    dispatchWorkflowEvent("payment_received", {
+      entityId: result[0].id,
+      entityType: "payment",
+      userId: session.user.id,
+      data: { invoiceId, amount: validated.data.amount },
+    }).catch(console.error);
+
     revalidatePath("/billing");
     return { data: result[0] };
   });
@@ -172,6 +231,31 @@ export async function cancelInvoice(id: string) {
     if (result.length === 0) {
       return { error: "Invoice not found, already paid, or already cancelled" };
     }
+    revalidatePath("/billing");
+    return { success: true };
+  });
+}
+
+export async function deleteInvoice(id: string) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    if (!validateId(id)) return { error: "Invalid ID" };
+
+    // Only allow deletion of draft invoices
+    const result = await db
+      .delete(invoices)
+      .where(sql`${invoices.id} = ${id} AND ${invoices.status} = 'draft'`)
+      .returning({ id: invoices.id });
+
+    if (result.length === 0) {
+      return { error: "Invoice not found or not in draft status" };
+    }
+
+    await createAuditLog(session.user.id, "delete", "invoice", id, {});
     revalidatePath("/billing");
     return { success: true };
   });
@@ -221,6 +305,71 @@ export async function createQuote(data: unknown) {
     });
 
     revalidatePath("/billing");
+    return { data: result[0] };
+  });
+}
+
+export async function createQuoteWithLineItems(data: unknown) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    const validated = createQuoteWithLineItemsSchema.safeParse(data);
+    if (!validated.success) return { error: validated.error.issues[0].message };
+
+    // Compute line item amounts server-side to prevent billing fraud
+    const computedLineItems = validated.data.lineItems.map((item) => ({
+      ...item,
+      amount: item.quantity * item.rate,
+    }));
+    const subtotal = computedLineItems.reduce((sum, item) => sum + item.amount, 0);
+    const vatRate = 16;
+    const vatAmount = subtotal * (vatRate / 100);
+    const totalAmount = subtotal + vatAmount;
+
+    // Retry on unique constraint violation (concurrent number generation race)
+    const result = await withUniqueRetry(async () => {
+      const year = new Date().getFullYear();
+      const qtPrefix = `QT-${year}-`;
+      const [qtResult] = await db
+        .select({ maxNum: sql<string>`MAX(${quotes.quoteNumber})` })
+        .from(quotes)
+        .where(sql`${quotes.quoteNumber} LIKE ${qtPrefix + '%'}`);
+      let qtNext = 1;
+      if (qtResult?.maxNum) {
+        const parts = qtResult.maxNum.split("-");
+        const lastNum = parseInt(parts[parts.length - 1], 10);
+        if (!isNaN(lastNum)) qtNext = lastNum + 1;
+      }
+      const quoteNumber = `${qtPrefix}${String(qtNext).padStart(4, "0")}`;
+
+      return await db
+        .insert(quotes)
+        .values({
+          quoteNumber,
+          clientId: validated.data.clientId,
+          caseId: validated.data.caseId || undefined,
+          createdBy: session.user.id,
+          subtotal: String(subtotal),
+          vatAmount: String(vatAmount),
+          totalAmount: String(totalAmount),
+          validUntil: validated.data.validUntil ? new Date(validated.data.validUntil) : undefined,
+          notes: validated.data.notes,
+        })
+        .returning();
+    });
+
+    await createAuditLog(
+      session.user.id,
+      "create",
+      "quote",
+      result[0].id,
+      { quoteNumber: result[0].quoteNumber, totalAmount }
+    );
+
+    revalidatePath("/billing/quotes");
     return { data: result[0] };
   });
 }

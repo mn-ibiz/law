@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { EmptyState } from "@/components/shared/empty-state";
-import { CreditCard } from "lucide-react";
+import { CreditCard, ArrowRight } from "lucide-react";
 import { formatKES } from "@/lib/utils/format";
+import { Button } from "@/components/ui/button";
 
 interface OverdueInvoice {
   id: string;
@@ -15,9 +16,20 @@ interface OverdueInvoice {
 
 export function OverdueInvoicesTable({ data }: { data: OverdueInvoice[] }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Overdue Invoices</CardTitle>
+    <Card className="shadow-sm">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-base font-semibold">Overdue Invoices</CardTitle>
+            <CardDescription className="text-xs">Requires follow-up</CardDescription>
+          </div>
+          <Button variant="ghost" size="sm" className="gap-1 text-xs" asChild>
+            <Link href="/billing">
+              View all
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         {data.length === 0 ? (
@@ -30,11 +42,19 @@ export function OverdueInvoicesTable({ data }: { data: OverdueInvoice[] }) {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b text-left text-muted-foreground">
-                  <th className="pb-2 font-medium">Invoice #</th>
-                  <th className="pb-2 font-medium">Client</th>
-                  <th className="pb-2 font-medium">Amount</th>
-                  <th className="pb-2 font-medium">Days Overdue</th>
+                <tr className="border-b text-left">
+                  <th className="pb-2.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Invoice #
+                  </th>
+                  <th className="pb-2.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Client
+                  </th>
+                  <th className="pb-2.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Balance
+                  </th>
+                  <th className="pb-2.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Overdue
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -48,19 +68,26 @@ export function OverdueInvoicesTable({ data }: { data: OverdueInvoice[] }) {
                       )
                     : 0;
                   return (
-                    <tr key={inv.id} className="border-b last:border-0">
-                      <td className="py-2">
+                    <tr
+                      key={inv.id}
+                      className="border-b last:border-0 transition-colors hover:bg-muted/50"
+                    >
+                      <td className="py-2.5">
                         <Link
                           href={`/billing/${inv.id}`}
-                          className="text-primary hover:underline"
+                          className="font-mono text-xs font-medium text-primary hover:underline"
                         >
                           {inv.invoiceNumber}
                         </Link>
                       </td>
-                      <td className="py-2">{inv.clientName}</td>
-                      <td className="py-2">{formatKES(balance)}</td>
-                      <td className="py-2 text-destructive font-medium">
-                        {daysOverdue} days
+                      <td className="py-2.5 text-muted-foreground">
+                        {inv.clientName}
+                      </td>
+                      <td className="py-2.5 font-medium">{formatKES(balance)}</td>
+                      <td className="py-2.5">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-700 ring-1 ring-inset ring-rose-600/20">
+                          {daysOverdue}d overdue
+                        </span>
                       </td>
                     </tr>
                   );

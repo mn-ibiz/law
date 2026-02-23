@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { PracticeAreasToolbar } from "@/components/settings/practice-areas-toolbar";
+import { PracticeAreaActions } from "@/components/settings/practice-area-actions";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -22,9 +24,12 @@ export default async function PracticeAreasPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Practice Areas & Billing Rates</h1>
-        <p className="text-muted-foreground">Configure practice areas and hourly billing rates.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Practice Areas & Billing Rates</h1>
+          <p className="text-muted-foreground">Configure practice areas and hourly billing rates.</p>
+        </div>
+        <PracticeAreasToolbar />
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -39,6 +44,7 @@ export default async function PracticeAreasPage() {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead className="w-[50px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -56,6 +62,14 @@ export default async function PracticeAreasPage() {
                         <Badge variant={area.isActive ? "default" : "secondary"}>
                           {area.isActive ? "Active" : "Inactive"}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <PracticeAreaActions
+                          id={area.id}
+                          name={area.name}
+                          description={area.description}
+                          isActive={area.isActive}
+                        />
                       </TableCell>
                     </TableRow>
                   ))}

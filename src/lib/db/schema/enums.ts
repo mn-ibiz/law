@@ -31,6 +31,15 @@ export const kycStatus = pgEnum("kyc_status", [
   "expired",
 ]);
 export const riskLevel = pgEnum("risk_level", ["low", "medium", "high", "critical"]);
+export const leadSource = pgEnum("lead_source", [
+  "referral",
+  "website",
+  "walk_in",
+  "advertising",
+  "social_media",
+  "event",
+  "other",
+]);
 
 // Cases
 export const caseStatus = pgEnum("case_status", [
@@ -81,6 +90,11 @@ export const documentStatus = pgEnum("document_status", [
   "final",
   "signed",
   "archived",
+]);
+export const documentReviewStatus = pgEnum("document_review_status", [
+  "pending_review",
+  "approved",
+  "rejected",
 ]);
 
 // Calendar

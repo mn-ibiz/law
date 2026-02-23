@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -40,6 +41,12 @@ export default async function SupplierDetailPage({
 
   return (
     <div className="space-y-6">
+      <PageBreadcrumb
+        items={[
+          { label: "Suppliers", href: "/suppliers" },
+          { label: supplier.name },
+        ]}
+      />
       <div>
         <h1 className="text-2xl font-bold tracking-tight">{supplier.name}</h1>
         <p className="text-muted-foreground">Supplier details and invoices.</p>

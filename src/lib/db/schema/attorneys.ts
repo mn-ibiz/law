@@ -115,6 +115,44 @@ export const disciplinaryRecords = pgTable("disciplinary_records", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
+export const professionalIndemnity = pgTable("professional_indemnity", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  attorneyId: uuid("attorney_id")
+    .notNull()
+    .references(() => attorneys.id, { onDelete: "cascade" }),
+  insurer: text("insurer").notNull(),
+  policyNumber: text("policy_number").notNull(),
+  coverageAmount: numeric("coverage_amount", { precision: 14, scale: 2 }).notNull(),
+  premium: numeric("premium", { precision: 12, scale: 2 }),
+  startDate: timestamp("start_date", { withTimezone: true }).notNull(),
+  expiryDate: timestamp("expiry_date", { withTimezone: true }).notNull(),
+  status: text("status").notNull().default("active"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const lskMembership = pgTable(
+  "lsk_membership",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    attorneyId: uuid("attorney_id")
+      .notNull()
+      .references(() => attorneys.id, { onDelete: "cascade" }),
+    year: text("year").notNull(),
+    amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+    paymentDate: timestamp("payment_date", { withTimezone: true }),
+    receiptNumber: text("receipt_number"),
+    status: text("status").notNull().default("pending"),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    unique("lsk_membership_attorney_year").on(table.attorneyId, table.year),
+  ]
+);
+
 export const attorneysRelations = relations(attorneys, ({ one, many }) => ({
   user: one(users, { fields: [attorneys.userId], references: [users.id] }),
   practiceAreas: many(attorneyPracticeAreas),
@@ -122,6 +160,8 @@ export const attorneysRelations = relations(attorneys, ({ one, many }) => ({
   practisingCertificates: many(practisingCertificates),
   cpdRecords: many(cpdRecords),
   disciplinaryRecords: many(disciplinaryRecords),
+  professionalIndemnity: many(professionalIndemnity),
+  lskMembership: many(lskMembership),
 }));
 
 export const attorneyPracticeAreasRelations = relations(attorneyPracticeAreas, ({ one }) => ({
@@ -157,5 +197,19 @@ export const disciplinaryRecordsRelations = relations(disciplinaryRecords, ({ on
   createdByUser: one(users, {
     fields: [disciplinaryRecords.createdBy],
     references: [users.id],
+  }),
+}));
+
+export const professionalIndemnityRelations = relations(professionalIndemnity, ({ one }) => ({
+  attorney: one(attorneys, {
+    fields: [professionalIndemnity.attorneyId],
+    references: [attorneys.id],
+  }),
+}));
+
+export const lskMembershipRelations = relations(lskMembership, ({ one }) => ({
+  attorney: one(attorneys, {
+    fields: [lskMembership.attorneyId],
+    references: [attorneys.id],
   }),
 }));

@@ -19,9 +19,11 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
-      <Icon className="h-12 w-12 text-muted-foreground mb-4" />
-      <h3 className="text-lg font-medium">{title}</h3>
-      <p className="text-sm text-muted-foreground mt-1 max-w-sm">{description}</p>
+      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+        <Icon className="h-6 w-6 text-muted-foreground" />
+      </div>
+      <h3 className="text-sm font-semibold">{title}</h3>
+      <p className="mt-1 max-w-sm text-xs text-muted-foreground">{description}</p>
       {actionLabel && actionHref && (
         <Button asChild className="mt-4" size="sm">
           <Link href={actionHref}>{actionLabel}</Link>

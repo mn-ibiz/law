@@ -275,28 +275,158 @@ async function main() {
     }
   }
 
-  // 10. Seed Pipeline Stages
+  // 10. Seed Pipeline Stages (default / universal)
   console.log("Seeding pipeline stages...");
   const stages = [
-    { name: "Intake", description: "New case intake and initial review", order: 1, color: "#6366f1" },
-    { name: "Investigation", description: "Gathering facts and evidence", order: 2, color: "#f59e0b" },
-    { name: "Preparation", description: "Preparing filings and documentation", order: 3, color: "#3b82f6" },
-    { name: "Filing", description: "Filed with court", order: 4, color: "#8b5cf6" },
-    { name: "Discovery", description: "Discovery phase", order: 5, color: "#ec4899" },
-    { name: "Negotiation", description: "Settlement negotiations", order: 6, color: "#14b8a6" },
-    { name: "Trial/Hearing", description: "Court proceedings", order: 7, color: "#f97316" },
+    { name: "Intake", description: "New case intake and initial review", order: 1, color: "#6366f1", maxDurationDays: 7 },
+    { name: "Investigation", description: "Gathering facts and evidence", order: 2, color: "#f59e0b", maxDurationDays: 30 },
+    { name: "Preparation", description: "Preparing filings and documentation", order: 3, color: "#3b82f6", maxDurationDays: 21 },
+    { name: "Filing", description: "Filed with court", order: 4, color: "#8b5cf6", maxDurationDays: 14 },
+    { name: "Discovery", description: "Discovery phase", order: 5, color: "#ec4899", maxDurationDays: 60 },
+    { name: "Negotiation", description: "Settlement negotiations", order: 6, color: "#14b8a6", maxDurationDays: 30 },
+    { name: "Trial/Hearing", description: "Court proceedings", order: 7, color: "#f97316", maxDurationDays: 45 },
     { name: "Resolution", description: "Case resolved or settled", order: 8, color: "#22c55e" },
   ];
+  const stageIds: Record<string, string> = {};
   for (const stage of stages) {
     const existing = await db
       .select()
       .from(schema.pipelineStages)
       .where(eq(schema.pipelineStages.name, stage.name));
     if (existing.length === 0) {
-      await db.insert(schema.pipelineStages).values(stage);
+      const [inserted] = await db.insert(schema.pipelineStages).values(stage).returning();
+      stageIds[stage.name] = inserted.id;
+    } else {
+      stageIds[stage.name] = existing[0].id;
+      // Update existing stages with maxDurationDays if missing
+      if ("maxDurationDays" in stage && stage.maxDurationDays) {
+        await db
+          .update(schema.pipelineStages)
+          .set({ maxDurationDays: stage.maxDurationDays })
+          .where(eq(schema.pipelineStages.id, existing[0].id));
+      }
     }
   }
-  console.log(`  ✓ ${stages.length} pipeline stages seeded`);
+  console.log(`  ✓ ${stages.length} default pipeline stages seeded`);
+
+  // 10b. Seed practice-area-specific pipeline stages
+  console.log("Seeding practice-area pipeline stages...");
+  const allPracticeAreas = await db.select().from(schema.practiceAreas);
+  const paMap: Record<string, string> = {};
+  for (const pa of allPracticeAreas) {
+    paMap[pa.name] = pa.id;
+  }
+
+  const paStages: { practiceArea: string; stages: { name: string; description: string; order: number; color: string; maxDurationDays?: number }[] }[] = [
+    {
+      practiceArea: "Conveyancing",
+      stages: [
+        { name: "Instruction", description: "Client instruction received", order: 1, color: "#6366f1", maxDurationDays: 5 },
+        { name: "Due Diligence", description: "Property search and verification", order: 2, color: "#f59e0b", maxDurationDays: 14 },
+        { name: "Draft Agreement", description: "Drafting sale agreement", order: 3, color: "#3b82f6", maxDurationDays: 10 },
+        { name: "Execution", description: "Agreement signing and stamping", order: 4, color: "#8b5cf6", maxDurationDays: 7 },
+        { name: "Registration", description: "Title transfer at lands office", order: 5, color: "#ec4899", maxDurationDays: 30 },
+        { name: "Completion", description: "Handover of title and keys", order: 6, color: "#22c55e" },
+      ],
+    },
+    {
+      practiceArea: "Litigation",
+      stages: [
+        { name: "Case Assessment", description: "Initial case evaluation", order: 1, color: "#6366f1", maxDurationDays: 7 },
+        { name: "Pleadings", description: "Drafting and filing pleadings", order: 2, color: "#f59e0b", maxDurationDays: 14 },
+        { name: "Discovery", description: "Document discovery and interrogatories", order: 3, color: "#3b82f6", maxDurationDays: 45 },
+        { name: "Pre-Trial", description: "Pre-trial conferences and motions", order: 4, color: "#8b5cf6", maxDurationDays: 21 },
+        { name: "Trial", description: "Court trial proceedings", order: 5, color: "#f97316", maxDurationDays: 60 },
+        { name: "Judgment", description: "Awaiting and receiving judgment", order: 6, color: "#22c55e" },
+      ],
+    },
+    {
+      practiceArea: "Corporate & Commercial",
+      stages: [
+        { name: "Engagement", description: "Client engagement and scope", order: 1, color: "#6366f1", maxDurationDays: 5 },
+        { name: "Research", description: "Legal research and analysis", order: 2, color: "#f59e0b", maxDurationDays: 14 },
+        { name: "Drafting", description: "Document drafting", order: 3, color: "#3b82f6", maxDurationDays: 14 },
+        { name: "Review", description: "Client review and negotiation", order: 4, color: "#8b5cf6", maxDurationDays: 21 },
+        { name: "Execution", description: "Document execution", order: 5, color: "#ec4899", maxDurationDays: 7 },
+        { name: "Closing", description: "Transaction closing", order: 6, color: "#22c55e" },
+      ],
+    },
+  ];
+
+  let paStageCount = 0;
+  for (const paConfig of paStages) {
+    const practiceAreaId = paMap[paConfig.practiceArea];
+    if (!practiceAreaId) continue;
+    for (const stage of paConfig.stages) {
+      const existing = await db
+        .select()
+        .from(schema.pipelineStages)
+        .where(eq(schema.pipelineStages.name, `${paConfig.practiceArea}: ${stage.name}`));
+      if (existing.length === 0) {
+        await db.insert(schema.pipelineStages).values({
+          ...stage,
+          name: `${paConfig.practiceArea}: ${stage.name}`,
+          practiceAreaId,
+        });
+        paStageCount++;
+      }
+    }
+  }
+  console.log(`  ✓ ${paStageCount} practice-area pipeline stages seeded`);
+
+  // 10c. Seed sample stage automations
+  console.log("Seeding stage automations...");
+  const trialStageId = stageIds["Trial/Hearing"];
+  const resolutionStageId = stageIds["Resolution"];
+  if (trialStageId) {
+    const existing = await db
+      .select()
+      .from(schema.stageAutomations)
+      .where(eq(schema.stageAutomations.stageId, trialStageId));
+    if (existing.length === 0) {
+      await db.insert(schema.stageAutomations).values({
+        stageId: trialStageId,
+        triggerOn: "enter",
+        actionType: "send_notification",
+        actionConfig: JSON.stringify({
+          title: "Case entering Trial/Hearing",
+          message: "A case assigned to you has entered the Trial/Hearing stage.",
+        }),
+        isActive: true,
+      });
+    }
+  }
+  if (resolutionStageId) {
+    const existing = await db
+      .select()
+      .from(schema.stageAutomations)
+      .where(eq(schema.stageAutomations.stageId, resolutionStageId));
+    if (existing.length === 0) {
+      await db.insert(schema.stageAutomations).values({
+        stageId: resolutionStageId,
+        triggerOn: "enter",
+        actionType: "update_status",
+        actionConfig: JSON.stringify({ status: "resolved" }),
+        isActive: true,
+      });
+    }
+  }
+  console.log("  ✓ Sample stage automations seeded");
+
+  // 10d. Backfill stageEnteredAt and caseStageHistory for existing pipeline-assigned cases
+  console.log("Backfilling stage_entered_at for existing cases...");
+  await db.execute(
+    `UPDATE cases SET stage_entered_at = updated_at WHERE pipeline_stage_id IS NOT NULL AND stage_entered_at IS NULL`
+  );
+  // Insert initial caseStageHistory records for existing cases that have no history yet
+  await db.execute(
+    `INSERT INTO case_stage_history (id, case_id, stage_id, entered_at)
+     SELECT gen_random_uuid(), c.id, c.pipeline_stage_id, COALESCE(c.stage_entered_at, c.updated_at)
+     FROM cases c
+     LEFT JOIN case_stage_history csh ON csh.case_id = c.id AND csh.stage_id = c.pipeline_stage_id
+     WHERE c.pipeline_stage_id IS NOT NULL AND csh.id IS NULL`
+  );
+  console.log("  ✓ Backfill completed");
 
   console.log("\n✅ Seed completed successfully!");
   console.log(`
@@ -309,7 +439,8 @@ Summary:
   - ${userData.attorneys.length} attorneys (with practising certificates & CPD records)
   - ${userData.clients.length} clients
   - ${sampleCases.length} cases (with attorney assignments)
-  - ${stages.length} pipeline stages
+  - ${stages.length} default pipeline stages + practice-area-specific stages
+  - Stage automations + backfilled stage history
 
 Default password for all users: ${DEFAULT_PASSWORD}
 `);

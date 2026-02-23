@@ -10,18 +10,18 @@ export const metadata: Metadata = {
 
 export default function RegisterPage() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Create Account</CardTitle>
+    <Card className="shadow-lg border-0">
+      <CardHeader className="text-center">
+        <CardTitle className="text-xl">Create Account</CardTitle>
         <CardDescription>
           Register for a client account. Admin approval is required.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <RegisterForm />
-        <div className="mt-4 text-center text-sm text-muted-foreground">
+        <div className="mt-6 text-center text-sm text-muted-foreground">
           Already have an account?{" "}
-          <Link href="/login" className="text-primary hover:underline">
+          <Link href="/login" className="font-medium text-primary hover:underline">
             Sign In
           </Link>
         </div>

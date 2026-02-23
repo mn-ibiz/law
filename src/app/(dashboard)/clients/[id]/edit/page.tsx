@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireAdminOrAttorney } from "@/lib/auth/get-session";
 import { getClientById } from "@/lib/queries/clients";
 import { ClientForm } from "@/components/forms/client-form";
+import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -19,6 +20,13 @@ export default async function EditClientPage({ params }: { params: Promise<{ id:
 
   return (
     <div className="space-y-6">
+      <PageBreadcrumb
+        items={[
+          { label: "Clients", href: "/clients" },
+          { label: `${client.firstName} ${client.lastName}`, href: `/clients/${id}` },
+          { label: "Edit" },
+        ]}
+      />
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Edit Client</h1>
         <p className="text-muted-foreground">

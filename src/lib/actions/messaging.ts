@@ -1,5 +1,6 @@
 "use server";
 
+import { z } from "zod";
 import { db } from "@/lib/db";
 import { messages, notifications } from "@/lib/db/schema/messaging";
 import { auth } from "@/lib/auth/auth";
@@ -36,7 +37,47 @@ export async function sendMessage(data: unknown) {
     });
 
     revalidatePath("/messages");
-    return { data: result[0] };
+    return { data: (result as Record<string, unknown>[])[0] };
+  });
+}
+
+export async function deleteMessage(id: string) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user) return { error: "Unauthorized" };
+
+    const idParsed = z.string().uuid().safeParse(id);
+    if (!idParsed.success) return { error: "Invalid message ID" };
+
+    // Only allow sender to delete their own messages
+    const msg = await db.select({ senderId: messages.senderId }).from(messages).where(eq(messages.id, idParsed.data)).limit(1);
+    if (!msg[0]) return { error: "Not found" };
+    if (msg[0].senderId !== session.user.id && session.user.role !== "admin") {
+      return { error: "Unauthorized" };
+    }
+
+    await db.delete(messages).where(eq(messages.id, idParsed.data));
+    revalidatePath("/messages");
+    return { success: true };
+  });
+}
+
+export async function markMessageRead(id: string) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user) return { error: "Unauthorized" };
+
+    const idParsed = z.string().uuid().safeParse(id);
+    if (!idParsed.success) return { error: "Invalid message ID" };
+
+    await db
+      .update(messages)
+      .set({ status: "read", readAt: new Date() })
+      .where(and(eq(messages.id, idParsed.data), eq(messages.recipientId, session.user.id)));
+
+    revalidatePath("/messages");
+    revalidatePath("/notifications");
+    return { success: true };
   });
 }
 

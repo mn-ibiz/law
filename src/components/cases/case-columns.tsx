@@ -2,7 +2,6 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 import { formatEnum } from "@/lib/utils/format-enum";
+import { CaseStatusBadge, PriorityBadge } from "@/components/shared/status-badges";
 
 export interface CaseRow {
   id: string;
@@ -26,26 +26,14 @@ export interface CaseRow {
   createdAt: Date;
 }
 
-const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  open: "outline",
-  in_progress: "default",
-  hearing: "default",
-  resolved: "secondary",
-  closed: "secondary",
-  archived: "secondary",
-};
-
-const priorityVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  low: "secondary",
-  medium: "outline",
-  high: "default",
-  urgent: "destructive",
-};
-
 export const caseColumns: ColumnDef<CaseRow>[] = [
   {
     accessorKey: "caseNumber",
-    header: "Case #",
+    header: () => (
+      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        Case #
+      </span>
+    ),
     cell: ({ row }) => (
       <Link
         href={`/cases/${row.original.id}`}
@@ -57,14 +45,24 @@ export const caseColumns: ColumnDef<CaseRow>[] = [
   },
   {
     accessorKey: "title",
-    header: "Title",
+    header: () => (
+      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        Title
+      </span>
+    ),
     cell: ({ row }) => (
-      <span className="max-w-[200px] truncate block">{row.getValue("title")}</span>
+      <span className="max-w-[200px] truncate block font-medium">
+        {row.getValue("title")}
+      </span>
     ),
   },
   {
     accessorKey: "clientName",
-    header: "Client",
+    header: () => (
+      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        Client
+      </span>
+    ),
     cell: ({ row }) => (
       <Link
         href={`/clients/${row.original.clientId}`}
@@ -76,34 +74,34 @@ export const caseColumns: ColumnDef<CaseRow>[] = [
   },
   {
     accessorKey: "caseType",
-    header: "Type",
+    header: () => (
+      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        Type
+      </span>
+    ),
     cell: ({ row }) => (
-      <span className="capitalize">{formatEnum(row.getValue("caseType") as string)}</span>
+      <span className="text-sm text-muted-foreground">
+        {formatEnum(row.getValue("caseType") as string)}
+      </span>
     ),
   },
   {
     accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => {
-      const status = row.getValue("status") as string;
-      return (
-        <Badge variant={statusVariant[status] ?? "secondary"}>
-          {formatEnum(status)}
-        </Badge>
-      );
-    },
+    header: () => (
+      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        Status
+      </span>
+    ),
+    cell: ({ row }) => <CaseStatusBadge status={row.getValue("status") as string} />,
   },
   {
     accessorKey: "priority",
-    header: "Priority",
-    cell: ({ row }) => {
-      const priority = row.getValue("priority") as string;
-      return (
-        <Badge variant={priorityVariant[priority] ?? "secondary"}>
-          {priority}
-        </Badge>
-      );
-    },
+    header: () => (
+      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        Priority
+      </span>
+    ),
+    cell: ({ row }) => <PriorityBadge priority={row.getValue("priority") as string} />,
   },
   {
     id: "actions",

@@ -25,6 +25,28 @@ export const createLicenseSchema = z.object({
   expiryDate: z.string().optional(),
 });
 
+export const createProfessionalIndemnitySchema = z.object({
+  insurer: z.string().min(1, "Insurer is required").max(255),
+  policyNumber: z.string().min(1, "Policy number is required").max(100),
+  coverageAmount: z.number().min(0, "Coverage must be positive"),
+  premium: z.number().min(0).optional(),
+  startDate: z.string().min(1, "Start date is required"),
+  expiryDate: z.string().min(1, "Expiry date is required"),
+  status: z.enum(["active", "expired", "cancelled"]),
+  notes: z.string().max(5000).optional(),
+});
+
+export const createLskMembershipSchema = z.object({
+  year: z.string().min(4, "Year is required").max(4),
+  amount: z.number().min(0, "Amount must be positive"),
+  paymentDate: z.string().optional(),
+  receiptNumber: z.string().max(100).optional(),
+  status: z.enum(["pending", "paid", "overdue"]),
+  notes: z.string().max(5000).optional(),
+});
+
 export type CreateAttorneyInput = z.infer<typeof createAttorneySchema>;
 export type UpdateAttorneyInput = z.infer<typeof updateAttorneySchema>;
 export type CreateLicenseInput = z.infer<typeof createLicenseSchema>;
+export type CreateProfessionalIndemnityInput = z.infer<typeof createProfessionalIndemnitySchema>;
+export type CreateLskMembershipInput = z.infer<typeof createLskMembershipSchema>;

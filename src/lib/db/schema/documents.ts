@@ -1,6 +1,6 @@
 import { pgTable, uuid, text, integer, timestamp, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-import { documentCategory, documentStatus } from "./enums";
+import { documentCategory, documentStatus, documentReviewStatus } from "./enums";
 import { users } from "./auth";
 import { cases } from "./cases";
 import { clients } from "./clients";
@@ -22,6 +22,10 @@ export const documents = pgTable(
     fileSize: integer("file_size"),
     mimeType: text("mime_type"),
     description: text("description"),
+    reviewStatus: documentReviewStatus("review_status"),
+    reviewedBy: uuid("reviewed_by").references(() => users.id, { onDelete: "set null" }),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    reviewNotes: text("review_notes"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },

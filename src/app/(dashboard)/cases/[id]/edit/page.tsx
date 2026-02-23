@@ -4,6 +4,7 @@ import { requireAdminOrAttorney } from "@/lib/auth/get-session";
 import { getCaseById } from "@/lib/queries/cases";
 import { getClients } from "@/lib/queries/clients";
 import { CaseForm } from "@/components/forms/case-form";
+import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -28,6 +29,13 @@ export default async function EditCasePage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="space-y-6">
+      <PageBreadcrumb
+        items={[
+          { label: "Cases", href: "/cases" },
+          { label: caseData.caseNumber, href: `/cases/${id}` },
+          { label: "Edit" },
+        ]}
+      />
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Edit Case</h1>
         <p className="text-muted-foreground">

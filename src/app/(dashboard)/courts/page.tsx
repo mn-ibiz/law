@@ -1,75 +1,57 @@
 import { requireAdminOrAttorney } from "@/lib/auth/get-session";
-import { getCourtHierarchy } from "@/lib/queries/courts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { getCourtHierarchy, getAllCourtFilings, getAllServiceOfDocuments, getCourts } from "@/lib/queries/courts";
+import { getCases } from "@/lib/queries/cases";
+import { CourtsTabs } from "@/components/courts/courts-tabs";
+import { Gavel } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Courts",
-  description: "Kenya court hierarchy and stations",
+  description: "Kenya court hierarchy, filings, and service of process",
 };
 
 export default async function CourtsPage() {
   await requireAdminOrAttorney();
-  const hierarchy = await getCourtHierarchy();
+  const [hierarchy, filings, serviceRecords, courtList, caseResult] = await Promise.all([
+    getCourtHierarchy(),
+    getAllCourtFilings(),
+    getAllServiceOfDocuments(),
+    getCourts(),
+    getCases({ limit: 200 }),
+  ]);
+
+  const cases = caseResult.data.map((c) => ({
+    id: c.id,
+    caseNumber: c.caseNumber,
+    title: c.title,
+  }));
+
+  const courts = courtList.map((c) => ({
+    id: c.id,
+    name: c.name,
+  }));
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Kenya Court Hierarchy</h1>
-        <p className="text-muted-foreground">Courts and stations for case filings.</p>
-      </div>
-      {hierarchy.length === 0 ? (
-        <Card>
-          <CardContent className="py-8 text-center">
-            <p className="text-muted-foreground">
-              No courts configured. Add courts in Settings to begin tracking filings.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {hierarchy.map((court) => (
-            <Card key={court.id}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">{court.name}</CardTitle>
-                  <Badge variant="outline">{court.level}</Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <dl className="grid gap-2 text-sm">
-                  {court.jurisdiction && (
-                    <div>
-                      <dt className="text-muted-foreground">Jurisdiction</dt>
-                      <dd className="font-medium">{court.jurisdiction}</dd>
-                    </div>
-                  )}
-                  {court.address && (
-                    <div>
-                      <dt className="text-muted-foreground">Address</dt>
-                      <dd className="font-medium">{court.address}</dd>
-                    </div>
-                  )}
-                </dl>
-                {court.stations.length > 0 && (
-                  <div className="mt-4">
-                    <p className="text-sm font-medium mb-2">Stations ({court.stations.length})</p>
-                    <div className="flex flex-wrap gap-2">
-                      {court.stations.map((station) => (
-                        <Badge key={station.id} variant="secondary">
-                          {station.name}
-                          {station.county && ` (${station.county})`}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+          <Gavel className="h-5 w-5 text-primary" />
         </div>
-      )}
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Courts & Filings</h1>
+          <p className="text-sm text-muted-foreground">
+            Court hierarchy, filings, and service of process.
+          </p>
+        </div>
+      </div>
+
+      <CourtsTabs
+        hierarchy={hierarchy}
+        filings={filings}
+        serviceRecords={serviceRecords}
+        cases={cases}
+        courts={courts}
+      />
     </div>
   );
 }

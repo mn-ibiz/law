@@ -3,17 +3,20 @@
 import { useState, useTransition } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { searchConflicts, type ConflictResult } from "@/lib/actions/conflicts";
 import { Search, Loader2, AlertTriangle, CheckCircle, Shield } from "lucide-react";
 import { formatEnum } from "@/lib/utils/format-enum";
+import { cn } from "@/lib/utils";
 
-const severityVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  none: "secondary",
-  low: "outline",
-  medium: "default",
-  high: "destructive",
+const capsule =
+  "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold leading-none whitespace-nowrap";
+
+const severityStyles: Record<string, string> = {
+  none: "bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-500/20",
+  low: "bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20",
+  medium: "bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20",
+  high: "bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/20",
 };
 
 export function ConflictCheckPage() {
@@ -32,7 +35,7 @@ export function ConflictCheckPage() {
   }
 
   return (
-    <Card>
+    <Card className="shadow-sm">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Shield className="h-5 w-5" />
@@ -83,7 +86,7 @@ export function ConflictCheckPage() {
                   {results.map((r, i) => (
                     <div
                       key={`${r.entityId}-${i}`}
-                      className="flex items-center justify-between rounded-md border p-4"
+                      className="flex items-center justify-between rounded-md border p-4 transition-colors hover:bg-muted/50"
                     >
                       <div>
                         <p className="font-medium">{r.entityName}</p>
@@ -95,9 +98,14 @@ export function ConflictCheckPage() {
                           Type: {formatEnum(r.entityType)}
                         </p>
                       </div>
-                      <Badge variant={severityVariant[r.severity]}>
+                      <span
+                        className={cn(
+                          capsule,
+                          severityStyles[r.severity] ?? severityStyles.none
+                        )}
+                      >
                         {r.severity}
-                      </Badge>
+                      </span>
                     </div>
                   ))}
                 </div>

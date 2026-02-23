@@ -16,9 +16,11 @@
     "seed": "npx tsx src/lib/db/seed.ts"
   },
   "dependencies": {
+    "@base-ui/react": "^1.2.0",
     "@hookform/resolvers": "^5.2.2",
     "@neondatabase/serverless": "^1.0.2",
     "@tanstack/react-table": "^8.21.3",
+    "africastalking": "^0.7.9",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -26,7 +28,11 @@
     "date-fns": "^4.1.0",
     "dotenv": "^17.3.1",
     "drizzle-orm": "^0.45.1",
+    "embla-carousel-react": "^8.6.0",
+    "ics": "^3.8.1",
+    "input-otp": "^1.4.2",
     "lucide-react": "^0.575.0",
+    "motion": "^12.34.3",
     "next": "16.1.6",
     "next-auth": "5.0.0-beta.30",
     "next-themes": "^0.4.6",
@@ -35,9 +41,12 @@
     "react-day-picker": "^9.13.2",
     "react-dom": "19.2.3",
     "react-hook-form": "^7.71.2",
-    "recharts": "^3.7.0",
+    "react-resizable-panels": "^4.6.5",
+    "recharts": "^2.15.4",
+    "resend": "^6.9.2",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",
+    "vaul": "^1.1.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {

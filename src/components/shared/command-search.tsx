@@ -10,6 +10,7 @@ import {
   CreditCard,
   Search,
   Clock,
+  ArrowRight,
 } from "lucide-react";
 import {
   CommandDialog,
@@ -114,6 +115,15 @@ export function CommandSearch() {
     setQuery(q);
   }
 
+  function handleSearchAll() {
+    if (query.trim()) {
+      addRecentSearch(query);
+      setOpen(false);
+      router.push(`/search?q=${encodeURIComponent(query.trim())}`);
+      setQuery("");
+    }
+  }
+
   // Group results by type
   const grouped = results.reduce<Record<string, SearchResult[]>>(
     (acc, item) => {
@@ -183,6 +193,21 @@ export function CommandSearch() {
               </div>
             );
           })}
+
+        {!loading && query.length >= 2 && (
+          <>
+            <CommandSeparator />
+            <CommandGroup>
+              <CommandItem
+                onSelect={handleSearchAll}
+                value={`search-all-${query}`}
+              >
+                <ArrowRight className="mr-2 h-4 w-4" />
+                <span>Search all for &quot;{query}&quot;</span>
+              </CommandItem>
+            </CommandGroup>
+          </>
+        )}
       </CommandList>
     </CommandDialog>
   );

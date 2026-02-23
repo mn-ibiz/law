@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { db } from "@/lib/db";
-import { attorneys, attorneyPracticeAreas, attorneyLicenses } from "@/lib/db/schema/attorneys";
+import { attorneys, attorneyPracticeAreas, attorneyLicenses, professionalIndemnity, lskMembership } from "@/lib/db/schema/attorneys";
 import { users } from "@/lib/db/schema/auth";
 import { practiceAreas } from "@/lib/db/schema/settings";
 import { eq, ilike, or, and, sql, desc } from "drizzle-orm";
@@ -127,4 +127,20 @@ export async function getAvailableUsers() {
     .leftJoin(attorneys, eq(users.id, attorneys.userId))
     .where(and(eq(users.role, "attorney"), sql`${attorneys.id} IS NULL`));
   return result;
+}
+
+export async function getAttorneyIndemnity(attorneyId: string) {
+  return db
+    .select()
+    .from(professionalIndemnity)
+    .where(eq(professionalIndemnity.attorneyId, attorneyId))
+    .orderBy(desc(professionalIndemnity.expiryDate));
+}
+
+export async function getAttorneyLskMemberships(attorneyId: string) {
+  return db
+    .select()
+    .from(lskMembership)
+    .where(eq(lskMembership.attorneyId, attorneyId))
+    .orderBy(desc(lskMembership.year));
 }

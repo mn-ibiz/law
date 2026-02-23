@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { ActiveBadge, PriorityBadge } from "@/components/shared/status-badges";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -15,7 +16,8 @@ import {
 } from "@/components/ui/table";
 import { ConflictCheckDialog } from "./conflict-check-dialog";
 import { formatEnum } from "@/lib/utils/format-enum";
-import { Shield, AlertTriangle, CheckCircle, FileText } from "lucide-react";
+import { Shield, ShieldAlert, AlertTriangle, CheckCircle, FileText } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { APP_LOCALE } from "@/lib/constants/locale";
 
 interface Client {
@@ -40,6 +42,8 @@ interface Client {
   employer: string | null;
   referralSource: string | null;
   notes: string | null;
+  isPep: boolean;
+  pepDetails: string | null;
   createdAt: Date;
 }
 
@@ -79,19 +83,40 @@ interface ClientDetailTabsProps {
   riskAssessment: RiskAssessment | null;
 }
 
-const kycStatusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  verified: "default",
-  pending: "outline",
-  rejected: "destructive",
-  expired: "secondary",
+/* ── KYC document status capsule ── */
+const capsule =
+  "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold leading-none whitespace-nowrap";
+
+const kycStatusStyles: Record<string, string> = {
+  verified: "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20",
+  pending: "bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20",
+  rejected: "bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/20",
+  expired: "bg-gray-50 text-gray-500 ring-1 ring-inset ring-gray-500/20",
 };
 
-const riskVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  low: "default",
-  medium: "outline",
-  high: "destructive",
-  critical: "destructive",
+function KycStatusBadge({ status }: { status: string }) {
+  return (
+    <span className={cn(capsule, kycStatusStyles[status] ?? kycStatusStyles.pending)}>
+      {formatEnum(status)}
+    </span>
+  );
+}
+
+/* ── Risk level capsule ── */
+const riskLevelStyles: Record<string, string> = {
+  low: "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20",
+  medium: "bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20",
+  high: "bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/20",
+  critical: "bg-red-100 text-red-800 ring-1 ring-inset ring-red-600/25",
 };
+
+function RiskLevelBadge({ level }: { level: string }) {
+  return (
+    <span className={cn(capsule, riskLevelStyles[level] ?? riskLevelStyles.medium)}>
+      {formatEnum(level)}
+    </span>
+  );
+}
 
 export function ClientDetailTabs({ client, contacts, kycDocuments, riskAssessment }: ClientDetailTabsProps) {
   const [conflictOpen, setConflictOpen] = useState(false);
@@ -108,9 +133,12 @@ export function ClientDetailTabs({ client, contacts, kycDocuments, riskAssessmen
         </TabsList>
 
         <TabsContent value="profile">
-          <Card>
+          <Card className="shadow-sm">
             <CardHeader>
-              <CardTitle>Client Information</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Client Information</CardTitle>
+                <ActiveBadge active={client.status === "active"} />
+              </div>
             </CardHeader>
             <CardContent>
               <dl className="grid gap-4 md:grid-cols-2">
@@ -140,47 +168,47 @@ export function ClientDetailTabs({ client, contacts, kycDocuments, riskAssessmen
                 )}
                 <div>
                   <dt className="text-sm text-muted-foreground">National ID</dt>
-                  <dd className="font-medium">{client.nationalId ?? "—"}</dd>
+                  <dd className="font-medium">{client.nationalId ?? "\u2014"}</dd>
                 </div>
                 <div>
                   <dt className="text-sm text-muted-foreground">KRA PIN</dt>
-                  <dd className="font-medium">{client.kraPin ?? "—"}</dd>
+                  <dd className="font-medium">{client.kraPin ?? "\u2014"}</dd>
                 </div>
                 <div>
                   <dt className="text-sm text-muted-foreground">Passport</dt>
-                  <dd className="font-medium">{client.passportNumber ?? "—"}</dd>
+                  <dd className="font-medium">{client.passportNumber ?? "\u2014"}</dd>
                 </div>
                 <div>
                   <dt className="text-sm text-muted-foreground">County</dt>
-                  <dd className="font-medium">{client.county ?? "—"}</dd>
+                  <dd className="font-medium">{client.county ?? "\u2014"}</dd>
                 </div>
                 <div>
                   <dt className="text-sm text-muted-foreground">P.O. Box</dt>
-                  <dd className="font-medium">{client.poBox ?? "—"}</dd>
+                  <dd className="font-medium">{client.poBox ?? "\u2014"}</dd>
                 </div>
                 <div className="md:col-span-2">
                   <dt className="text-sm text-muted-foreground">Physical Address</dt>
-                  <dd className="font-medium">{client.physicalAddress ?? "—"}</dd>
+                  <dd className="font-medium">{client.physicalAddress ?? "\u2014"}</dd>
                 </div>
                 <div>
                   <dt className="text-sm text-muted-foreground">Date of Birth</dt>
                   <dd className="font-medium">
                     {client.dateOfBirth
                       ? new Date(client.dateOfBirth).toLocaleDateString(APP_LOCALE)
-                      : "—"}
+                      : "\u2014"}
                   </dd>
                 </div>
                 <div>
                   <dt className="text-sm text-muted-foreground">Next of Kin</dt>
-                  <dd className="font-medium">{client.nextOfKin ?? "—"}</dd>
+                  <dd className="font-medium">{client.nextOfKin ?? "\u2014"}</dd>
                 </div>
                 <div>
                   <dt className="text-sm text-muted-foreground">Employer</dt>
-                  <dd className="font-medium">{client.employer ?? "—"}</dd>
+                  <dd className="font-medium">{client.employer ?? "\u2014"}</dd>
                 </div>
                 <div>
                   <dt className="text-sm text-muted-foreground">Referral Source</dt>
-                  <dd className="font-medium">{client.referralSource ?? "—"}</dd>
+                  <dd className="font-medium">{client.referralSource ?? "\u2014"}</dd>
                 </div>
                 {client.notes && (
                   <div className="md:col-span-2">
@@ -189,12 +217,39 @@ export function ClientDetailTabs({ client, contacts, kycDocuments, riskAssessmen
                   </div>
                 )}
               </dl>
+
+              {/* PEP Screening Section */}
+              <div className="mt-6 border-t pt-6">
+                <h3 className="flex items-center gap-2 text-sm font-semibold mb-3">
+                  <ShieldAlert className="h-4 w-4" />
+                  PEP Screening
+                </h3>
+                {client.isPep ? (
+                  <div className="rounded-lg border border-rose-200 bg-rose-50 p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge variant="destructive" className="gap-1">
+                        <ShieldAlert className="h-3 w-3" />
+                        Politically Exposed Person
+                      </Badge>
+                    </div>
+                    {client.pepDetails && (
+                      <p className="text-sm text-rose-800 whitespace-pre-wrap mt-2">
+                        {client.pepDetails}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    This client is not flagged as a Politically Exposed Person (PEP).
+                  </p>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="contacts">
-          <Card>
+          <Card className="shadow-sm">
             <CardHeader>
               <CardTitle>Contact History</CardTitle>
             </CardHeader>
@@ -221,7 +276,7 @@ export function ClientDetailTabs({ client, contacts, kycDocuments, riskAssessmen
                           {formatEnum(c.type)}
                         </TableCell>
                         <TableCell>{c.subject}</TableCell>
-                        <TableCell>{c.contactedByName ?? "—"}</TableCell>
+                        <TableCell>{c.contactedByName ?? "\u2014"}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -232,7 +287,7 @@ export function ClientDetailTabs({ client, contacts, kycDocuments, riskAssessmen
         </TabsContent>
 
         <TabsContent value="kyc">
-          <Card>
+          <Card className="shadow-sm">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
@@ -261,17 +316,15 @@ export function ClientDetailTabs({ client, contacts, kycDocuments, riskAssessmen
                         <TableCell className="capitalize">
                           {formatEnum(doc.documentType)}
                         </TableCell>
-                        <TableCell>{doc.documentNumber ?? "—"}</TableCell>
+                        <TableCell>{doc.documentNumber ?? "\u2014"}</TableCell>
                         <TableCell>
-                          <Badge variant={kycStatusVariant[doc.status] ?? "secondary"}>
-                            {doc.status}
-                          </Badge>
+                          <KycStatusBadge status={doc.status} />
                         </TableCell>
-                        <TableCell>{doc.verifiedByName ?? "—"}</TableCell>
+                        <TableCell>{doc.verifiedByName ?? "\u2014"}</TableCell>
                         <TableCell>
                           {doc.expiryDate
                             ? new Date(doc.expiryDate).toLocaleDateString(APP_LOCALE)
-                            : "—"}
+                            : "\u2014"}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -283,7 +336,7 @@ export function ClientDetailTabs({ client, contacts, kycDocuments, riskAssessmen
         </TabsContent>
 
         <TabsContent value="risk">
-          <Card>
+          <Card className="shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-5 w-5" />
@@ -295,10 +348,8 @@ export function ClientDetailTabs({ client, contacts, kycDocuments, riskAssessmen
                 <dl className="grid gap-4 md:grid-cols-2">
                   <div>
                     <dt className="text-sm text-muted-foreground">Risk Level</dt>
-                    <dd>
-                      <Badge variant={riskVariant[riskAssessment.riskLevel] ?? "secondary"}>
-                        {riskAssessment.riskLevel}
-                      </Badge>
+                    <dd className="mt-1">
+                      <RiskLevelBadge level={riskAssessment.riskLevel} />
                     </dd>
                   </div>
                   <div>
@@ -331,7 +382,7 @@ export function ClientDetailTabs({ client, contacts, kycDocuments, riskAssessmen
         </TabsContent>
 
         <TabsContent value="conflicts">
-          <Card>
+          <Card className="shadow-sm">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">

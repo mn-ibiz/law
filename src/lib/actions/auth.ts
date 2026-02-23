@@ -10,6 +10,9 @@ import { loginSchema, registerSchema, forgotPasswordSchema } from "@/lib/validat
 import { AuthError } from "next-auth";
 import { rateLimit } from "@/lib/utils/rate-limit";
 import { safeAction } from "@/lib/utils/safe-action";
+import { sendEmail } from "@/lib/email/send-email";
+import { passwordResetEmailHtml } from "@/lib/email/templates/password-reset";
+import { env } from "@/lib/env";
 
 export async function loginAction(formData: {
   email: string;
@@ -122,7 +125,7 @@ export async function forgotPasswordAction(formData: { email: string }) {
     }
 
     const [user] = await db
-      .select({ id: users.id })
+      .select({ id: users.id, name: users.name })
       .from(users)
       .where(eq(users.email, validated.data.email))
       .limit(1);
@@ -147,9 +150,14 @@ export async function forgotPasswordAction(formData: { email: string }) {
         })
         .where(eq(users.id, user.id));
 
-      // TODO: Send actual email with reset link containing the plaintext token
-      // The link should be: /reset-password?token=${resetToken}&email=${validated.data.email}
-      // When verifying, hash the submitted token and compare against the stored hash
+      // Build the reset link and send the email (fire-and-forget)
+      const baseUrl = env.AUTH_URL ?? "http://localhost:3000";
+      const resetUrl = `${baseUrl}/reset-password?token=${resetToken}&email=${encodeURIComponent(validated.data.email)}`;
+      sendEmail({
+        to: validated.data.email,
+        subject: "Password Reset Request",
+        html: passwordResetEmailHtml(resetUrl, user.name ?? undefined),
+      }).catch((err) => console.error("Password reset email failed:", err));
     }
 
     // Always return success to prevent email enumeration

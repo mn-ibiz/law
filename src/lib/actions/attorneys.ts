@@ -1,13 +1,15 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { attorneys, attorneyLicenses, attorneyPracticeAreas } from "@/lib/db/schema/attorneys";
+import { attorneys, attorneyLicenses, attorneyPracticeAreas, professionalIndemnity, lskMembership } from "@/lib/db/schema/attorneys";
 import { auth } from "@/lib/auth/auth";
 import { createAuditLog } from "@/lib/utils/audit";
 import {
   createAttorneySchema,
   updateAttorneySchema,
   createLicenseSchema,
+  createProfessionalIndemnitySchema,
+  createLskMembershipSchema,
 } from "@/lib/validators/attorney";
 import { eq, and, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -201,5 +203,65 @@ export async function linkPracticeAreas(attorneyId: string, practiceAreaIds: str
 
     revalidatePath(`/attorneys/${validAttorneyId}`);
     return { success: true };
+  });
+}
+
+export async function addProfessionalIndemnity(attorneyId: string, data: unknown) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || session.user.role !== "admin") {
+      return { error: "Unauthorized" };
+    }
+
+    const validated = createProfessionalIndemnitySchema.safeParse(data);
+    if (!validated.success) {
+      return { error: validated.error.issues[0].message };
+    }
+
+    const { startDate, expiryDate, coverageAmount, premium, ...rest } = validated.data;
+
+    const result = await db
+      .insert(professionalIndemnity)
+      .values({
+        attorneyId,
+        ...rest,
+        coverageAmount: String(coverageAmount),
+        premium: premium != null ? String(premium) : undefined,
+        startDate: new Date(startDate),
+        expiryDate: new Date(expiryDate),
+      })
+      .returning();
+
+    revalidatePath(`/attorneys/${attorneyId}`);
+    return { data: result[0] };
+  });
+}
+
+export async function addLskMembership(attorneyId: string, data: unknown) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || session.user.role !== "admin") {
+      return { error: "Unauthorized" };
+    }
+
+    const validated = createLskMembershipSchema.safeParse(data);
+    if (!validated.success) {
+      return { error: validated.error.issues[0].message };
+    }
+
+    const { paymentDate, amount, ...rest } = validated.data;
+
+    const result = await db
+      .insert(lskMembership)
+      .values({
+        attorneyId,
+        ...rest,
+        amount: String(amount),
+        paymentDate: paymentDate ? new Date(paymentDate) : undefined,
+      })
+      .returning();
+
+    revalidatePath(`/attorneys/${attorneyId}`);
+    return { data: result[0] };
   });
 }

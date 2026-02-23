@@ -17,16 +17,18 @@ export default async function CasesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Cases</h1>
-          <p className="text-muted-foreground">Manage legal cases and matters.</p>
+          <p className="text-sm text-muted-foreground">
+            Manage legal cases and matters.
+          </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" asChild>
             <Link href="/cases/pipeline">Pipeline View</Link>
           </Button>
-          <Button asChild>
+          <Button size="sm" asChild>
             <Link href="/cases/new">
               <Plus className="mr-2 h-4 w-4" />
               New Case

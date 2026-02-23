@@ -20,6 +20,7 @@ export const createCaseSchema = z.object({
   estimatedValue: z.number().optional(),
   description: z.string().max(5000).optional(),
   notes: z.string().max(5000).optional(),
+  conflictAcknowledged: z.boolean().optional(),
 });
 
 export const updateCaseSchema = createCaseSchema.partial().extend({

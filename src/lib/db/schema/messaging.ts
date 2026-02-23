@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, boolean, timestamp, index } from "drizzle-orm/pg-core";
+import { type AnyPgColumn, pgTable, uuid, text, boolean, timestamp, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { messageStatus, notificationType } from "./enums";
 import { users } from "./auth";
@@ -15,7 +15,7 @@ export const messages = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "restrict" }),
     caseId: uuid("case_id").references(() => cases.id, { onDelete: "set null" }),
-    parentMessageId: uuid("parent_message_id").references(() => messages.id),
+    parentMessageId: uuid("parent_message_id").references((): AnyPgColumn => messages.id),
     subject: text("subject"),
     body: text("body").notNull(),
     status: messageStatus("status").notNull().default("sent"),

@@ -2,9 +2,15 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { ActiveBadge } from "@/components/shared/status-badges";
+import { cn } from "@/lib/utils";
 import { formatKES } from "@/lib/utils/format";
 import { APP_LOCALE } from "@/lib/constants/locale";
+import { IndemnityTab } from "@/components/attorneys/indemnity-tab";
+import { LskMembershipTab } from "@/components/attorneys/lsk-membership-tab";
+
+const designationCapsule =
+  "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold leading-none whitespace-nowrap bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-600/20";
 
 interface Attorney {
   id: string;
@@ -26,7 +32,41 @@ interface Attorney {
   createdAt: Date;
 }
 
-export function AttorneyDetailTabs({ attorney }: { attorney: Attorney }) {
+interface IndemnityRecord {
+  id: string;
+  attorneyId: string;
+  insurer: string;
+  policyNumber: string;
+  coverageAmount: string;
+  premium: string | null;
+  startDate: Date;
+  expiryDate: Date;
+  status: string;
+  notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface LskMembershipRecord {
+  id: string;
+  attorneyId: string;
+  year: string;
+  amount: string;
+  paymentDate: Date | null;
+  receiptNumber: string | null;
+  status: string;
+  notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface AttorneyDetailTabsProps {
+  attorney: Attorney;
+  indemnityRecords?: IndemnityRecord[];
+  lskMembershipRecords?: LskMembershipRecord[];
+}
+
+export function AttorneyDetailTabs({ attorney, indemnityRecords = [], lskMembershipRecords = [] }: AttorneyDetailTabsProps) {
   return (
     <Tabs defaultValue="profile" className="space-y-4">
       <TabsList>
@@ -34,14 +74,19 @@ export function AttorneyDetailTabs({ attorney }: { attorney: Attorney }) {
         <TabsTrigger value="licenses">Licenses</TabsTrigger>
         <TabsTrigger value="certificates">Certificates</TabsTrigger>
         <TabsTrigger value="cpd">CPD</TabsTrigger>
+        <TabsTrigger value="insurance">Insurance</TabsTrigger>
+        <TabsTrigger value="lsk">LSK</TabsTrigger>
         <TabsTrigger value="performance">Performance</TabsTrigger>
         <TabsTrigger value="disciplinary">Disciplinary</TabsTrigger>
       </TabsList>
 
       <TabsContent value="profile">
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader>
-            <CardTitle>Professional Profile</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Professional Profile</CardTitle>
+              <ActiveBadge active={attorney.isActive} />
+            </div>
           </CardHeader>
           <CardContent>
             <dl className="grid gap-4 md:grid-cols-2">
@@ -51,7 +96,7 @@ export function AttorneyDetailTabs({ attorney }: { attorney: Attorney }) {
               </div>
               <div>
                 <dt className="text-sm text-muted-foreground">Phone</dt>
-                <dd className="font-medium">{attorney.phone ?? "—"}</dd>
+                <dd className="font-medium">{attorney.phone ?? "\u2014"}</dd>
               </div>
               <div>
                 <dt className="text-sm text-muted-foreground">Bar Number</dt>
@@ -63,12 +108,12 @@ export function AttorneyDetailTabs({ attorney }: { attorney: Attorney }) {
               </div>
               <div>
                 <dt className="text-sm text-muted-foreground">LSK Number</dt>
-                <dd className="font-medium">{attorney.lskNumber ?? "—"}</dd>
+                <dd className="font-medium">{attorney.lskNumber ?? "\u2014"}</dd>
               </div>
               <div>
                 <dt className="text-sm text-muted-foreground">Hourly Rate</dt>
                 <dd className="font-medium">
-                  {attorney.hourlyRate ? formatKES(Number(attorney.hourlyRate)) : "—"}
+                  {attorney.hourlyRate ? formatKES(Number(attorney.hourlyRate)) : "\u2014"}
                 </dd>
               </div>
               <div>
@@ -76,24 +121,26 @@ export function AttorneyDetailTabs({ attorney }: { attorney: Attorney }) {
                 <dd className="font-medium">
                   {attorney.dateAdmitted
                     ? new Date(attorney.dateAdmitted).toLocaleDateString(APP_LOCALE)
-                    : "—"}
+                    : "\u2014"}
                 </dd>
               </div>
               <div>
                 <dt className="text-sm text-muted-foreground">Department</dt>
-                <dd className="font-medium">{attorney.department ?? "—"}</dd>
+                <dd className="font-medium">{attorney.department ?? "\u2014"}</dd>
               </div>
               <div className="md:col-span-2">
                 <dt className="text-sm text-muted-foreground">Designations</dt>
                 <dd className="flex gap-2 mt-1">
                   {attorney.commissionerForOaths && (
-                    <Badge variant="outline">Commissioner for Oaths</Badge>
+                    <span className={designationCapsule}>Commissioner for Oaths</span>
                   )}
                   {attorney.notaryPublic && (
-                    <Badge variant="outline">Notary Public</Badge>
+                    <span className={designationCapsule}>Notary Public</span>
                   )}
                   {attorney.seniorCounsel && (
-                    <Badge variant="outline">Senior Counsel</Badge>
+                    <span className={cn(designationCapsule, "bg-amber-50 text-amber-700 ring-amber-600/20")}>
+                      Senior Counsel
+                    </span>
                   )}
                   {!attorney.commissionerForOaths &&
                     !attorney.notaryPublic &&
@@ -114,7 +161,7 @@ export function AttorneyDetailTabs({ attorney }: { attorney: Attorney }) {
       </TabsContent>
 
       <TabsContent value="licenses">
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader>
             <CardTitle>Additional Licenses</CardTitle>
           </CardHeader>
@@ -127,7 +174,7 @@ export function AttorneyDetailTabs({ attorney }: { attorney: Attorney }) {
       </TabsContent>
 
       <TabsContent value="certificates">
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader>
             <CardTitle>Practising Certificates</CardTitle>
           </CardHeader>
@@ -140,7 +187,7 @@ export function AttorneyDetailTabs({ attorney }: { attorney: Attorney }) {
       </TabsContent>
 
       <TabsContent value="cpd">
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader>
             <CardTitle>CPD Records</CardTitle>
           </CardHeader>
@@ -152,8 +199,16 @@ export function AttorneyDetailTabs({ attorney }: { attorney: Attorney }) {
         </Card>
       </TabsContent>
 
+      <TabsContent value="insurance">
+        <IndemnityTab attorneyId={attorney.id} records={indemnityRecords} />
+      </TabsContent>
+
+      <TabsContent value="lsk">
+        <LskMembershipTab attorneyId={attorney.id} records={lskMembershipRecords} />
+      </TabsContent>
+
       <TabsContent value="performance">
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader>
             <CardTitle>Performance Metrics</CardTitle>
           </CardHeader>
@@ -166,7 +221,7 @@ export function AttorneyDetailTabs({ attorney }: { attorney: Attorney }) {
       </TabsContent>
 
       <TabsContent value="disciplinary">
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader>
             <CardTitle>Disciplinary Records</CardTitle>
           </CardHeader>

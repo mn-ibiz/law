@@ -37,7 +37,19 @@ export const createDocumentVersionSchema = z.object({
   changeNotes: z.string().max(5000).optional(),
 });
 
+export const clientUploadDocumentSchema = z.object({
+  title: z.string().min(1, "Title is required").max(255),
+  caseId: z.string().uuid().optional(),
+  category: z.enum(["pleading", "correspondence", "contract", "evidence", "court_order", "filing", "template", "other"]),
+  description: z.string().max(5000).optional(),
+  fileUrl: z.string().min(1).max(2000),
+  fileName: z.string().min(1).max(255),
+  fileSize: z.number().positive().optional(),
+  mimeType: z.string().max(100).optional(),
+});
+
 export type UploadDocumentInput = z.infer<typeof uploadDocumentSchema>;
 export type CreateTemplateInput = z.infer<typeof createTemplateSchema>;
 export type CreateDocumentRecordInput = z.infer<typeof createDocumentRecordSchema>;
 export type CreateDocumentVersionInput = z.infer<typeof createDocumentVersionSchema>;
+export type ClientUploadDocumentInput = z.infer<typeof clientUploadDocumentSchema>;

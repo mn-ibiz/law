@@ -1,7 +1,8 @@
 import { requireAdmin } from "@/lib/auth/get-session";
 import { getUsers } from "@/lib/queries/settings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { RoleBadge, ActiveBadge } from "@/components/shared/status-badges";
+import { UserActions } from "@/components/settings/user-actions";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -14,14 +15,15 @@ export const metadata: Metadata = {
 };
 
 export default async function UsersPage() {
-  await requireAdmin();
+  const session = await requireAdmin();
   const userList = await getUsers();
+  const currentUserId = session.user.id;
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">User Management</h1>
-        <p className="text-muted-foreground">Manage system users and their roles.</p>
+        <p className="text-muted-foreground">Manage system users, roles, and account status.</p>
       </div>
       <Card>
         <CardHeader><CardTitle>All Users</CardTitle></CardHeader>
@@ -29,27 +31,39 @@ export default async function UsersPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
+                <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Name</TableHead>
+                <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Email</TableHead>
+                <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Role</TableHead>
+                <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Status</TableHead>
+                <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Created</TableHead>
+                <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground w-[50px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {userList.map((u) => (
-                <TableRow key={u.id}>
-                  <TableCell className="font-medium">{u.name}</TableCell>
+                <TableRow key={u.id} className="transition-colors hover:bg-muted/50">
+                  <TableCell className="font-medium">
+                    {u.name}
+                    {u.id === currentUserId && (
+                      <span className="ml-2 text-xs text-muted-foreground">(you)</span>
+                    )}
+                  </TableCell>
                   <TableCell>{u.email}</TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="capitalize">{u.role}</Badge>
+                    <RoleBadge role={u.role} />
                   </TableCell>
                   <TableCell>
-                    <Badge variant={u.isActive ? "default" : "secondary"}>
-                      {u.isActive ? "Active" : "Inactive"}
-                    </Badge>
+                    <ActiveBadge active={u.isActive} />
                   </TableCell>
                   <TableCell>{new Date(u.createdAt).toLocaleDateString(APP_LOCALE)}</TableCell>
+                  <TableCell>
+                    <UserActions
+                      userId={u.id}
+                      currentRole={u.role}
+                      isActive={u.isActive}
+                      isSelf={u.id === currentUserId}
+                    />
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
