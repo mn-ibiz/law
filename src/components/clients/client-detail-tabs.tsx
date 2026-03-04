@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ActiveBadge, PriorityBadge } from "@/components/shared/status-badges";
+import { ActiveBadge } from "@/components/shared/status-badges";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {

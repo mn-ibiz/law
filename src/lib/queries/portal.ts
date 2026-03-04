@@ -4,7 +4,7 @@ import { invoices } from "@/lib/db/schema/billing";
 import { documents } from "@/lib/db/schema/documents";
 import { clients } from "@/lib/db/schema/clients";
 import { messages } from "@/lib/db/schema/messaging";
-import { eq, desc, sql, and } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 export async function getPortalCases(clientUserId: string) {
   const client = await db.select({ id: clients.id }).from(clients).where(eq(clients.userId, clientUserId)).limit(1);

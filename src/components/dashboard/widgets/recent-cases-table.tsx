@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Briefcase, ArrowRight } from "lucide-react";
-import { formatEnum } from "@/lib/utils/format-enum";
 import { Button } from "@/components/ui/button";
 import { CaseStatusBadge } from "@/components/shared/status-badges";
 

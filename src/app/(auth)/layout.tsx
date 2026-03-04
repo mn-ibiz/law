@@ -1,5 +1,6 @@
 import { Scale } from "lucide-react";
 import { getFirmBranding } from "@/lib/queries/settings";
+import Image from "next/image";
 
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
   const branding = await getFirmBranding();
@@ -16,10 +17,13 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
       <div className="w-full max-w-md">
         <div className="mb-8 flex flex-col items-center text-center">
           {branding.logoUrl ? (
-            <img
+            <Image
               src={branding.logoUrl}
               alt={branding.firmName ?? "Firm logo"}
+              width={48}
+              height={48}
               className="mb-3 h-12 w-12 rounded-xl object-contain"
+              unoptimized
             />
           ) : (
             <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary shadow-lg">

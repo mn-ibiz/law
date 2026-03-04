@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { branches, branchUsers } from "@/lib/db/schema/branches";
 import { auth } from "@/lib/auth/auth";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { safeAction } from "@/lib/utils/safe-action";

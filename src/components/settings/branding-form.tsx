@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { upsertFirmSetting } from "@/lib/actions/settings";
 import { useRouter } from "next/navigation";
 import { Scale } from "lucide-react";
+import Image from "next/image";
 
 interface BrandingFormProps {
   initialData: {
@@ -21,6 +22,7 @@ interface BrandingFormProps {
 export function BrandingForm({ initialData }: BrandingFormProps) {
   const router = useRouter();
   const [logoUrl, setLogoUrl] = useState(initialData.logoUrl ?? "");
+  const [logoError, setLogoError] = useState(false);
   const [firmName, setFirmName] = useState(initialData.firmName ?? "");
   const [primaryColor, setPrimaryColor] = useState(initialData.primaryColor ?? "#1e40af");
   const [accentColor, setAccentColor] = useState(initialData.accentColor ?? "#3b82f6");
@@ -63,7 +65,10 @@ export function BrandingForm({ initialData }: BrandingFormProps) {
             <Input
               id="logoUrl"
               value={logoUrl}
-              onChange={(e) => setLogoUrl(e.target.value)}
+              onChange={(e) => {
+                setLogoError(false);
+                setLogoUrl(e.target.value);
+              }}
               placeholder="https://example.com/logo.png"
             />
             <p className="text-xs text-muted-foreground">
@@ -126,14 +131,15 @@ export function BrandingForm({ initialData }: BrandingFormProps) {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-3 rounded-lg border p-4">
-              {logoUrl ? (
-                <img
+              {logoUrl && !logoError ? (
+                <Image
                   src={logoUrl}
                   alt="Firm logo"
+                  width={40}
+                  height={40}
                   className="h-10 w-10 rounded-lg object-contain"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = "none";
-                  }}
+                  onError={() => setLogoError(true)}
+                  unoptimized
                 />
               ) : (
                 <div

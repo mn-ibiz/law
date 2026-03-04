@@ -11,7 +11,7 @@ import {
   auditLog,
 } from "@/lib/db/schema/settings";
 import { branches, branchUsers } from "@/lib/db/schema/branches";
-import { eq, desc, sql, inArray } from "drizzle-orm";
+import { eq, desc, inArray } from "drizzle-orm";
 
 // Dynamic imports to avoid circular deps - read schema directly
 export async function getUsers() {

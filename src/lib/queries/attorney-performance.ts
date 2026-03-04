@@ -1,7 +1,5 @@
 import { db } from "@/lib/db";
 import { cases, caseAssignments } from "@/lib/db/schema/cases";
-import { invoices } from "@/lib/db/schema/billing";
-import { payments } from "@/lib/db/schema/billing";
 import { timeEntries } from "@/lib/db/schema/time-expenses";
 import { sql, eq, and, isNull, inArray } from "drizzle-orm";
 

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Clock, AlertTriangle } from "lucide-react";
+import { Calendar, AlertTriangle } from "lucide-react";
 import { formatEnum } from "@/lib/utils/format-enum";
 import { APP_LOCALE } from "@/lib/constants/locale";
 import { cn } from "@/lib/utils";

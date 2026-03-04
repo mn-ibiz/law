@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,15 +78,18 @@ function formatElapsed(totalSeconds: number): string {
 }
 
 export function TimerWidget({ cases }: TimerWidgetProps) {
-  const [isRunning, setIsRunning] = useState(false);
-  const [startTime, setStartTime] = useState<number | null>(null);
-  const [accumulatedMs, setAccumulatedMs] = useState(0);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [selectedCaseId, setSelectedCaseId] = useState("");
-  const [description, setDescription] = useState("");
+  const [initial] = useState<TimerState>(() => loadTimerState());
+
+  const [isRunning, setIsRunning] = useState(initial.isRunning);
+  const [startTime, setStartTime] = useState<number | null>(initial.startTime);
+  const [accumulatedMs, setAccumulatedMs] = useState(initial.accumulatedMs);
+  const [elapsedSeconds, setElapsedSeconds] = useState(
+    Math.floor(initial.accumulatedMs / 1000)
+  );
+  const [selectedCaseId, setSelectedCaseId] = useState(initial.selectedCaseId);
+  const [description, setDescription] = useState(initial.description);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
-  const initialized = useRef(false);
+  const [isVisible, setIsVisible] = useState(initial.isRunning || initial.accumulatedMs > 0);
 
   const { execute, isPending } = useAction(createTimeEntry, {
     successMessage: "Time entry saved",
@@ -102,24 +105,8 @@ export function TimerWidget({ cases }: TimerWidgetProps) {
     },
   });
 
-  // Initialize from localStorage
-  useEffect(() => {
-    if (initialized.current) return;
-    initialized.current = true;
-    const state = loadTimerState();
-    setIsRunning(state.isRunning);
-    setStartTime(state.startTime);
-    setAccumulatedMs(state.accumulatedMs);
-    setSelectedCaseId(state.selectedCaseId);
-    setDescription(state.description);
-    if (state.isRunning || state.accumulatedMs > 0) {
-      setIsVisible(true);
-    }
-  }, []);
-
   // Persist state changes
   useEffect(() => {
-    if (!initialized.current) return;
     saveTimerState({
       isRunning,
       startTime,
@@ -131,11 +118,7 @@ export function TimerWidget({ cases }: TimerWidgetProps) {
 
   // Timer tick
   useEffect(() => {
-    if (!isRunning || !startTime) {
-      const totalMs = accumulatedMs;
-      setElapsedSeconds(Math.floor(totalMs / 1000));
-      return;
-    }
+    if (!isRunning || !startTime) return;
     const interval = setInterval(() => {
       const now = Date.now();
       const totalMs = accumulatedMs + (now - startTime);
@@ -148,11 +131,17 @@ export function TimerWidget({ cases }: TimerWidgetProps) {
     setIsRunning(true);
     setStartTime(Date.now());
     setIsVisible(true);
-  }, []);
+    setElapsedSeconds(Math.floor(accumulatedMs / 1000));
+  }, [accumulatedMs]);
 
   const handlePause = useCallback(() => {
     if (startTime) {
-      setAccumulatedMs((prev) => prev + (Date.now() - startTime));
+      const delta = Date.now() - startTime;
+      setAccumulatedMs((prev) => {
+        const next = prev + delta;
+        setElapsedSeconds(Math.floor(next / 1000));
+        return next;
+      });
     }
     setIsRunning(false);
     setStartTime(null);
@@ -167,6 +156,7 @@ export function TimerWidget({ cases }: TimerWidgetProps) {
     setIsRunning(false);
     setStartTime(null);
     setAccumulatedMs(totalMs);
+    setElapsedSeconds(Math.floor(totalMs / 1000));
 
     const hours = totalMs / (1000 * 60 * 60);
     if (hours < 0.01) return; // Less than ~36 seconds, skip

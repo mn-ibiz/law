@@ -69,7 +69,11 @@ export function PipelineStageAutomations({
   };
 
   useEffect(() => {
-    if (open) loadAutomations();
+    if (!open) return;
+    const t = setTimeout(() => {
+      void loadAutomations();
+    }, 0);
+    return () => clearTimeout(t);
   }, [open, stageId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { execute: addAutomation, isPending: isAdding } = useAction(

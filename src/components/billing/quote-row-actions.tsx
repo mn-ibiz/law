@@ -14,6 +14,7 @@ interface QuoteRowActionsProps {
 
 export function QuoteRowActions({ quoteId, status, userRole }: QuoteRowActionsProps) {
   const router = useRouter();
+  void userRole;
 
   const { execute: executeSend, isPending: isSending } = useAction(
     (id: string) => updateQuoteStatus(id, "sent"),

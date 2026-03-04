@@ -25,7 +25,7 @@ export async function submitIntake(data: unknown) {
 
     const { firstName, lastName, email, phone, referralSource } = validated.data;
 
-    const result = await db
+    await db
       .insert(clients)
       .values({
         type: "individual",

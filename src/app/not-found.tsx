@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileQuestion } from "lucide-react";
@@ -23,7 +24,7 @@ export default function NotFoundPage() {
         </CardHeader>
         <CardContent>
           <Button asChild>
-            <a href="/">Go Home</a>
+            <Link href="/">Go Home</Link>
           </Button>
         </CardContent>
       </Card>

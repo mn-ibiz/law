@@ -149,7 +149,17 @@ export async function updateCase(id: string, data: unknown) {
       return { error: validated.error.issues[0].message };
     }
 
-    const { hourlyRate, flatFeeAmount, contingencyPercentage, estimatedValue, statuteOfLimitations, dateFiled, conflictAcknowledged: _ca, ...rest } = validated.data;
+    const {
+      hourlyRate,
+      flatFeeAmount,
+      contingencyPercentage,
+      estimatedValue,
+      statuteOfLimitations,
+      dateFiled,
+      conflictAcknowledged,
+      ...rest
+    } = validated.data;
+    void conflictAcknowledged;
 
     const result = await db
       .update(cases)

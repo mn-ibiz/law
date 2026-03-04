@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
-import { kycDocuments, clientRiskAssessments, clients } from "@/lib/db/schema/clients";
+import { kycDocuments, clientRiskAssessments } from "@/lib/db/schema/clients";
 import { users } from "@/lib/db/schema/auth";
-import { eq, and, sql, desc, lte, gte } from "drizzle-orm";
+import { eq, and, sql, desc, lte } from "drizzle-orm";
 
 export async function getClientKycDocuments(clientId: string) {
   return db

@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, numeric, integer, index } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, numeric, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { invoiceStatus, paymentMethod, trustAccountType, trustTransactionType, quoteStatus } from "./enums";
 import { users } from "./auth";

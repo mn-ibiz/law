@@ -13,6 +13,14 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    rules: {
+      // React Compiler is enabled in eslint-config-next; many popular libraries
+      // (TanStack Table, React Hook Form) intentionally return function values.
+      // The compiler will skip memoization safely; we don't want noisy warnings.
+      "react-hooks/incompatible-library": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

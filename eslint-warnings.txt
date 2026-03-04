@@ -1,0 +1,296 @@
+src/app/(auth)/layout.tsx:19:13 [@next/next/no-img-element] Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src/app/(dashboard)/dashboard/page.tsx:7:10 [@typescript-eslint/no-unused-vars] 'Briefcase' is defined but never used.
+src/app/(dashboard)/dashboard/page.tsx:7:27 [@typescript-eslint/no-unused-vars] 'FileText' is defined but never used.
+src/components/attorneys/attorney-data-table.tsx:35:17 [react-hooks/incompatible-library] Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/linuxlab/Desktop/Law Firm Registry/src/components/attorneys/attorney-data-table.tsx:35:17
+  33 |   const [globalFilter, setGlobalFilter] = useState("");
+  34 |
+> 35 |   const table = useReactTable({
+     |                 ^^^^^^^^^^^^^ TanStack Table's `useReactTable()` API returns functions that cannot be memoized safely
+  36 |     data,
+  37 |     columns: attorneyColumns,
+  38 |     getCoreRowModel: getCoreRowModel(),
+src/components/billing/quote-form.tsx:47:26 [react-hooks/incompatible-library] Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/linuxlab/Desktop/Law Firm Registry/src/components/billing/quote-form.tsx:47:26
+  45 |   });
+  46 |
+> 47 |   const watchLineItems = form.watch("lineItems");
+     |                          ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  48 |
+  49 |   function updateLineItemAmount(index: number) {
+  50 |     const quantity = form.getValues(`lineItems.${index}.quantity`) || 0;
+src/components/billing/quote-row-actions.tsx:15:52 [@typescript-eslint/no-unused-vars] 'userRole' is defined but never used.
+src/components/calendar/calendar-day-sheet.tsx:19:25 [@typescript-eslint/no-unused-vars] 'getBlockColor' is defined but never used.
+src/components/calendar/calendar-view.tsx:5:20 [@typescript-eslint/no-unused-vars] 'Clock' is defined but never used.
+src/components/cases/case-data-table.tsx:53:17 [react-hooks/incompatible-library] Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/linuxlab/Desktop/Law Firm Registry/src/components/cases/case-data-table.tsx:53:17
+  51 |   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  52 |
+> 53 |   const table = useReactTable({
+     |                 ^^^^^^^^^^^^^ TanStack Table's `useReactTable()` API returns functions that cannot be memoized safely
+  54 |     data,
+  55 |     columns: caseColumns,
+  56 |     getCoreRowModel: getCoreRowModel(),
+src/components/clients/client-data-table.tsx:35:17 [react-hooks/incompatible-library] Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/linuxlab/Desktop/Law Firm Registry/src/components/clients/client-data-table.tsx:35:17
+  33 |   const [globalFilter, setGlobalFilter] = useState("");
+  34 |
+> 35 |   const table = useReactTable({
+     |                 ^^^^^^^^^^^^^ TanStack Table's `useReactTable()` API returns functions that cannot be memoized safely
+  36 |     data,
+  37 |     columns: clientColumns,
+  38 |     getCoreRowModel: getCoreRowModel(),
+src/components/clients/client-detail-tabs.tsx:6:23 [@typescript-eslint/no-unused-vars] 'PriorityBadge' is defined but never used.
+src/components/courts/filing-form.tsx:91:22 [react-hooks/incompatible-library] Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/linuxlab/Desktop/Law Firm Registry/src/components/courts/filing-form.tsx:91:22
+  89 |             <Label>Case *</Label>
+  90 |             <Select
+> 91 |               value={form.watch("caseId")}
+     |                      ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  92 |               onValueChange={(val) => form.setValue("caseId", val)}
+  93 |             >
+  94 |               <SelectTrigger>
+src/components/courts/service-form.tsx:86:22 [react-hooks/incompatible-library] Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/linuxlab/Desktop/Law Firm Registry/src/components/courts/service-form.tsx:86:22
+  84 |             <Label>Case *</Label>
+  85 |             <Select
+> 86 |               value={form.watch("caseId")}
+     |                      ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  87 |               onValueChange={(val) => form.setValue("caseId", val)}
+  88 |             >
+  89 |               <SelectTrigger>
+src/components/dashboard/widgets/recent-cases-table.tsx:3:10 [@typescript-eslint/no-unused-vars] 'Badge' is defined but never used.
+src/components/dashboard/widgets/recent-cases-table.tsx:6:10 [@typescript-eslint/no-unused-vars] 'formatEnum' is defined but never used.
+src/components/forms/attorney-form.tsx:85:28 [react-hooks/incompatible-library] Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/linuxlab/Desktop/Law Firm Registry/src/components/forms/attorney-form.tsx:85:28
+  83 |                 {users && users.length > 0 ? (
+  84 |                   <Select
+> 85 |                     value={form.watch("userId")}
+     |                            ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  86 |                     onValueChange={(val) => form.setValue("userId", val, { shouldValidate: true })}
+  87 |                   >
+  88 |                     <SelectTrigger id="userId">
+src/components/forms/bring-up-form.tsx:66:24 [react-hooks/incompatible-library] Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/linuxlab/Desktop/Law Firm Registry/src/components/forms/bring-up-form.tsx:66:24
+  64 |               <Label>Case *</Label>
+  65 |               <Select
+> 66 |                 value={form.watch("caseId")}
+     |                        ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  67 |                 onValueChange={(val) => form.setValue("caseId", val)}
+  68 |               >
+  69 |                 <SelectTrigger>
+src/components/forms/case-form.tsx:58:23 [react-hooks/incompatible-library] Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/linuxlab/Desktop/Law Firm Registry/src/components/forms/case-form.tsx:58:23
+  56 |   });
+  57 |
+> 58 |   const billingType = form.watch("billingType");
+     |                       ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  59 |
+  60 |   async function onSubmit(data: CreateCaseInput) {
+  61 |     try {
+src/components/forms/client-form.tsx:57:22 [react-hooks/incompatible-library] Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/linuxlab/Desktop/Law Firm Registry/src/components/forms/client-form.tsx:57:22
+  55 |   });
+  56 |
+> 57 |   const clientType = form.watch("type");
+     |                      ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  58 |
+  59 |   async function onSubmit(data: CreateClientInput) {
+  60 |     try {
+src/components/forms/contact-log-form.tsx:66:22 [react-hooks/incompatible-library] Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/linuxlab/Desktop/Law Firm Registry/src/components/forms/contact-log-form.tsx:66:22
+  64 |             <Label>Contact Type *</Label>
+  65 |             <Select
+> 66 |               value={form.watch("type")}
+     |                      ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  67 |               onValueChange={(val) => form.setValue("type", val as CreateContactLogInput["type"])}
+  68 |             >
+  69 |               <SelectTrigger>
+src/components/forms/deadline-form.tsx:77:24 [react-hooks/incompatible-library] Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/linuxlab/Desktop/Law Firm Registry/src/components/forms/deadline-form.tsx:77:24
+  75 |               <Label>Case</Label>
+  76 |               <Select
+> 77 |                 value={form.watch("caseId") ?? ""}
+     |                        ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  78 |                 onValueChange={(val) => form.setValue("caseId", val === "__none__" ? "" : val)}
+  79 |               >
+  80 |                 <SelectTrigger>
+src/components/forms/document-form.tsx:104:24 [react-hooks/incompatible-library] Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/linuxlab/Desktop/Law Firm Registry/src/components/forms/document-form.tsx:104:24
+  102 |               <Label>Case</Label>
+  103 |               <Select
+> 104 |                 value={form.watch("caseId") ?? ""}
+      |                        ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  105 |                 onValueChange={(val) =>
+  106 |                   form.setValue("caseId", val || undefined)
+  107 |                 }
+src/components/forms/event-form.tsx:40:7 [@typescript-eslint/no-unused-vars] 'NONE_VALUE' is assigned a value but never used.
+src/components/forms/event-form.tsx:102:18 [react-hooks/incompatible-library] Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/linuxlab/Desktop/Law Firm Registry/src/components/forms/event-form.tsx:102:18
+  100 |   const [endTime, setEndTime] = useState("");
+  101 |
+> 102 |   const allDay = form.watch("allDay");
+      |                  ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  103 |   const selectedCaseId = form.watch("caseId");
+  104 |
+  105 |   // Find the selected case for display
+src/components/forms/expense-form.tsx:81:24 [react-hooks/incompatible-library] Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/linuxlab/Desktop/Law Firm Registry/src/components/forms/expense-form.tsx:81:24
+  79 |               <Label>Case *</Label>
+  80 |               <Select
+> 81 |                 value={form.watch("caseId")}
+     |                        ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  82 |                 onValueChange={(val) => form.setValue("caseId", val)}
+  83 |               >
+  84 |                 <SelectTrigger>
+src/components/forms/intake-form.tsx:100:22 [react-hooks/incompatible-library] Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/linuxlab/Desktop/Law Firm Registry/src/components/forms/intake-form.tsx:100:22
+   98 |             <Label>Case Type *</Label>
+   99 |             <Select
+> 100 |               value={form.watch("caseType")}
+      |                      ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  101 |               onValueChange={(val) => form.setValue("caseType", val)}
+  102 |             >
+  103 |               <SelectTrigger>
+src/components/forms/invoice-form.tsx:47:26 [react-hooks/incompatible-library] Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/linuxlab/Desktop/Law Firm Registry/src/components/forms/invoice-form.tsx:47:26
+  45 |   });
+  46 |
+> 47 |   const watchLineItems = form.watch("lineItems");
+     |                          ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  48 |
+  49 |   // Auto-compute amount for each line item when quantity or unitPrice changes
+  50 |   function updateLineItemAmount(index: number) {
+src/components/forms/message-form.tsx:67:24 [react-hooks/incompatible-library] Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/linuxlab/Desktop/Law Firm Registry/src/components/forms/message-form.tsx:67:24
+  65 |               <Label>Recipient *</Label>
+  66 |               <Select
+> 67 |                 value={form.watch("receiverId")}
+     |                        ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  68 |                 onValueChange={(val) => form.setValue("receiverId", val)}
+  69 |               >
+  70 |                 <SelectTrigger>
+src/components/forms/requisition-form.tsx:74:24 [react-hooks/incompatible-library] Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/linuxlab/Desktop/Law Firm Registry/src/components/forms/requisition-form.tsx:74:24
+  72 |               <Label>Case (Optional)</Label>
+  73 |               <Select
+> 74 |                 value={form.watch("caseId") ?? ""}
+     |                        ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  75 |                 onValueChange={(val) =>
+  76 |                   form.setValue("caseId", val === "__none__" ? undefined : val)
+  77 |                 }
+src/components/forms/task-form.tsx:75:24 [react-hooks/incompatible-library] Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/linuxlab/Desktop/Law Firm Registry/src/components/forms/task-form.tsx:75:24
+  73 |               <Label>Case</Label>
+  74 |               <Select
+> 75 |                 value={form.watch("caseId") ?? ""}
+     |                        ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  76 |                 onValueChange={(val) => form.setValue("caseId", val === "__none__" ? "" : val)}
+  77 |               >
+  78 |                 <SelectTrigger>
+src/components/forms/time-entry-form.tsx:70:24 [react-hooks/incompatible-library] Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/linuxlab/Desktop/Law Firm Registry/src/components/forms/time-entry-form.tsx:70:24
+  68 |               <Label>Case *</Label>
+  69 |               <Select
+> 70 |                 value={form.watch("caseId")}
+     |                        ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  71 |                 onValueChange={(val) => form.setValue("caseId", val)}
+  72 |               >
+  73 |                 <SelectTrigger>
+src/components/layout/sidebar.tsx:7:30 [@typescript-eslint/no-unused-vars] 'LogOut' is defined but never used.
+src/components/settings/branding-form.tsx:130:17 [@next/next/no-img-element] Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src/components/time-tracking/quick-time-entry.tsx:77:22 [react-hooks/incompatible-library] Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/linuxlab/Desktop/Law Firm Registry/src/components/time-tracking/quick-time-entry.tsx:77:22
+  75 |   });
+  76 |
+> 77 |   const isBillable = watch("isBillable");
+     |                      ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  78 |   const caseId = watch("caseId");
+  79 |
+  80 |   const { execute, isPending } = useAction(createTimeEntry, {
+src/components/ui/combobox.tsx:277:3 [@typescript-eslint/no-unused-vars] 'children' is defined but never used.
+src/lib/actions/branches.ts:6:14 [@typescript-eslint/no-unused-vars] 'and' is defined but never used.
+src/lib/actions/cases.ts:152:134 [@typescript-eslint/no-unused-vars] '_ca' is assigned a value but never used.
+src/lib/actions/conflicts.ts:8:21 [@typescript-eslint/no-unused-vars] 'sql' is defined but never used.
+src/lib/actions/intake.ts:28:11 [@typescript-eslint/no-unused-vars] 'result' is assigned a value but never used.
+src/lib/actions/pipeline.ts:4:45 [@typescript-eslint/no-unused-vars] 'caseStageHistory' is defined but never used.
+src/lib/actions/pipeline.ts:74:3 [@typescript-eslint/no-unused-vars] '_userId' is defined but never used.
+src/lib/db/schema/billing.ts:1:51 [@typescript-eslint/no-unused-vars] 'integer' is defined but never used.
+src/lib/db/seed.ts:118:5 [@typescript-eslint/no-unused-vars] 'adminId' is assigned a value but never used.
+src/lib/queries/attorney-performance.ts:3:10 [@typescript-eslint/no-unused-vars] 'invoices' is defined but never used.
+src/lib/queries/attorney-performance.ts:4:10 [@typescript-eslint/no-unused-vars] 'payments' is defined but never used.
+src/lib/queries/billing.ts:3:56 [@typescript-eslint/no-unused-vars] 'creditNotes' is defined but never used.
+src/lib/queries/cases.ts:6:46 [@typescript-eslint/no-unused-vars] 'isNotNull' is defined but never used.
+src/lib/queries/cases.ts:19:47 [@typescript-eslint/no-unused-vars] 'assignedTo' is assigned a value but never used.
+src/lib/queries/documents.ts:5:36 [@typescript-eslint/no-unused-vars] 'sql' is defined but never used.
+src/lib/queries/kyc.ts:2:47 [@typescript-eslint/no-unused-vars] 'clients' is defined but never used.
+src/lib/queries/kyc.ts:4:35 [@typescript-eslint/no-unused-vars] 'gte' is defined but never used.
+src/lib/queries/portal.ts:7:20 [@typescript-eslint/no-unused-vars] 'sql' is defined but never used.
+src/lib/queries/portal.ts:7:25 [@typescript-eslint/no-unused-vars] 'and' is defined but never used.
+src/lib/queries/settings.ts:14:20 [@typescript-eslint/no-unused-vars] 'sql' is defined but never used.

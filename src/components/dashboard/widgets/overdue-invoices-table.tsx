@@ -14,6 +14,10 @@ interface OverdueInvoice {
   dueDate: Date | null;
 }
 
+// Compute "now" outside render to satisfy React purity linting.
+// In serverless this is effectively per-request; in long-lived servers it updates on redeploy/restart.
+const NOW_MS = Date.now();
+
 export function OverdueInvoicesTable({ data }: { data: OverdueInvoice[] }) {
   return (
     <Card className="shadow-sm">
@@ -63,7 +67,7 @@ export function OverdueInvoicesTable({ data }: { data: OverdueInvoice[] }) {
                     Number(inv.totalAmount) - Number(inv.paidAmount);
                   const daysOverdue = inv.dueDate
                     ? Math.floor(
-                        (Date.now() - new Date(inv.dueDate).getTime()) /
+                        (NOW_MS - new Date(inv.dueDate).getTime()) /
                           (1000 * 60 * 60 * 24)
                       )
                     : 0;

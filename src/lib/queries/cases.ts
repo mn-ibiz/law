@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { cases, caseAssignments, caseNotes, caseTimeline, caseParties, pipelineStages } from "@/lib/db/schema/cases";
 import { clients } from "@/lib/db/schema/clients";
 import { users } from "@/lib/db/schema/auth";
-import { eq, ilike, or, and, sql, desc, asc, isNotNull, inArray } from "drizzle-orm";
+import { eq, ilike, or, and, sql, desc, asc, inArray } from "drizzle-orm";
 
 interface CaseFilters {
   search?: string;
@@ -16,7 +16,7 @@ interface CaseFilters {
 }
 
 export async function getCases(filters: CaseFilters = {}) {
-  const { search, status, priority, clientId, assignedTo, page = 1, limit = 20 } = filters;
+  const { search, status, priority, clientId, page = 1, limit = 20 } = filters;
 
   const conditions = [];
   if (status) conditions.push(eq(cases.status, status as "open" | "in_progress" | "hearing" | "resolved" | "closed" | "archived"));
@@ -35,7 +35,7 @@ export async function getCases(filters: CaseFilters = {}) {
     );
   }
 
-  let query = db
+  const query = db
     .select({
       id: cases.id,
       caseNumber: cases.caseNumber,

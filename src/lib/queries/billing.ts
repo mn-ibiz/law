@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { db } from "@/lib/db";
-import { invoices, invoiceLineItems, payments, quotes, creditNotes } from "@/lib/db/schema/billing";
+import { invoices, invoiceLineItems, payments, quotes } from "@/lib/db/schema/billing";
 import { cases } from "@/lib/db/schema/cases";
 import { clients } from "@/lib/db/schema/clients";
 import { users } from "@/lib/db/schema/auth";

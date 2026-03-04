@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { documents, documentVersions, documentTemplates } from "@/lib/db/schema/documents";
 import { cases } from "@/lib/db/schema/cases";
 import { users } from "@/lib/db/schema/auth";
-import { eq, desc, ilike, or, and, sql } from "drizzle-orm";
+import { eq, desc, ilike, or, and } from "drizzle-orm";
 
 interface DocFilters {
   search?: string;

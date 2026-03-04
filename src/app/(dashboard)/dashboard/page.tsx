@@ -4,7 +4,7 @@ import { requireAuth } from "@/lib/auth/get-session";
 import { AdminDashboard } from "@/components/dashboard/admin-dashboard";
 import { AttorneyDashboard } from "@/components/dashboard/attorney-dashboard";
 import { Button } from "@/components/ui/button";
-import { Briefcase, Plus, FileText, Users } from "lucide-react";
+import { Plus, Users } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Dashboard",

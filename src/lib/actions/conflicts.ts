@@ -5,7 +5,7 @@ import { clients, conflictChecks } from "@/lib/db/schema/clients";
 import { cases, caseParties } from "@/lib/db/schema/cases";
 import { auth } from "@/lib/auth/auth";
 import { createAuditLog } from "@/lib/utils/audit";
-import { ilike, or, sql, eq } from "drizzle-orm";
+import { ilike, or, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { safeAction } from "@/lib/utils/safe-action";
 

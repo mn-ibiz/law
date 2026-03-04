@@ -37,8 +37,6 @@ import {
 import { ChevronsUpDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const NONE_VALUE = "__none__";
-
 const EVENT_TYPES = [
   "court_hearing",
   "meeting",

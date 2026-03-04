@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { stageAutomations, caseAssignments, caseStageHistory } from "@/lib/db/schema/cases";
+import { stageAutomations, caseAssignments } from "@/lib/db/schema/cases";
 import { notifications } from "@/lib/db/schema/messaging";
 import { tasks } from "@/lib/db/schema/calendar";
 import { cases } from "@/lib/db/schema/cases";
@@ -53,7 +53,7 @@ export async function executeStageAutomations(
       const config = automation.actionConfig ? JSON.parse(automation.actionConfig) : {};
       switch (automation.actionType) {
         case "send_notification":
-          await executeNotificationAutomation(caseId, config, userId);
+          await executeNotificationAutomation(caseId, config);
           break;
         case "create_task":
           await executeTaskAutomation(caseId, config, userId);
@@ -70,8 +70,7 @@ export async function executeStageAutomations(
 
 async function executeNotificationAutomation(
   caseId: string,
-  config: { title?: string; message?: string },
-  _userId: string
+  config: { title?: string; message?: string }
 ) {
   // Get all assigned users for the case
   const assigned = await db

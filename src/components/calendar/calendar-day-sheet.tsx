@@ -16,7 +16,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Clock, MapPin, ExternalLink, Trash2, Plus, Gavel } from "lucide-react";
 import { formatEnum } from "@/lib/utils/format-enum";
-import { getBadgeStyle, getBlockColor } from "./event-type-colors";
+import { getBadgeStyle } from "./event-type-colors";
 import { deleteEvent } from "@/lib/actions/calendar";
 import type { CalendarEvent } from "./calendar-types";
 import { APP_LOCALE } from "@/lib/constants/locale";

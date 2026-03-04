@@ -63,20 +63,30 @@ export default async function TrustAccountDetailPage({ params }: PageProps) {
 
   // Compute running balance for display (transactions are ordered desc by date)
   // We need to compute from the earliest transaction forward, then display desc
-  let runningBalance = balance;
-  const transactionsWithRunning = transactions.map((t) => {
-    const currentRunning = runningBalance;
-    const amt = Number(t.amount);
-    const isCredit = ["deposit", "interest"].includes(t.type);
-    // Since we're going backwards (newest first), we reverse the operation
-    // to get what the balance was BEFORE this transaction
-    if (isCredit) {
-      runningBalance = runningBalance - amt;
-    } else {
-      runningBalance = runningBalance + amt;
+  const transactionsWithRunning = transactions.reduce(
+    (
+      acc: {
+        runningBalance: number;
+        rows: Array<(typeof transactions)[number] & { runningBalance: number }>;
+      },
+      t
+    ) => {
+      const currentRunning = acc.runningBalance;
+      const amt = Number(t.amount);
+      const isCredit = ["deposit", "interest"].includes(t.type);
+      // Since we're going backwards (newest first), we reverse the operation
+      // to get what the balance was BEFORE this transaction
+      const previousRunning = isCredit ? currentRunning - amt : currentRunning + amt;
+      return {
+        runningBalance: previousRunning,
+        rows: [...acc.rows, { ...t, runningBalance: currentRunning }],
+      };
+    },
+    {
+      runningBalance: balance,
+      rows: [] as Array<(typeof transactions)[number] & { runningBalance: number }>,
     }
-    return { ...t, runningBalance: currentRunning };
-  });
+  ).rows;
 
   return (
     <div className="space-y-6">
