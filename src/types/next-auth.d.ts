@@ -8,12 +8,14 @@ declare module "next-auth" {
       role: "admin" | "attorney" | "client";
       email: string;
       name: string;
+      image?: string | null;
     } & DefaultSession["user"];
   }
 
   interface User extends DefaultUser {
     id: string;
     role: "admin" | "attorney" | "client";
+    image?: string | null;
   }
 }
 
@@ -23,5 +25,6 @@ declare module "next-auth/jwt" {
     role: "admin" | "attorney" | "client";
     email: string;
     name: string;
+    image?: string | null;
   }
 }

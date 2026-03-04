@@ -30,6 +30,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
             name: users.name,
             role: users.role,
             password: users.password,
+            avatar: users.avatar,
             isActive: users.isActive,
             failedAttempts: users.failedAttempts,
             lockedUntil: users.lockedUntil,
@@ -82,6 +83,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
           email: user.email,
           name: user.name,
           role: user.role,
+          image: user.avatar,
         };
       },
     }),
@@ -97,6 +99,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
         token.role = user.role as "admin" | "attorney" | "client";
         token.email = user.email as string;
         token.name = user.name as string;
+        token.image = user.image ?? null;
         token.lastRefresh = Date.now();
       }
 
@@ -137,6 +140,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
       session.user.role = token.role;
       session.user.email = token.email;
       session.user.name = token.name;
+      session.user.image = token.image;
       return session;
     },
     async redirect({ url, baseUrl }) {

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { Menu, Scale } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -18,11 +17,14 @@ import {
 } from "@/components/ui/sheet";
 import { dashboardNav, portalNav } from "./sidebar-nav";
 
-export function MobileNav() {
+interface MobileNavProps {
+  role: string;
+  permissions: Record<string, string[]>;
+}
+
+export function MobileNav({ role, permissions }: MobileNavProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const { data: session } = useSession();
-  const role = session?.user?.role ?? "";
 
   // Use portal nav for client role, dashboard nav otherwise
   const isClient = role === "client";
@@ -59,7 +61,10 @@ export function MobileNav() {
                     {group.label}
                   </p>
                   {group.items
-                    .filter((item) => !item.adminOnly || role === "admin")
+                    .filter((item) => {
+                      if (!item.resource) return true;
+                      return permissions[item.resource]?.includes("read");
+                    })
                     .map((item) => {
                       // Strip query params from href for active state comparison
                       const hrefPath = item.href.split("?")[0];

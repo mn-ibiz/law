@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { ChevronLeft, Scale, LogOut } from "lucide-react";
+import { ChevronLeft, Scale } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -17,19 +16,19 @@ import {
 import { dashboardNav } from "./sidebar-nav";
 import { BranchSelector } from "./branch-selector";
 
-export function Sidebar() {
+interface SidebarProps {
+  role: string;
+  userName: string;
+  permissions: Record<string, string[]>;
+}
+
+export function Sidebar({ role, userName, permissions }: SidebarProps) {
   const pathname = usePathname();
-  const { data: session } = useSession();
-  const role = (session?.user?.role as string) ?? "";
-  const userName = session?.user?.name ?? "User";
-  const userEmail = session?.user?.email ?? "";
 
-  const [collapsed, setCollapsed] = useState(false);
-
-  useEffect(() => {
-    const stored = localStorage.getItem("sidebar-collapsed");
-    if (stored === "true") setCollapsed(true);
-  }, []);
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("sidebar-collapsed") === "true";
+  });
 
   useEffect(() => {
     localStorage.setItem("sidebar-collapsed", String(collapsed));
@@ -71,7 +70,13 @@ export function Sidebar() {
       {/* Navigation */}
       <ScrollArea className="flex-1 overflow-hidden py-3">
         <nav className="space-y-1 px-2">
-          {dashboardNav.map((group, groupIdx) => (
+          {dashboardNav.map((group, groupIdx) => {
+            const visibleItems = group.items.filter((item) => {
+              if (!item.resource) return true;
+              return permissions[item.resource]?.includes("read");
+            });
+            if (visibleItems.length === 0) return null;
+            return (
             <div key={group.label}>
               {groupIdx > 0 && (
                 <div className="my-3 px-2">
@@ -83,8 +88,7 @@ export function Sidebar() {
                   {group.label}
                 </p>
               )}
-              {group.items
-                .filter((item) => !item.adminOnly || role === "admin")
+              {visibleItems
                 .map((item) => {
                   const baseHref = item.href.split("?")[0];
                   const isActive =
@@ -143,7 +147,8 @@ export function Sidebar() {
                   return <div key={item.href}>{linkContent}</div>;
                 })}
             </div>
-          ))}
+            );
+          })}
         </nav>
       </ScrollArea>
 

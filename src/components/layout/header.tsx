@@ -7,14 +7,16 @@ import { MobileNav } from "./mobile-nav";
 import { CommandSearch } from "@/components/shared/command-search";
 
 interface HeaderProps {
+  role: string;
+  permissions: Record<string, string[]>;
   /** Server component slot rendered between search and user nav (e.g. NotificationBellWrapper) */
   actions?: React.ReactNode;
 }
 
-export function Header({ actions }: HeaderProps) {
+export function Header({ role, permissions, actions }: HeaderProps) {
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-card/80 px-4 backdrop-blur-md md:px-6">
-      <MobileNav />
+      <MobileNav role={role} permissions={permissions} />
 
       {/* Search trigger */}
       <SearchTrigger />

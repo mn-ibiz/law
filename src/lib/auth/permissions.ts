@@ -16,7 +16,8 @@ export type Resource =
   | "users";
 export type Action = "create" | "read" | "update" | "delete" | "export";
 
-const permissions: Record<Role, Partial<Record<Resource, Action[]>>> = {
+/** Hardcoded fallback — used when DB permissions are not yet seeded */
+export const defaultPermissions: Record<Role, Partial<Record<Resource, Action[]>>> = {
   admin: {
     attorneys: ["create", "read", "update", "delete"],
     clients: ["create", "read", "update", "delete"],
@@ -56,13 +57,30 @@ const permissions: Record<Role, Partial<Record<Resource, Action[]>>> = {
   },
 };
 
-export function checkPermission(
+/**
+ * Server-side permission check. Queries the DB for dynamic permissions,
+ * falling back to the hardcoded matrix if the DB has no rows.
+ */
+export async function checkPermission(
   session: { user: { role: Role } } | null,
   resource: Resource,
   action: Action
-): boolean {
+): Promise<boolean> {
   if (!session) return false;
-  const rolePermissions = permissions[session.user.role];
+
+  // Dynamic import to avoid pulling DB code into client bundles
+  const { getPermissionsForRole } = await import("@/lib/queries/permissions");
+  const dbPerms = await getPermissionsForRole(session.user.role);
+
+  // Use DB permissions if any exist for this role
+  if (Object.keys(dbPerms).length > 0) {
+    const resourceActions = dbPerms[resource];
+    if (!resourceActions) return false;
+    return resourceActions.includes(action);
+  }
+
+  // Fallback to hardcoded matrix
+  const rolePermissions = defaultPermissions[session.user.role];
   if (!rolePermissions) return false;
   const resourcePermissions = rolePermissions[resource];
   if (!resourcePermissions) return false;

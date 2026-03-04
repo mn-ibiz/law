@@ -103,7 +103,6 @@ async function main() {
     .select()
     .from(schema.users)
     .where(eq(schema.users.email, userData.admin.email));
-  let adminId: string;
   if (existingAdmin.length === 0) {
     const [admin] = await db
       .insert(schema.users)
@@ -113,9 +112,9 @@ async function main() {
         branchId,
       })
       .returning();
-    adminId = admin.id;
+    void admin.id;
   } else {
-    adminId = existingAdmin[0].id;
+    void existingAdmin[0].id;
   }
   console.log(`  ✓ Admin: ${userData.admin.email}`);
 
@@ -275,7 +274,53 @@ async function main() {
     }
   }
 
-  // 10. Seed Pipeline Stages (default / universal)
+  // 10. Seed Role Permissions
+  console.log("Seeding role permissions...");
+  const defaultRolePermissions: { role: string; resource: string; actions: string[] }[] = [
+    // Admin — full access to everything
+    { role: "admin", resource: "attorneys", actions: ["create", "read", "update", "delete"] },
+    { role: "admin", resource: "clients", actions: ["create", "read", "update", "delete"] },
+    { role: "admin", resource: "cases", actions: ["create", "read", "update", "delete"] },
+    { role: "admin", resource: "documents", actions: ["create", "read", "update", "delete"] },
+    { role: "admin", resource: "calendar", actions: ["create", "read", "update", "delete"] },
+    { role: "admin", resource: "time-tracking", actions: ["create", "read", "update", "delete"] },
+    { role: "admin", resource: "expenses", actions: ["create", "read", "update", "delete"] },
+    { role: "admin", resource: "billing", actions: ["create", "read", "update", "delete"] },
+    { role: "admin", resource: "trust-accounts", actions: ["create", "read", "update", "delete"] },
+    { role: "admin", resource: "messages", actions: ["create", "read", "update", "delete"] },
+    { role: "admin", resource: "reports", actions: ["read", "export"] },
+    { role: "admin", resource: "settings", actions: ["create", "read", "update", "delete"] },
+    { role: "admin", resource: "audit-log", actions: ["read", "export"] },
+    { role: "admin", resource: "users", actions: ["create", "read", "update", "delete"] },
+    // Attorney
+    { role: "attorney", resource: "attorneys", actions: ["read"] },
+    { role: "attorney", resource: "clients", actions: ["create", "read", "update"] },
+    { role: "attorney", resource: "cases", actions: ["create", "read", "update"] },
+    { role: "attorney", resource: "documents", actions: ["create", "read", "update", "delete"] },
+    { role: "attorney", resource: "calendar", actions: ["create", "read", "update", "delete"] },
+    { role: "attorney", resource: "time-tracking", actions: ["create", "read", "update", "delete"] },
+    { role: "attorney", resource: "expenses", actions: ["create", "read", "update", "delete"] },
+    { role: "attorney", resource: "billing", actions: ["read"] },
+    { role: "attorney", resource: "trust-accounts", actions: ["read"] },
+    { role: "attorney", resource: "messages", actions: ["create", "read"] },
+    { role: "attorney", resource: "reports", actions: ["read"] },
+    { role: "attorney", resource: "settings", actions: ["read"] },
+    // Client
+    { role: "client", resource: "cases", actions: ["read"] },
+    { role: "client", resource: "documents", actions: ["read"] },
+    { role: "client", resource: "billing", actions: ["read"] },
+    { role: "client", resource: "messages", actions: ["create", "read"] },
+    { role: "client", resource: "settings", actions: ["read"] },
+  ];
+  for (const perm of defaultRolePermissions) {
+    await db
+      .insert(schema.rolePermissions)
+      .values(perm)
+      .onConflictDoNothing();
+  }
+  console.log(`  ✓ ${defaultRolePermissions.length} role permission rows seeded`);
+
+  // 11. Seed Pipeline Stages (default / universal)
   console.log("Seeding pipeline stages...");
   const stages = [
     { name: "Intake", description: "New case intake and initial review", order: 1, color: "#6366f1", maxDurationDays: 7 },

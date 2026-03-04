@@ -17,6 +17,13 @@ const settingsGroups = [
     color: "bg-blue-500/10 text-blue-600",
   },
   {
+    title: "Role Permissions",
+    description: "Control what each role can access and do",
+    href: "/settings/permissions",
+    icon: Shield,
+    color: "bg-indigo-500/10 text-indigo-600",
+  },
+  {
     title: "Practice Areas & Rates",
     description: "Configure practice areas and billing rates",
     href: "/settings/practice-areas",

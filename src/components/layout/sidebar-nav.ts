@@ -25,13 +25,14 @@ import {
   ScrollText,
   type LucideIcon,
 } from "lucide-react";
+import type { Resource } from "@/lib/auth/permissions";
 
 export interface NavItem {
   label: string;
   href: string;
   icon: LucideIcon;
   badge?: number;
-  adminOnly?: boolean;
+  resource?: Resource;
 }
 
 export interface NavGroup {
@@ -49,54 +50,54 @@ export const dashboardNav: NavGroup[] = [
   {
     label: "Management",
     items: [
-      { label: "Attorneys", href: "/attorneys", icon: Users },
-      { label: "Clients", href: "/clients", icon: UserCheck },
-      { label: "Branches", href: "/settings/branches", icon: Building2, adminOnly: true },
+      { label: "Attorneys", href: "/attorneys", icon: Users, resource: "attorneys" },
+      { label: "Clients", href: "/clients", icon: UserCheck, resource: "clients" },
+      { label: "Branches", href: "/settings/branches", icon: Building2, resource: "settings" },
     ],
   },
   {
     label: "Work",
     items: [
-      { label: "Cases", href: "/cases", icon: Briefcase },
-      { label: "Calendar", href: "/calendar", icon: Calendar },
-      { label: "Deadlines", href: "/deadlines", icon: Clock },
-      { label: "Tasks", href: "/tasks", icon: CheckSquare },
-      { label: "Bring-Ups", href: "/bring-ups", icon: Bell },
-      { label: "Documents", href: "/documents", icon: FileText },
-      { label: "Courts", href: "/courts", icon: Gavel },
-      { label: "Cause Lists", href: "/cause-lists", icon: ScrollText },
-      { label: "Conflicts", href: "/conflicts", icon: ShieldAlert },
+      { label: "Cases", href: "/cases", icon: Briefcase, resource: "cases" },
+      { label: "Calendar", href: "/calendar", icon: Calendar, resource: "calendar" },
+      { label: "Deadlines", href: "/deadlines", icon: Clock, resource: "calendar" },
+      { label: "Tasks", href: "/tasks", icon: CheckSquare, resource: "calendar" },
+      { label: "Bring-Ups", href: "/bring-ups", icon: Bell, resource: "calendar" },
+      { label: "Documents", href: "/documents", icon: FileText, resource: "documents" },
+      { label: "Courts", href: "/courts", icon: Gavel, resource: "cases" },
+      { label: "Cause Lists", href: "/cause-lists", icon: ScrollText, resource: "cases" },
+      { label: "Conflicts", href: "/conflicts", icon: ShieldAlert, resource: "cases" },
     ],
   },
   {
     label: "Finance",
     items: [
-      { label: "Time Tracking", href: "/time-expenses", icon: Timer },
-      { label: "Expenses", href: "/time-expenses?tab=expenses", icon: Receipt },
-      { label: "Billing", href: "/billing", icon: CreditCard },
-      { label: "Trust Accounts", href: "/trust-accounts", icon: Landmark },
-      { label: "Petty Cash", href: "/petty-cash", icon: Wallet },
-      { label: "Requisitions", href: "/requisitions", icon: ClipboardList },
-      { label: "Suppliers", href: "/suppliers", icon: Truck, adminOnly: true },
+      { label: "Time Tracking", href: "/time-expenses", icon: Timer, resource: "time-tracking" },
+      { label: "Expenses", href: "/time-expenses?tab=expenses", icon: Receipt, resource: "expenses" },
+      { label: "Billing", href: "/billing", icon: CreditCard, resource: "billing" },
+      { label: "Trust Accounts", href: "/trust-accounts", icon: Landmark, resource: "trust-accounts" },
+      { label: "Petty Cash", href: "/petty-cash", icon: Wallet, resource: "billing" },
+      { label: "Requisitions", href: "/requisitions", icon: ClipboardList, resource: "billing" },
+      { label: "Suppliers", href: "/suppliers", icon: Truck, resource: "settings" },
     ],
   },
   {
     label: "Communication",
     items: [
-      { label: "Messages", href: "/messages", icon: MessageSquare },
+      { label: "Messages", href: "/messages", icon: MessageSquare, resource: "messages" },
       { label: "Notifications", href: "/notifications", icon: Bell },
     ],
   },
   {
     label: "Analytics",
     items: [
-      { label: "Reports", href: "/reports", icon: BarChart3 },
+      { label: "Reports", href: "/reports", icon: BarChart3, resource: "reports" },
     ],
   },
   {
     label: "System",
     items: [
-      { label: "Settings", href: "/settings", icon: Settings, adminOnly: true },
+      { label: "Settings", href: "/settings", icon: Settings, resource: "settings" },
     ],
   },
 ];

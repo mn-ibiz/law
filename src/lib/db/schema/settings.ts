@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, boolean, timestamp, numeric, integer, index } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, boolean, timestamp, numeric, integer, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { auditAction } from "./enums";
 import { users } from "./auth";
@@ -93,6 +93,21 @@ export const tags = pgTable("tags", {
   entityType: text("entity_type"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+export const rolePermissions = pgTable(
+  "role_permissions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    role: text("role").notNull(),
+    resource: text("resource").notNull(),
+    actions: text("actions").array().notNull(),
+    updatedBy: uuid("updated_by").references(() => users.id, { onDelete: "set null" }),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("role_permissions_role_resource_idx").on(table.role, table.resource),
+  ]
+);
 
 export const firmSettingsRelations = relations(firmSettings, ({ one }) => ({
   updatedByUser: one(users, { fields: [firmSettings.updatedBy], references: [users.id] }),
