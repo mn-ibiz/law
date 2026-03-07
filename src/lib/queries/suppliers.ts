@@ -1,9 +1,9 @@
 import { db } from "@/lib/db";
 import { suppliers, supplierInvoices } from "@/lib/db/schema/suppliers";
 import { users } from "@/lib/db/schema/auth";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 
-export async function getSuppliers() {
+export async function getSuppliers(organizationId: string) {
   return db
     .select({
       id: suppliers.id,
@@ -18,15 +18,16 @@ export async function getSuppliers() {
       createdAt: suppliers.createdAt,
     })
     .from(suppliers)
+    .where(eq(suppliers.organizationId, organizationId))
     .orderBy(suppliers.name);
 }
 
-export async function getSupplierById(id: string) {
-  const result = await db.select().from(suppliers).where(eq(suppliers.id, id)).limit(1);
+export async function getSupplierById(organizationId: string, id: string) {
+  const result = await db.select().from(suppliers).where(and(eq(suppliers.organizationId, organizationId), eq(suppliers.id, id))).limit(1);
   return result[0] ?? null;
 }
 
-export async function getSupplierInvoices(supplierId?: string) {
+export async function getSupplierInvoices(organizationId: string, supplierId?: string) {
   const query = db
     .select({
       id: supplierInvoices.id,
@@ -51,7 +52,7 @@ export async function getSupplierInvoices(supplierId?: string) {
     .orderBy(desc(supplierInvoices.createdAt));
 
   if (supplierId) {
-    return query.where(eq(supplierInvoices.supplierId, supplierId));
+    return query.where(and(eq(supplierInvoices.organizationId, organizationId), eq(supplierInvoices.supplierId, supplierId)));
   }
-  return query;
+  return query.where(eq(supplierInvoices.organizationId, organizationId));
 }

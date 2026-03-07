@@ -7,6 +7,7 @@ import {
 import { eq, and } from "drizzle-orm";
 
 export interface WorkflowContext {
+  organizationId: string;
   entityId: string;
   entityType: string;
   userId?: string;
@@ -33,6 +34,7 @@ export async function dispatchWorkflowEvent(
       .from(workflowTemplates)
       .where(
         and(
+          eq(workflowTemplates.organizationId, context.organizationId),
           eq(workflowTemplates.triggerType, triggerType),
           eq(workflowTemplates.isActive, true)
         )
@@ -187,7 +189,7 @@ async function handleSendSMS(
     `Notification for ${context.entityType}`;
 
   if (to) {
-    await sendSMS({ to, message, userId: context.userId });
+    await sendSMS({ organizationId: context.organizationId, to, message, userId: context.userId });
   }
 }
 
@@ -200,6 +202,7 @@ async function handleCreateTask(
     typeof config.dueDays === "number" ? config.dueDays : 3;
 
   await db.insert(tasks).values({
+    organizationId: context.organizationId,
     title:
       (config.title as string) ?? `Follow up: ${context.entityType}`,
     description:
@@ -225,6 +228,7 @@ async function handleSendNotification(
   if (!userId) return;
 
   await db.insert(notifications).values({
+    organizationId: context.organizationId,
     userId,
     type:
       (config.type as

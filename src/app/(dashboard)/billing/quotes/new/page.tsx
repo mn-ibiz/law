@@ -1,4 +1,4 @@
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getCases } from "@/lib/queries/cases";
 import { getClients } from "@/lib/queries/clients";
 import { QuoteForm } from "@/components/billing/quote-form";
@@ -10,10 +10,10 @@ export const metadata: Metadata = {
 };
 
 export default async function NewQuotePage() {
-  await requireAdminOrAttorney();
+  const { organizationId } = await requireOrg();
   const [caseResult, clientResult] = await Promise.all([
-    getCases({ limit: 200 }),
-    getClients({ limit: 200 }),
+    getCases(organizationId, { limit: 200 }),
+    getClients(organizationId, { limit: 200 }),
   ]);
 
   const cases = caseResult.data.map((c) => ({

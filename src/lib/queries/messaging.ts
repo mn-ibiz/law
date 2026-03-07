@@ -7,7 +7,7 @@ import { alias } from "drizzle-orm/pg-core";
 /* ──────────────────────────────────────────────
  * Messages — Inbox
  * ────────────────────────────────────────────── */
-export async function getMessages(userId: string) {
+export async function getMessages(organizationId: string, userId: string) {
   return db
     .select({
       id: messages.id,
@@ -22,7 +22,7 @@ export async function getMessages(userId: string) {
     })
     .from(messages)
     .innerJoin(users, eq(messages.senderId, users.id))
-    .where(eq(messages.recipientId, userId))
+    .where(and(eq(messages.organizationId, organizationId), eq(messages.recipientId, userId)))
     .orderBy(desc(messages.createdAt))
     .limit(200);
 }
@@ -30,7 +30,7 @@ export async function getMessages(userId: string) {
 /* ──────────────────────────────────────────────
  * Messages — Sent
  * ────────────────────────────────────────────── */
-export async function getSentMessages(userId: string) {
+export async function getSentMessages(organizationId: string, userId: string) {
   return db
     .select({
       id: messages.id,
@@ -43,7 +43,7 @@ export async function getSentMessages(userId: string) {
     })
     .from(messages)
     .innerJoin(users, eq(messages.recipientId, users.id))
-    .where(eq(messages.senderId, userId))
+    .where(and(eq(messages.organizationId, organizationId), eq(messages.senderId, userId)))
     .orderBy(desc(messages.createdAt))
     .limit(200);
 }
@@ -51,7 +51,7 @@ export async function getSentMessages(userId: string) {
 /* ──────────────────────────────────────────────
  * Single Message by ID (with sender + recipient names)
  * ────────────────────────────────────────────── */
-export async function getMessageById(id: string) {
+export async function getMessageById(organizationId: string, id: string) {
   const sender = alias(users, "sender");
   const recipient = alias(users, "recipient");
 
@@ -77,7 +77,7 @@ export async function getMessageById(id: string) {
     .from(messages)
     .innerJoin(sender, eq(messages.senderId, sender.id))
     .innerJoin(recipient, eq(messages.recipientId, recipient.id))
-    .where(eq(messages.id, id))
+    .where(and(eq(messages.organizationId, organizationId), eq(messages.id, id)))
     .limit(1);
 
   return rows[0] ?? null;
@@ -86,7 +86,7 @@ export async function getMessageById(id: string) {
 /* ──────────────────────────────────────────────
  * Message Thread between two users (ordered by date asc)
  * ────────────────────────────────────────────── */
-export async function getMessageThread(userA: string, userB: string) {
+export async function getMessageThread(organizationId: string, userA: string, userB: string) {
   const sender = alias(users, "sender");
   const recipient = alias(users, "recipient");
 
@@ -109,9 +109,12 @@ export async function getMessageThread(userA: string, userB: string) {
     .innerJoin(sender, eq(messages.senderId, sender.id))
     .innerJoin(recipient, eq(messages.recipientId, recipient.id))
     .where(
-      or(
-        and(eq(messages.senderId, userA), eq(messages.recipientId, userB)),
-        and(eq(messages.senderId, userB), eq(messages.recipientId, userA))
+      and(
+        eq(messages.organizationId, organizationId),
+        or(
+          and(eq(messages.senderId, userA), eq(messages.recipientId, userB)),
+          and(eq(messages.senderId, userB), eq(messages.recipientId, userA))
+        )
       )
     )
     .orderBy(messages.createdAt)
@@ -121,8 +124,8 @@ export async function getMessageThread(userA: string, userB: string) {
 /* ──────────────────────────────────────────────
  * Notifications — List
  * ────────────────────────────────────────────── */
-export async function getNotifications(userId: string, unreadOnly?: boolean) {
-  const conditions = [eq(notifications.userId, userId)];
+export async function getNotifications(organizationId: string, userId: string, unreadOnly?: boolean) {
+  const conditions = [eq(notifications.organizationId, organizationId), eq(notifications.userId, userId)];
   if (unreadOnly) {
     conditions.push(eq(notifications.isRead, false));
   }
@@ -138,10 +141,10 @@ export async function getNotifications(userId: string, unreadOnly?: boolean) {
 /* ──────────────────────────────────────────────
  * Notifications — Unread Count
  * ────────────────────────────────────────────── */
-export async function getUnreadNotificationCount(userId: string): Promise<number> {
+export async function getUnreadNotificationCount(organizationId: string, userId: string): Promise<number> {
   const [result] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(notifications)
-    .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
+    .where(and(eq(notifications.organizationId, organizationId), eq(notifications.userId, userId), eq(notifications.isRead, false)));
   return result?.count ?? 0;
 }

@@ -2,8 +2,8 @@
 
 import { db } from "@/lib/db";
 import { suppliers, supplierInvoices } from "@/lib/db/schema/suppliers";
-import { auth } from "@/lib/auth/auth";
-import { eq, sql } from "drizzle-orm";
+import { getTenantContext } from "@/lib/auth/get-session";
+import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { createSupplierSchema, createSupplierInvoiceSchema } from "@/lib/validators/supplier";
 import { safeAction } from "@/lib/utils/safe-action";
@@ -12,10 +12,8 @@ import { createAuditLog } from "@/lib/utils/audit";
 
 export async function createSupplier(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId, role } = await getTenantContext();
+    if (role !== "admin") return { error: "Unauthorized" };
 
     const validated = createSupplierSchema.safeParse(data);
     if (!validated.success) {
@@ -26,6 +24,7 @@ export async function createSupplier(data: unknown) {
       .insert(suppliers)
       .values({
         ...validated.data,
+        organizationId,
         email: validated.data.email || null,
       })
       .returning();
@@ -37,10 +36,8 @@ export async function createSupplier(data: unknown) {
 
 export async function updateSupplier(id: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId, role } = await getTenantContext();
+    if (role !== "admin") return { error: "Unauthorized" };
 
     if (!validateId(id)) return { error: "Invalid ID" };
 
@@ -52,7 +49,7 @@ export async function updateSupplier(id: string, data: unknown) {
     await db
       .update(suppliers)
       .set({ ...validated.data, email: validated.data.email || null, updatedAt: new Date() })
-      .where(eq(suppliers.id, id));
+      .where(and(eq(suppliers.id, id), eq(suppliers.organizationId, organizationId)));
 
     revalidatePath("/suppliers");
     return { success: true };
@@ -61,17 +58,15 @@ export async function updateSupplier(id: string, data: unknown) {
 
 export async function toggleSupplierActive(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId, role } = await getTenantContext();
+    if (role !== "admin") return { error: "Unauthorized" };
 
     if (!validateId(id)) return { error: "Invalid ID" };
 
     await db
       .update(suppliers)
       .set({ isActive: sql`NOT ${suppliers.isActive}`, updatedAt: new Date() })
-      .where(eq(suppliers.id, id));
+      .where(and(eq(suppliers.id, id), eq(suppliers.organizationId, organizationId)));
 
     revalidatePath("/suppliers");
     return { success: true };
@@ -80,10 +75,7 @@ export async function toggleSupplierActive(id: string) {
 
 export async function createSupplierInvoice(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId, userId } = await getTenantContext();
 
     const validated = createSupplierInvoiceSchema.safeParse(data);
     if (!validated.success) {
@@ -99,13 +91,14 @@ export async function createSupplierInvoice(data: unknown) {
       .insert(supplierInvoices)
       .values({
         ...rest,
+        organizationId,
         amount: String(amount),
         vatAmount: String(computedVat),
         totalAmount: String(computedTotal),
         invoiceDate: new Date(invoiceDate),
         dueDate: dueDate ? new Date(dueDate) : null,
         fileUrl: fileUrl || null,
-        createdBy: session.user.id,
+        createdBy: userId,
       })
       .returning();
 
@@ -116,24 +109,22 @@ export async function createSupplierInvoice(data: unknown) {
 
 export async function deleteSupplierInvoice(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId, userId, role } = await getTenantContext();
+    if (role !== "admin") return { error: "Unauthorized" };
 
     if (!validateId(id)) return { error: "Invalid ID" };
 
     // Only allow deleting unpaid/pending invoices — atomic conditional delete
     const result = await db
       .delete(supplierInvoices)
-      .where(sql`${supplierInvoices.id} = ${id} AND ${supplierInvoices.status} != 'paid'`)
+      .where(sql`${supplierInvoices.id} = ${id} AND ${supplierInvoices.organizationId} = ${organizationId} AND ${supplierInvoices.status} != 'paid'`)
       .returning({ id: supplierInvoices.id });
 
     if (result.length === 0) {
       return { error: "Invoice not found or already paid (cannot delete)" };
     }
 
-    await createAuditLog(session.user.id, "delete", "supplier_invoice", id, { action: "delete" });
+    await createAuditLog(organizationId, userId, "delete", "supplier_invoice", id, { action: "delete" });
 
     revalidatePath("/suppliers");
     return { success: true };
@@ -142,10 +133,8 @@ export async function deleteSupplierInvoice(id: string) {
 
 export async function paySupplierInvoice(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId, userId, role } = await getTenantContext();
+    if (role !== "admin") return { error: "Unauthorized" };
 
     if (!validateId(id)) return { error: "Invalid ID" };
 
@@ -153,14 +142,14 @@ export async function paySupplierInvoice(id: string) {
     const result = await db
       .update(supplierInvoices)
       .set({ status: "paid", paidAt: new Date(), updatedAt: new Date() })
-      .where(sql`${supplierInvoices.id} = ${id} AND ${supplierInvoices.status} != 'paid'`)
+      .where(sql`${supplierInvoices.id} = ${id} AND ${supplierInvoices.organizationId} = ${organizationId} AND ${supplierInvoices.status} != 'paid'`)
       .returning({ id: supplierInvoices.id });
 
     if (result.length === 0) {
       return { error: "Invoice not found or already paid" };
     }
 
-    await createAuditLog(session.user.id, "update", "supplier_invoice", id, { action: "pay" });
+    await createAuditLog(organizationId, userId, "update", "supplier_invoice", id, { action: "pay" });
 
     revalidatePath("/suppliers");
     return { success: true };

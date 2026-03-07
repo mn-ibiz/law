@@ -10,7 +10,7 @@ import { messages } from "@/lib/db/schema/messaging";
 import { documents } from "@/lib/db/schema/documents";
 import { sql, eq, and, inArray, isNull, gte, lte, ne } from "drizzle-orm";
 
-export async function getAdminDashboardStats() {
+export async function getAdminDashboardStats(organizationId: string) {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
@@ -25,15 +25,15 @@ export async function getAdminDashboardStats() {
     db
       .select({ count: sql<number>`count(*)::int` })
       .from(cases)
-      .where(inArray(cases.status, ["open", "in_progress", "hearing"])),
+      .where(and(eq(cases.organizationId, organizationId), inArray(cases.status, ["open", "in_progress", "hearing"]))),
     db
       .select({ count: sql<number>`count(*)::int` })
       .from(clients)
-      .where(eq(clients.status, "active")),
+      .where(and(eq(clients.organizationId, organizationId), eq(clients.status, "active"))),
     db
       .select({ total: sql<number>`coalesce(sum(${payments.amount}::numeric), 0)::float` })
       .from(payments)
-      .where(gte(payments.paymentDate, startOfMonth)),
+      .where(and(eq(payments.organizationId, organizationId), gte(payments.paymentDate, startOfMonth))),
     db
       .select({
         total: sql<number>`coalesce(sum((${invoices.totalAmount}::numeric - ${invoices.paidAmount}::numeric)), 0)::float`,
@@ -41,6 +41,7 @@ export async function getAdminDashboardStats() {
       .from(invoices)
       .where(
         and(
+          eq(invoices.organizationId, organizationId),
           ne(invoices.status, "paid"),
           ne(invoices.status, "cancelled")
         )
@@ -48,11 +49,11 @@ export async function getAdminDashboardStats() {
     db
       .select({ count: sql<number>`count(*)::int` })
       .from(users)
-      .where(and(eq(users.role, "attorney"), eq(users.isActive, true))),
+      .where(and(eq(users.organizationId, organizationId), eq(users.role, "attorney"), eq(users.isActive, true))),
     db
       .select({ count: sql<number>`count(*)::int` })
       .from(deadlines)
-      .where(and(lte(deadlines.dueDate, now), isNull(deadlines.completedAt))),
+      .where(and(eq(deadlines.organizationId, organizationId), lte(deadlines.dueDate, now), isNull(deadlines.completedAt))),
   ]);
 
   return {
@@ -65,7 +66,7 @@ export async function getAdminDashboardStats() {
   };
 }
 
-export async function getAttorneyDashboardStats(userId: string) {
+export async function getAttorneyDashboardStats(organizationId: string, userId: string) {
   const now = new Date();
   const dayOfWeek = now.getDay();
   const startOfWeek = new Date(now);
@@ -88,6 +89,7 @@ export async function getAttorneyDashboardStats(userId: string) {
       .innerJoin(cases, eq(caseAssignments.caseId, cases.id))
       .where(
         and(
+          eq(cases.organizationId, organizationId),
           eq(caseAssignments.userId, userId),
           isNull(caseAssignments.unassignedAt),
           inArray(cases.status, ["open", "in_progress", "hearing"])
@@ -96,12 +98,13 @@ export async function getAttorneyDashboardStats(userId: string) {
     db
       .select({ total: sql<number>`coalesce(sum(${timeEntries.hours}::numeric), 0)::float` })
       .from(timeEntries)
-      .where(and(eq(timeEntries.userId, userId), gte(timeEntries.date, startOfWeek))),
+      .where(and(eq(timeEntries.organizationId, organizationId), eq(timeEntries.userId, userId), gte(timeEntries.date, startOfWeek))),
     db
       .select({ total: sql<number>`coalesce(sum(${timeEntries.hours}::numeric), 0)::float` })
       .from(timeEntries)
       .where(
         and(
+          eq(timeEntries.organizationId, organizationId),
           eq(timeEntries.userId, userId),
           eq(timeEntries.isBillable, true),
           gte(timeEntries.date, startOfMonth)
@@ -112,6 +115,7 @@ export async function getAttorneyDashboardStats(userId: string) {
       .from(deadlines)
       .where(
         and(
+          eq(deadlines.organizationId, organizationId),
           eq(deadlines.assignedTo, userId),
           isNull(deadlines.completedAt),
           gte(deadlines.dueDate, now),
@@ -121,7 +125,7 @@ export async function getAttorneyDashboardStats(userId: string) {
     db
       .select({ count: sql<number>`count(*)::int` })
       .from(messages)
-      .where(and(eq(messages.recipientId, userId), isNull(messages.readAt))),
+      .where(and(eq(messages.organizationId, organizationId), eq(messages.recipientId, userId), isNull(messages.readAt))),
   ]);
 
   return {
@@ -133,12 +137,12 @@ export async function getAttorneyDashboardStats(userId: string) {
   };
 }
 
-export async function getClientDashboardStats(userId: string) {
+export async function getClientDashboardStats(organizationId: string, userId: string) {
   // Get clientId from users -> clients relation
   const clientResult = await db
     .select({ id: clients.id })
     .from(clients)
-    .where(eq(clients.userId, userId))
+    .where(and(eq(clients.organizationId, organizationId), eq(clients.userId, userId)))
     .limit(1);
 
   const clientId = clientResult[0]?.id;
@@ -152,6 +156,7 @@ export async function getClientDashboardStats(userId: string) {
       .from(cases)
       .where(
         and(
+          eq(cases.organizationId, organizationId),
           eq(cases.clientId, clientId),
           inArray(cases.status, ["open", "in_progress", "hearing"])
         )
@@ -160,7 +165,7 @@ export async function getClientDashboardStats(userId: string) {
       .select({ count: sql<number>`count(*)::int` })
       .from(documents)
       .where(
-        and(eq(documents.clientId, clientId), eq(documents.status, "draft"))
+        and(eq(documents.organizationId, organizationId), eq(documents.clientId, clientId), eq(documents.status, "draft"))
       ),
     db
       .select({
@@ -169,6 +174,7 @@ export async function getClientDashboardStats(userId: string) {
       .from(invoices)
       .where(
         and(
+          eq(invoices.organizationId, organizationId),
           eq(invoices.clientId, clientId),
           ne(invoices.status, "paid"),
           ne(invoices.status, "cancelled")

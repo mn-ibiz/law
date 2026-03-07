@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { requireAdmin } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getTrustAccountById, getTrustTransactions } from "@/lib/queries/trust";
 import { formatKES } from "@/lib/utils/format";
 import { formatEnum } from "@/lib/utils/format-enum";
@@ -35,7 +35,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!UUID_RE.test(id)) {
     return { title: "Trust Account", description: "Trust account details" };
   }
-  const account = await getTrustAccountById(id);
+  const { organizationId } = await requireOrg();
+  const account = await getTrustAccountById(organizationId, id);
   return {
     title: account ? `${account.accountName} - Trust Account` : "Trust Account",
     description: account ? `Trust account details for ${account.accountName}` : "Trust account details",
@@ -51,15 +52,15 @@ const capsule =
   "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold leading-none whitespace-nowrap";
 
 export default async function TrustAccountDetailPage({ params }: PageProps) {
-  await requireAdmin();
+  const { organizationId } = await requireOrg();
   const { id } = await params;
 
   if (!UUID_RE.test(id)) notFound();
 
-  const account = await getTrustAccountById(id);
+  const account = await getTrustAccountById(organizationId, id);
   if (!account) notFound();
 
-  const transactions = await getTrustTransactions(id);
+  const transactions = await getTrustTransactions(organizationId, id);
   const balance = Number(account.balance);
 
   // Compute running balance for display (transactions are ordered desc by date)

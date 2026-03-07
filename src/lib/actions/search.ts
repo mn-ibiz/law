@@ -8,7 +8,7 @@ import { documents } from "@/lib/db/schema/documents";
 import { invoices } from "@/lib/db/schema/billing";
 import { attorneys } from "@/lib/db/schema/attorneys";
 import { ilike, or, sql, eq, and } from "drizzle-orm";
-import { auth } from "@/lib/auth/auth";
+import { getTenantContext } from "@/lib/auth/get-session";
 import { safeAction } from "@/lib/utils/safe-action";
 
 export interface SearchResult {
@@ -21,12 +21,11 @@ export interface SearchResult {
 
 export async function globalSearch(query: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user) return [];
+    const { organizationId, role, userId } = await getTenantContext();
 
     if (!query || query.length < 2) return [];
 
-    const isClient = session.user.role === "client";
+    const isClient = role === "client";
 
     // Escape LIKE-special characters to prevent pattern injection
     const escaped = query.replace(/[%_\\]/g, "\\$&");
@@ -38,15 +37,15 @@ export async function globalSearch(query: string) {
       const [clientRecord] = await db
         .select({ id: clients.id })
         .from(clients)
-        .where(eq(clients.userId, session.user.id))
+        .where(and(eq(clients.userId, userId), eq(clients.organizationId, organizationId)))
         .limit(1);
       clientRecordId = clientRecord?.id ?? null;
       if (!clientRecordId) return [];
     }
 
     const caseFilter = isClient && clientRecordId
-      ? and(or(ilike(cases.title, pattern), ilike(cases.caseNumber, pattern)), eq(cases.clientId, clientRecordId))
-      : or(ilike(cases.title, pattern), ilike(cases.caseNumber, pattern));
+      ? and(or(ilike(cases.title, pattern), ilike(cases.caseNumber, pattern)), eq(cases.clientId, clientRecordId), eq(cases.organizationId, organizationId))
+      : and(or(ilike(cases.title, pattern), ilike(cases.caseNumber, pattern)), eq(cases.organizationId, organizationId));
 
     const [caseResults, clientResults, attorneyResults, docResults, invoiceResults] =
       await Promise.all([
@@ -70,10 +69,13 @@ export async function globalSearch(query: string) {
           })
           .from(clients)
           .where(
-            or(
-              ilike(clients.firstName, pattern),
-              ilike(clients.lastName, pattern),
-              ilike(clients.email, pattern)
+            and(
+              eq(clients.organizationId, organizationId),
+              or(
+                ilike(clients.firstName, pattern),
+                ilike(clients.lastName, pattern),
+                ilike(clients.email, pattern)
+              )
             )
           )
           .limit(5),
@@ -89,9 +91,12 @@ export async function globalSearch(query: string) {
           .from(attorneys)
           .innerJoin(users, sql`${attorneys.userId} = ${users.id}`)
           .where(
-            or(
-              ilike(users.name, pattern),
-              ilike(attorneys.lskNumber, pattern)
+            and(
+              eq(attorneys.organizationId, organizationId),
+              or(
+                ilike(users.name, pattern),
+                ilike(attorneys.lskNumber, pattern)
+              )
             )
           )
           .limit(5),
@@ -105,9 +110,12 @@ export async function globalSearch(query: string) {
           })
           .from(documents)
           .where(
-            or(
-              ilike(documents.title, pattern),
-              ilike(documents.fileName, pattern)
+            and(
+              eq(documents.organizationId, organizationId),
+              or(
+                ilike(documents.title, pattern),
+                ilike(documents.fileName, pattern)
+              )
             )
           )
           .limit(5),
@@ -121,8 +129,8 @@ export async function globalSearch(query: string) {
           .from(invoices)
           .where(
             isClient && clientRecordId
-              ? and(ilike(invoices.invoiceNumber, pattern), eq(invoices.clientId, clientRecordId))
-              : ilike(invoices.invoiceNumber, pattern)
+              ? and(ilike(invoices.invoiceNumber, pattern), eq(invoices.clientId, clientRecordId), eq(invoices.organizationId, organizationId))
+              : and(ilike(invoices.invoiceNumber, pattern), eq(invoices.organizationId, organizationId))
           )
           .limit(5),
       ]);

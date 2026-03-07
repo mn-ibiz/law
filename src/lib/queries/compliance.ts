@@ -3,21 +3,22 @@ import { practisingCertificates, cpdRecords, attorneys } from "@/lib/db/schema/a
 import { users } from "@/lib/db/schema/auth";
 import { eq, and, sql, desc, lte, gte } from "drizzle-orm";
 
-export async function getAttorneyCertificates(attorneyId: string) {
+export async function getAttorneyCertificates(organizationId: string, attorneyId: string) {
   return db
     .select()
     .from(practisingCertificates)
-    .where(eq(practisingCertificates.attorneyId, attorneyId))
+    .where(and(eq(practisingCertificates.organizationId, organizationId), eq(practisingCertificates.attorneyId, attorneyId)))
     .orderBy(desc(practisingCertificates.year));
 }
 
-export async function getAttorneyCpdRecords(attorneyId: string, year?: number) {
+export async function getAttorneyCpdRecords(organizationId: string, attorneyId: string, year?: number) {
   const currentYear = year ?? new Date().getFullYear();
   return db
     .select()
     .from(cpdRecords)
     .where(
       and(
+        eq(cpdRecords.organizationId, organizationId),
         eq(cpdRecords.attorneyId, attorneyId),
         eq(cpdRecords.year, String(currentYear))
       )
@@ -25,7 +26,7 @@ export async function getAttorneyCpdRecords(attorneyId: string, year?: number) {
     .orderBy(desc(cpdRecords.completionDate));
 }
 
-export async function getCpdSummary(attorneyId: string, year?: number) {
+export async function getCpdSummary(organizationId: string, attorneyId: string, year?: number) {
   const currentYear = year ?? new Date().getFullYear();
 
   const totalResult = await db
@@ -35,6 +36,7 @@ export async function getCpdSummary(attorneyId: string, year?: number) {
     .from(cpdRecords)
     .where(
       and(
+        eq(cpdRecords.organizationId, organizationId),
         eq(cpdRecords.attorneyId, attorneyId),
         eq(cpdRecords.year, String(currentYear))
       )
@@ -47,6 +49,7 @@ export async function getCpdSummary(attorneyId: string, year?: number) {
     .from(cpdRecords)
     .where(
       and(
+        eq(cpdRecords.organizationId, organizationId),
         eq(cpdRecords.attorneyId, attorneyId),
         eq(cpdRecords.year, String(currentYear)),
         eq(cpdRecords.isLskProgram, true)
@@ -66,7 +69,7 @@ export async function getCpdSummary(attorneyId: string, year?: number) {
   };
 }
 
-export async function getExpiringCertificates(daysAhead = 60) {
+export async function getExpiringCertificates(organizationId: string, daysAhead = 60) {
   const now = new Date();
   const futureDate = new Date();
   futureDate.setDate(now.getDate() + daysAhead);
@@ -85,6 +88,7 @@ export async function getExpiringCertificates(daysAhead = 60) {
     .innerJoin(users, eq(attorneys.userId, users.id))
     .where(
       and(
+        eq(practisingCertificates.organizationId, organizationId),
         gte(practisingCertificates.expiryDate, now),
         lte(practisingCertificates.expiryDate, futureDate),
         eq(practisingCertificates.status, "active")
@@ -93,7 +97,7 @@ export async function getExpiringCertificates(daysAhead = 60) {
     .orderBy(practisingCertificates.expiryDate);
 }
 
-export async function getNonCompliantCpdAttorneys(year?: number) {
+export async function getNonCompliantCpdAttorneys(organizationId: string, year?: number) {
   const currentYear = year ?? new Date().getFullYear();
 
   const result = await db.execute<{
@@ -112,7 +116,8 @@ export async function getNonCompliantCpdAttorneys(year?: number) {
     FROM ${attorneys} a
     INNER JOIN ${users} u ON a.user_id = u.id
     LEFT JOIN ${cpdRecords} c ON c.attorney_id = a.id AND c.year = ${String(currentYear)}
-    WHERE a.is_active = true
+    WHERE a.organization_id = ${organizationId}
+      AND a.is_active = true
     GROUP BY a.id, u.name, a.photo_url
     HAVING coalesce(sum(c.units::numeric), 0) < 5
        OR coalesce(sum(case when c.is_lsk_program then c.units::numeric else 0 end), 0) < 2

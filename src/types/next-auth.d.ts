@@ -5,26 +5,32 @@ declare module "next-auth" {
   interface Session {
     user: {
       id: string;
-      role: "admin" | "attorney" | "client";
+      role: "super_admin" | "admin" | "attorney" | "client";
       email: string;
       name: string;
       image?: string | null;
+      organizationId: string;
+      organizationSlug: string;
     } & DefaultSession["user"];
   }
 
   interface User extends DefaultUser {
     id: string;
-    role: "admin" | "attorney" | "client";
+    role: "super_admin" | "admin" | "attorney" | "client";
     image?: string | null;
+    organizationId: string;
+    organizationSlug: string;
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT extends DefaultJWT {
     id: string;
-    role: "admin" | "attorney" | "client";
+    role: "super_admin" | "admin" | "attorney" | "client";
     email: string;
     name: string;
     image?: string | null;
+    organizationId: string;
+    organizationSlug: string;
   }
 }

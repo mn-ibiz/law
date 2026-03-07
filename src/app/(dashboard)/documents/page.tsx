@@ -1,4 +1,4 @@
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getDocuments } from "@/lib/queries/documents";
 import { getCases } from "@/lib/queries/cases";
 import { getClients } from "@/lib/queries/clients";
@@ -15,11 +15,11 @@ export const metadata: Metadata = {
 };
 
 export default async function DocumentsPage() {
-  await requireAdminOrAttorney();
+  const { organizationId } = await requireOrg();
   const [docs, casesResult, clientsResult] = await Promise.all([
-    getDocuments({ limit: 500 }),
-    getCases({ limit: 200 }),
-    getClients({ limit: 200 }),
+    getDocuments(organizationId, { limit: 500 }),
+    getCases(organizationId, { limit: 200 }),
+    getClients(organizationId, { limit: 200 }),
   ]);
 
   const cases = casesResult.data.map((c) => ({

@@ -1,4 +1,4 @@
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getCauseLists } from "@/lib/queries/courts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
@@ -23,8 +23,8 @@ export const metadata: Metadata = {
 };
 
 export default async function CauseListsPage() {
-  await requireAdminOrAttorney();
-  const causeListData = await getCauseLists();
+  const { organizationId } = await requireOrg();
+  const causeListData = await getCauseLists(organizationId);
 
   return (
     <div className="space-y-6">

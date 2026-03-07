@@ -4,11 +4,15 @@ import { documentCategory, documentStatus, documentReviewStatus } from "./enums"
 import { users } from "./auth";
 import { cases } from "./cases";
 import { clients } from "./clients";
+import { organizations } from "./organizations";
 
 export const documents = pgTable(
   "documents",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
     caseId: uuid("case_id").references(() => cases.id, { onDelete: "set null" }),
     clientId: uuid("client_id").references(() => clients.id, { onDelete: "set null" }),
@@ -33,37 +37,56 @@ export const documents = pgTable(
     index("documents_case_id_idx").on(table.caseId),
     index("documents_client_id_idx").on(table.clientId),
     index("documents_status_idx").on(table.status),
+    index("documents_organization_id_idx").on(table.organizationId),
   ]
 );
 
-export const documentVersions = pgTable("document_versions", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  documentId: uuid("document_id")
-    .notNull()
-    .references(() => documents.id, { onDelete: "cascade" }),
-  versionNumber: integer("version_number").notNull(),
-  fileUrl: text("file_url").notNull(),
-  fileName: text("file_name").notNull(),
-  fileSize: integer("file_size"),
-  uploadedBy: uuid("uploaded_by")
-    .notNull()
-    .references(() => users.id, { onDelete: "restrict" }),
-  changeNotes: text("change_notes"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const documentVersions = pgTable(
+  "document_versions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    documentId: uuid("document_id")
+      .notNull()
+      .references(() => documents.id, { onDelete: "cascade" }),
+    versionNumber: integer("version_number").notNull(),
+    fileUrl: text("file_url").notNull(),
+    fileName: text("file_name").notNull(),
+    fileSize: integer("file_size"),
+    uploadedBy: uuid("uploaded_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    changeNotes: text("change_notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("document_versions_organization_id_idx").on(table.organizationId),
+  ]
+);
 
-export const documentTemplates = pgTable("document_templates", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  name: text("name").notNull(),
-  description: text("description"),
-  category: documentCategory("category").notNull().default("template"),
-  content: text("content"),
-  fileUrl: text("file_url"),
-  placeholders: text("placeholders"),
-  createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const documentTemplates = pgTable(
+  "document_templates",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    category: documentCategory("category").notNull().default("template"),
+    content: text("content"),
+    fileUrl: text("file_url"),
+    placeholders: text("placeholders"),
+    createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("document_templates_organization_id_idx").on(table.organizationId),
+  ]
+);
 
 export const documentsRelations = relations(documents, ({ one, many }) => ({
   case: one(cases, { fields: [documents.caseId], references: [cases.id] }),

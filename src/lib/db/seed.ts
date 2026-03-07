@@ -24,17 +24,80 @@ async function main() {
 
   console.log("Starting seed...\n");
 
+  // 0. Seed Default Organization & Plan
+  console.log("Seeding default organization...");
+  const [defaultPlan] = await db
+    .insert(schema.plans)
+    .values({
+      name: "Professional",
+      slug: "professional",
+      description: "Full-featured plan for law firms",
+      maxUsers: 25,
+      maxCases: 1000,
+      maxStorageMb: 51200, // 50 GB
+      features: JSON.stringify({
+        trust_accounting: true,
+        workflow_automation: true,
+        custom_branding: true,
+        reports: "full",
+        client_portal: true,
+      }),
+      monthlyPrice: "5000",
+      annualPrice: "50000",
+      currency: "KES",
+      trialDays: 14,
+      isActive: true,
+    })
+    .onConflictDoNothing({ target: schema.plans.slug })
+    .returning();
+
+  const planId = defaultPlan?.id ?? (await db.select().from(schema.plans).where(eq(schema.plans.slug, "professional")).limit(1))[0].id;
+
+  const existingOrg = await db
+    .select()
+    .from(schema.organizations)
+    .where(eq(schema.organizations.slug, "default"))
+    .limit(1);
+
+  let orgId: string;
+  if (existingOrg.length === 0) {
+    const [org] = await db
+      .insert(schema.organizations)
+      .values({
+        name: "Default Law Firm",
+        slug: "default",
+        email: "info@lawfirm.co.ke",
+        phone: "+254200000001",
+        country: "KE",
+        city: "Nairobi",
+        county: "Nairobi",
+        timezone: "Africa/Nairobi",
+        locale: "en-KE",
+        currency: "KES",
+        status: "active",
+        planId,
+      })
+      .returning();
+    orgId = org.id;
+  } else {
+    orgId = existingOrg[0].id;
+  }
+  console.log("  ✓ Default organization seeded");
+
   // 1. Seed Practice Areas
   console.log("Seeding practice areas...");
   for (const pa of practiceAreaData) {
-    await db
-      .insert(schema.practiceAreas)
-      .values(pa)
-      .onConflictDoNothing({ target: schema.practiceAreas.name });
+    const existing = await db
+      .select()
+      .from(schema.practiceAreas)
+      .where(eq(schema.practiceAreas.name, pa.name));
+    if (existing.length === 0) {
+      await db.insert(schema.practiceAreas).values({ ...pa, organizationId: orgId });
+    }
   }
   console.log(`  ✓ ${practiceAreaData.length} practice areas seeded`);
 
-  // 2. Seed Courts
+  // 2. Seed Courts (global — no orgId needed)
   console.log("Seeding courts...");
   const courtIds: Record<string, string> = {};
   for (const court of courtData) {
@@ -51,7 +114,7 @@ async function main() {
   }
   console.log(`  ✓ ${courtData.length} courts seeded`);
 
-  // 3. Seed Court Stations (link to Magistrate Courts by default)
+  // 3. Seed Court Stations (global — no orgId needed)
   console.log("Seeding court stations...");
   const magistrateCourtId = courtIds["magistrate"];
   for (const station of courtStationData) {
@@ -79,6 +142,7 @@ async function main() {
     const [branch] = await db
       .insert(schema.branches)
       .values({
+        organizationId: orgId,
         name: "Main Office — Nairobi",
         address: "Kimathi Street, Nairobi CBD",
         city: "Nairobi",
@@ -109,6 +173,7 @@ async function main() {
       .values({
         ...userData.admin,
         password: hashedPassword,
+        organizationId: orgId,
         branchId,
       })
       .returning();
@@ -136,6 +201,7 @@ async function main() {
         .values({
           ...attyData.user,
           password: hashedPassword,
+          organizationId: orgId,
           branchId,
         })
         .returning();
@@ -156,6 +222,7 @@ async function main() {
         .insert(schema.attorneys)
         .values({
           ...attyData.attorney,
+          organizationId: orgId,
           userId,
         })
         .returning();
@@ -174,6 +241,7 @@ async function main() {
       if (existingCert.length === 0) {
         await db.insert(schema.practisingCertificates).values({
           ...cert,
+          organizationId: orgId,
           attorneyId,
         });
       }
@@ -188,6 +256,7 @@ async function main() {
       if (existingCpd.length === 0) {
         await db.insert(schema.cpdRecords).values({
           ...cpd,
+          organizationId: orgId,
           attorneyId,
         });
       }
@@ -213,6 +282,7 @@ async function main() {
         .values({
           ...clientData.user,
           password: hashedPassword,
+          organizationId: orgId,
           branchId,
         })
         .returning();
@@ -232,6 +302,7 @@ async function main() {
         .insert(schema.clients)
         .values({
           ...clientData.client,
+          organizationId: orgId,
           userId,
         })
         .returning();
@@ -258,6 +329,7 @@ async function main() {
         .insert(schema.cases)
         .values({
           ...caseData,
+          organizationId: orgId,
           clientId,
         })
         .returning();
@@ -265,6 +337,7 @@ async function main() {
       // Assign an attorney
       const attorneyUserId = attorneyUserIds[i % attorneyUserIds.length];
       await db.insert(schema.caseAssignments).values({
+        organizationId: orgId,
         caseId: newCase.id,
         userId: attorneyUserId,
         role: i === 0 ? "lead" : "assigned",
@@ -315,7 +388,7 @@ async function main() {
   for (const perm of defaultRolePermissions) {
     await db
       .insert(schema.rolePermissions)
-      .values(perm)
+      .values({ ...perm, organizationId: orgId })
       .onConflictDoNothing();
   }
   console.log(`  ✓ ${defaultRolePermissions.length} role permission rows seeded`);
@@ -339,11 +412,10 @@ async function main() {
       .from(schema.pipelineStages)
       .where(eq(schema.pipelineStages.name, stage.name));
     if (existing.length === 0) {
-      const [inserted] = await db.insert(schema.pipelineStages).values(stage).returning();
+      const [inserted] = await db.insert(schema.pipelineStages).values({ ...stage, organizationId: orgId }).returning();
       stageIds[stage.name] = inserted.id;
     } else {
       stageIds[stage.name] = existing[0].id;
-      // Update existing stages with maxDurationDays if missing
       if ("maxDurationDays" in stage && stage.maxDurationDays) {
         await db
           .update(schema.pipelineStages)
@@ -411,6 +483,7 @@ async function main() {
         await db.insert(schema.pipelineStages).values({
           ...stage,
           name: `${paConfig.practiceArea}: ${stage.name}`,
+          organizationId: orgId,
           practiceAreaId,
         });
         paStageCount++;
@@ -430,6 +503,7 @@ async function main() {
       .where(eq(schema.stageAutomations.stageId, trialStageId));
     if (existing.length === 0) {
       await db.insert(schema.stageAutomations).values({
+        organizationId: orgId,
         stageId: trialStageId,
         triggerOn: "enter",
         actionType: "send_notification",
@@ -448,6 +522,7 @@ async function main() {
       .where(eq(schema.stageAutomations.stageId, resolutionStageId));
     if (existing.length === 0) {
       await db.insert(schema.stageAutomations).values({
+        organizationId: orgId,
         stageId: resolutionStageId,
         triggerOn: "enter",
         actionType: "update_status",
@@ -463,10 +538,9 @@ async function main() {
   await db.execute(
     `UPDATE cases SET stage_entered_at = updated_at WHERE pipeline_stage_id IS NOT NULL AND stage_entered_at IS NULL`
   );
-  // Insert initial caseStageHistory records for existing cases that have no history yet
   await db.execute(
-    `INSERT INTO case_stage_history (id, case_id, stage_id, entered_at)
-     SELECT gen_random_uuid(), c.id, c.pipeline_stage_id, COALESCE(c.stage_entered_at, c.updated_at)
+    `INSERT INTO case_stage_history (id, case_id, stage_id, entered_at, organization_id)
+     SELECT gen_random_uuid(), c.id, c.pipeline_stage_id, COALESCE(c.stage_entered_at, c.updated_at), c.organization_id
      FROM cases c
      LEFT JOIN case_stage_history csh ON csh.case_id = c.id AND csh.stage_id = c.pipeline_stage_id
      WHERE c.pipeline_stage_id IS NOT NULL AND csh.id IS NULL`
@@ -476,6 +550,8 @@ async function main() {
   console.log("\n✅ Seed completed successfully!");
   console.log(`
 Summary:
+  - 1 default organization
+  - 1 subscription plan (Professional)
   - ${practiceAreaData.length} practice areas
   - ${courtData.length} courts
   - ${courtStationData.length} court stations (47 counties)

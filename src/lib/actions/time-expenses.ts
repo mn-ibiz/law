@@ -3,10 +3,10 @@
 import { db } from "@/lib/db";
 import { timeEntries, expenses, requisitions } from "@/lib/db/schema/time-expenses";
 import { cases } from "@/lib/db/schema/cases";
-import { auth } from "@/lib/auth/auth";
+import { getTenantContext } from "@/lib/auth/get-session";
 import { createTimeEntrySchema, createExpenseSchema, createRequisitionSchema, updateRequisitionSchema, batchTimeEntrySchema, updateTimeEntrySchema, updateExpenseSchema } from "@/lib/validators/time-expense";
 import { attorneys } from "@/lib/db/schema/attorneys";
-import { eq, sql, desc } from "drizzle-orm";
+import { and, eq, sql, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { safeAction } from "@/lib/utils/safe-action";
 import { validateId } from "@/lib/utils/validate-id";
@@ -15,10 +15,7 @@ import { createAuditLog } from "@/lib/utils/audit";
 
 export async function createTimeEntry(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId, userId } = await getTenantContext();
 
     const validated = createTimeEntrySchema.safeParse(data);
     if (!validated.success) {
@@ -33,7 +30,8 @@ export async function createTimeEntry(data: unknown) {
       .insert(timeEntries)
       .values({
         ...rest,
-        userId: session.user.id,
+        organizationId,
+        userId,
         date: new Date(date),
         hours: String(hours),
         rate: String(rate),
@@ -48,15 +46,14 @@ export async function createTimeEntry(data: unknown) {
 
 export async function deleteTimeEntry(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user) return { error: "Unauthorized" };
+    const { organizationId, userId, role } = await getTenantContext();
 
     if (!validateId(id)) return { error: "Invalid ID" };
 
     // Only delete own entries or admin
-    const entry = await db.select({ userId: timeEntries.userId, isBilled: timeEntries.isBilled }).from(timeEntries).where(eq(timeEntries.id, id)).limit(1);
+    const entry = await db.select({ userId: timeEntries.userId, isBilled: timeEntries.isBilled }).from(timeEntries).where(and(eq(timeEntries.id, id), eq(timeEntries.organizationId, organizationId))).limit(1);
     if (!entry[0]) return { error: "Not found" };
-    if (entry[0].userId !== session.user.id && session.user.role !== "admin") {
+    if (entry[0].userId !== userId && role !== "admin") {
       return { error: "Unauthorized" };
     }
 
@@ -65,7 +62,7 @@ export async function deleteTimeEntry(id: string) {
       return { error: "Cannot delete a billed time entry" };
     }
 
-    await db.delete(timeEntries).where(eq(timeEntries.id, id));
+    await db.delete(timeEntries).where(and(eq(timeEntries.id, id), eq(timeEntries.organizationId, organizationId)));
     revalidatePath("/time-expenses");
     return { success: true };
   });
@@ -73,10 +70,7 @@ export async function deleteTimeEntry(id: string) {
 
 export async function createExpense(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId, userId } = await getTenantContext();
 
     const validated = createExpenseSchema.safeParse(data);
     if (!validated.success) {
@@ -89,7 +83,8 @@ export async function createExpense(data: unknown) {
       .insert(expenses)
       .values({
         ...rest,
-        userId: session.user.id,
+        organizationId,
+        userId,
         date: new Date(date),
         amount: String(amount),
         receiptUrl: receiptUrl ?? null,
@@ -103,10 +98,7 @@ export async function createExpense(data: unknown) {
 
 export async function createRequisition(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId, userId } = await getTenantContext();
 
     const validated = createRequisitionSchema.safeParse(data);
     if (!validated.success) {
@@ -120,7 +112,7 @@ export async function createRequisition(data: unknown) {
       const [reqResult] = await db
         .select({ maxNum: sql<string>`MAX(${requisitions.requisitionNumber})` })
         .from(requisitions)
-        .where(sql`${requisitions.requisitionNumber} LIKE ${reqPrefix + '%'}`);
+        .where(sql`${requisitions.organizationId} = ${organizationId} AND ${requisitions.requisitionNumber} LIKE ${reqPrefix + '%'}`);
       let reqNext = 1;
       if (reqResult?.maxNum) {
         const parts = reqResult.maxNum.split("-");
@@ -132,8 +124,9 @@ export async function createRequisition(data: unknown) {
       return await db
         .insert(requisitions)
         .values({
+          organizationId,
           requisitionNumber: reqNum,
-          requestedBy: session.user.id,
+          requestedBy: userId,
           caseId: validated.data.caseId || undefined,
           description: validated.data.description,
           amount: String(validated.data.amount),
@@ -149,18 +142,17 @@ export async function createRequisition(data: unknown) {
 
 export async function deleteExpense(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user) return { error: "Unauthorized" };
+    const { organizationId, userId, role } = await getTenantContext();
 
     if (!validateId(id)) return { error: "Invalid ID" };
 
-    const entry = await db.select({ userId: expenses.userId }).from(expenses).where(eq(expenses.id, id)).limit(1);
+    const entry = await db.select({ userId: expenses.userId }).from(expenses).where(and(eq(expenses.id, id), eq(expenses.organizationId, organizationId))).limit(1);
     if (!entry[0]) return { error: "Not found" };
-    if (entry[0].userId !== session.user.id && session.user.role !== "admin") {
+    if (entry[0].userId !== userId && role !== "admin") {
       return { error: "Unauthorized" };
     }
 
-    await db.delete(expenses).where(eq(expenses.id, id));
+    await db.delete(expenses).where(and(eq(expenses.id, id), eq(expenses.organizationId, organizationId)));
     revalidatePath("/time-expenses");
     return { success: true };
   });
@@ -168,17 +160,14 @@ export async function deleteExpense(id: string) {
 
 export async function deleteRequisition(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId } = await getTenantContext();
 
     if (!validateId(id)) return { error: "Invalid ID" };
 
     // Only allow deletion of draft requisitions
     const result = await db
       .delete(requisitions)
-      .where(sql`${requisitions.id} = ${id} AND ${requisitions.status} = 'draft'`)
+      .where(sql`${requisitions.id} = ${id} AND ${requisitions.organizationId} = ${organizationId} AND ${requisitions.status} = 'draft'`)
       .returning({ id: requisitions.id });
 
     if (result.length === 0) {
@@ -192,10 +181,7 @@ export async function deleteRequisition(id: string) {
 
 export async function updateRequisition(id: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId, userId } = await getTenantContext();
 
     if (!validateId(id)) return { error: "Invalid ID" };
 
@@ -214,14 +200,14 @@ export async function updateRequisition(id: string, data: unknown) {
         notes: validated.data.justification || null,
         updatedAt: new Date(),
       })
-      .where(sql`${requisitions.id} = ${id} AND ${requisitions.status} = 'draft'`)
+      .where(sql`${requisitions.id} = ${id} AND ${requisitions.organizationId} = ${organizationId} AND ${requisitions.status} = 'draft'`)
       .returning({ id: requisitions.id });
 
     if (result.length === 0) {
       return { error: "Requisition not found or cannot be edited (not in draft status)" };
     }
 
-    await createAuditLog(session.user.id, "update", "requisition", id, validated.data);
+    await createAuditLog(organizationId, userId, "update", "requisition", id, validated.data);
 
     revalidatePath("/requisitions");
     return { success: true };
@@ -230,24 +216,22 @@ export async function updateRequisition(id: string, data: unknown) {
 
 export async function rejectRequisition(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId, userId, role } = await getTenantContext();
+    if (role !== "admin") return { error: "Unauthorized" };
 
     if (!validateId(id)) return { error: "Invalid ID" };
 
     const result = await db
       .update(requisitions)
-      .set({ status: "rejected", approvedBy: session.user.id, approvedAt: new Date(), updatedAt: new Date() })
-      .where(sql`${requisitions.id} = ${id} AND ${requisitions.status} = 'pending_approval'`)
+      .set({ status: "rejected", approvedBy: userId, approvedAt: new Date(), updatedAt: new Date() })
+      .where(sql`${requisitions.id} = ${id} AND ${requisitions.organizationId} = ${organizationId} AND ${requisitions.status} = 'pending_approval'`)
       .returning({ id: requisitions.id });
 
     if (result.length === 0) {
       return { error: "Requisition not found or not in pending_approval status" };
     }
 
-    await createAuditLog(session.user.id, "update", "requisition", id, { action: "reject" });
+    await createAuditLog(organizationId, userId, "update", "requisition", id, { action: "reject" });
 
     revalidatePath("/requisitions");
     return { success: true };
@@ -256,17 +240,14 @@ export async function rejectRequisition(id: string) {
 
 export async function submitRequisition(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId } = await getTenantContext();
 
     if (!validateId(id)) return { error: "Invalid ID" };
 
     const result = await db
       .update(requisitions)
       .set({ status: "pending_approval", updatedAt: new Date() })
-      .where(sql`${requisitions.id} = ${id} AND ${requisitions.status} = 'draft'`)
+      .where(sql`${requisitions.id} = ${id} AND ${requisitions.organizationId} = ${organizationId} AND ${requisitions.status} = 'draft'`)
       .returning({ id: requisitions.id });
 
     if (result.length === 0) {
@@ -280,25 +261,23 @@ export async function submitRequisition(id: string) {
 
 export async function approveRequisition(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId, userId, role } = await getTenantContext();
+    if (role !== "admin") return { error: "Unauthorized" };
 
     if (!validateId(id)) return { error: "Invalid ID" };
 
     // Atomic conditional update — prevents TOCTOU race
     const result = await db
       .update(requisitions)
-      .set({ status: "approved", approvedBy: session.user.id, approvedAt: new Date(), updatedAt: new Date() })
-      .where(sql`${requisitions.id} = ${id} AND ${requisitions.status} = 'pending_approval'`)
+      .set({ status: "approved", approvedBy: userId, approvedAt: new Date(), updatedAt: new Date() })
+      .where(sql`${requisitions.id} = ${id} AND ${requisitions.organizationId} = ${organizationId} AND ${requisitions.status} = 'pending_approval'`)
       .returning({ id: requisitions.id });
 
     if (result.length === 0) {
       return { error: "Requisition not found or not in pending_approval status" };
     }
 
-    await createAuditLog(session.user.id, "update", "requisition", id, { action: "approve" });
+    await createAuditLog(organizationId, userId, "update", "requisition", id, { action: "approve" });
 
     revalidatePath("/requisitions");
     return { success: true };
@@ -307,10 +286,7 @@ export async function approveRequisition(id: string) {
 
 export async function updateTimeEntry(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId, userId, role } = await getTenantContext();
 
     const validated = updateTimeEntrySchema.safeParse(data);
     if (!validated.success) {
@@ -325,11 +301,11 @@ export async function updateTimeEntry(data: unknown) {
     const entry = await db
       .select({ userId: timeEntries.userId, isBilled: timeEntries.isBilled })
       .from(timeEntries)
-      .where(eq(timeEntries.id, id))
+      .where(and(eq(timeEntries.id, id), eq(timeEntries.organizationId, organizationId)))
       .limit(1);
 
     if (!entry[0]) return { error: "Not found" };
-    if (entry[0].userId !== session.user.id && session.user.role !== "admin") {
+    if (entry[0].userId !== userId && role !== "admin") {
       return { error: "Unauthorized" };
     }
     if (entry[0].isBilled) {
@@ -349,7 +325,7 @@ export async function updateTimeEntry(data: unknown) {
         amount: amount.toFixed(2),
         updatedAt: new Date(),
       })
-      .where(eq(timeEntries.id, id))
+      .where(and(eq(timeEntries.id, id), eq(timeEntries.organizationId, organizationId)))
       .returning();
 
     revalidatePath("/time-expenses");
@@ -359,10 +335,7 @@ export async function updateTimeEntry(data: unknown) {
 
 export async function updateExpense(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId, userId, role } = await getTenantContext();
 
     const validated = updateExpenseSchema.safeParse(data);
     if (!validated.success) {
@@ -376,11 +349,11 @@ export async function updateExpense(data: unknown) {
     const entry = await db
       .select({ userId: expenses.userId, isBilled: expenses.isBilled })
       .from(expenses)
-      .where(eq(expenses.id, id))
+      .where(and(eq(expenses.id, id), eq(expenses.organizationId, organizationId)))
       .limit(1);
 
     if (!entry[0]) return { error: "Not found" };
-    if (entry[0].userId !== session.user.id && session.user.role !== "admin") {
+    if (entry[0].userId !== userId && role !== "admin") {
       return { error: "Unauthorized" };
     }
     if (entry[0].isBilled) {
@@ -396,7 +369,7 @@ export async function updateExpense(data: unknown) {
         receiptUrl: receiptUrl ?? null,
         updatedAt: new Date(),
       })
-      .where(eq(expenses.id, id))
+      .where(and(eq(expenses.id, id), eq(expenses.organizationId, organizationId)))
       .returning();
 
     revalidatePath("/time-expenses");
@@ -406,10 +379,7 @@ export async function updateExpense(data: unknown) {
 
 export async function createBatchTimeEntries(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId, userId } = await getTenantContext();
 
     const validated = batchTimeEntrySchema.safeParse(data);
     if (!validated.success) {
@@ -426,13 +396,14 @@ export async function createBatchTimeEntries(data: unknown) {
     const [attorney] = await db
       .select({ hourlyRate: attorneys.hourlyRate })
       .from(attorneys)
-      .where(eq(attorneys.userId, session.user.id))
+      .where(and(eq(attorneys.userId, userId), eq(attorneys.organizationId, organizationId)))
       .limit(1);
     const rate = attorney?.hourlyRate ?? "0";
 
     const values = nonZero.map((entry) => ({
+      organizationId,
       caseId: entry.caseId,
-      userId: session.user.id,
+      userId,
       description: entry.description ?? "Time entry",
       date: new Date(entry.date),
       hours: String(entry.hours),
@@ -451,8 +422,7 @@ export async function createBatchTimeEntries(data: unknown) {
 
 /** Server action to fetch case options for client-side dropdowns */
 export async function fetchCaseOptions() {
-  const session = await auth();
-  if (!session?.user) return [];
+  const { organizationId } = await getTenantContext();
   return db
     .select({
       id: cases.id,
@@ -460,5 +430,6 @@ export async function fetchCaseOptions() {
       title: cases.title,
     })
     .from(cases)
+    .where(eq(cases.organizationId, organizationId))
     .orderBy(desc(cases.createdAt));
 }

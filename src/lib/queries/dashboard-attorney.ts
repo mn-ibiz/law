@@ -6,7 +6,7 @@ import { tasks } from "@/lib/db/schema/calendar";
 import { timeEntries } from "@/lib/db/schema/time-expenses";
 import { sql, eq, and, isNull, inArray, gte, desc, ne } from "drizzle-orm";
 
-export async function getAttorneyCases(userId: string) {
+export async function getAttorneyCases(organizationId: string, userId: string) {
   const result = await db
     .select({
       id: cases.id,
@@ -20,6 +20,7 @@ export async function getAttorneyCases(userId: string) {
     .innerJoin(clients, eq(cases.clientId, clients.id))
     .where(
       and(
+        eq(cases.organizationId, organizationId),
         eq(caseAssignments.userId, userId),
         isNull(caseAssignments.unassignedAt),
         inArray(cases.status, ["open", "in_progress", "hearing"])
@@ -30,7 +31,7 @@ export async function getAttorneyCases(userId: string) {
   return result;
 }
 
-export async function getAttorneyDeadlines(userId: string, limit = 7) {
+export async function getAttorneyDeadlines(organizationId: string, userId: string, limit = 7) {
   const now = new Date();
   const result = await db
     .select({
@@ -45,6 +46,7 @@ export async function getAttorneyDeadlines(userId: string, limit = 7) {
     .leftJoin(cases, eq(deadlines.caseId, cases.id))
     .where(
       and(
+        eq(deadlines.organizationId, organizationId),
         eq(deadlines.assignedTo, userId),
         isNull(deadlines.completedAt),
         gte(deadlines.dueDate, now)
@@ -55,7 +57,7 @@ export async function getAttorneyDeadlines(userId: string, limit = 7) {
   return result;
 }
 
-export async function getAttorneyRecentTimeEntries(userId: string, limit = 5) {
+export async function getAttorneyRecentTimeEntries(organizationId: string, userId: string, limit = 5) {
   const result = await db
     .select({
       id: timeEntries.id,
@@ -66,13 +68,13 @@ export async function getAttorneyRecentTimeEntries(userId: string, limit = 5) {
     })
     .from(timeEntries)
     .leftJoin(cases, eq(timeEntries.caseId, cases.id))
-    .where(eq(timeEntries.userId, userId))
+    .where(and(eq(timeEntries.organizationId, organizationId), eq(timeEntries.userId, userId)))
     .orderBy(desc(timeEntries.date))
     .limit(limit);
   return result;
 }
 
-export async function getAttorneyTasks(userId: string) {
+export async function getAttorneyTasks(organizationId: string, userId: string) {
   const result = await db
     .select({
       id: tasks.id,
@@ -87,6 +89,7 @@ export async function getAttorneyTasks(userId: string) {
     .leftJoin(cases, eq(tasks.caseId, cases.id))
     .where(
       and(
+        eq(tasks.organizationId, organizationId),
         eq(tasks.assignedTo, userId),
         ne(tasks.status, "completed"),
         ne(tasks.status, "cancelled")

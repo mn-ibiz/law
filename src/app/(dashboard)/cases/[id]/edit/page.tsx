@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getCaseById } from "@/lib/queries/cases";
 import { getClients } from "@/lib/queries/clients";
 import { CaseForm } from "@/components/forms/case-form";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { organizationId } = await requireOrg();
   const { id } = await params;
-  const caseData = await getCaseById(id);
+  const caseData = await getCaseById(organizationId, id);
   return {
     title: caseData ? `Edit ${caseData.caseNumber}` : "Edit Case",
     description: "Update case details",
@@ -16,12 +17,12 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 }
 
 export default async function EditCasePage({ params }: { params: Promise<{ id: string }> }) {
-  await requireAdminOrAttorney();
+  const { organizationId } = await requireOrg();
   const { id } = await params;
-  const caseData = await getCaseById(id);
+  const caseData = await getCaseById(organizationId, id);
   if (!caseData) notFound();
 
-  const { data: clientList } = await getClients({ limit: 200 });
+  const { data: clientList } = await getClients(organizationId, { limit: 200 });
   const clients = clientList.map((c) => ({
     id: c.id,
     name: c.companyName || `${c.firstName} ${c.lastName}`,

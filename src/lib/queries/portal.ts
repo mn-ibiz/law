@@ -4,10 +4,10 @@ import { invoices } from "@/lib/db/schema/billing";
 import { documents } from "@/lib/db/schema/documents";
 import { clients } from "@/lib/db/schema/clients";
 import { messages } from "@/lib/db/schema/messaging";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 
-export async function getPortalCases(clientUserId: string) {
-  const client = await db.select({ id: clients.id }).from(clients).where(eq(clients.userId, clientUserId)).limit(1);
+export async function getPortalCases(organizationId: string, clientUserId: string) {
+  const client = await db.select({ id: clients.id }).from(clients).where(and(eq(clients.organizationId, organizationId), eq(clients.userId, clientUserId))).limit(1);
   if (!client[0]) return [];
 
   return db
@@ -20,13 +20,13 @@ export async function getPortalCases(clientUserId: string) {
       createdAt: cases.createdAt,
     })
     .from(cases)
-    .where(eq(cases.clientId, client[0].id))
+    .where(and(eq(cases.organizationId, organizationId), eq(cases.clientId, client[0].id)))
     .orderBy(desc(cases.createdAt))
     .limit(200);
 }
 
-export async function getPortalInvoices(clientUserId: string) {
-  const client = await db.select({ id: clients.id }).from(clients).where(eq(clients.userId, clientUserId)).limit(1);
+export async function getPortalInvoices(organizationId: string, clientUserId: string) {
+  const client = await db.select({ id: clients.id }).from(clients).where(and(eq(clients.organizationId, organizationId), eq(clients.userId, clientUserId))).limit(1);
   if (!client[0]) return [];
 
   return db
@@ -39,13 +39,13 @@ export async function getPortalInvoices(clientUserId: string) {
       dueDate: invoices.dueDate,
     })
     .from(invoices)
-    .where(eq(invoices.clientId, client[0].id))
+    .where(and(eq(invoices.organizationId, organizationId), eq(invoices.clientId, client[0].id)))
     .orderBy(desc(invoices.createdAt))
     .limit(200);
 }
 
-export async function getPortalDocuments(clientUserId: string) {
-  const client = await db.select({ id: clients.id }).from(clients).where(eq(clients.userId, clientUserId)).limit(1);
+export async function getPortalDocuments(organizationId: string, clientUserId: string) {
+  const client = await db.select({ id: clients.id }).from(clients).where(and(eq(clients.organizationId, organizationId), eq(clients.userId, clientUserId))).limit(1);
   if (!client[0]) return [];
 
   return db
@@ -57,12 +57,12 @@ export async function getPortalDocuments(clientUserId: string) {
       createdAt: documents.createdAt,
     })
     .from(documents)
-    .where(eq(documents.clientId, client[0].id))
+    .where(and(eq(documents.organizationId, organizationId), eq(documents.clientId, client[0].id)))
     .orderBy(desc(documents.createdAt))
     .limit(200);
 }
 
-export async function getPortalMessages(userId: string) {
+export async function getPortalMessages(organizationId: string, userId: string) {
   return db
     .select({
       id: messages.id,
@@ -73,7 +73,7 @@ export async function getPortalMessages(userId: string) {
       createdAt: messages.createdAt,
     })
     .from(messages)
-    .where(eq(messages.recipientId, userId))
+    .where(and(eq(messages.organizationId, organizationId), eq(messages.recipientId, userId)))
     .orderBy(desc(messages.createdAt))
     .limit(20);
 }

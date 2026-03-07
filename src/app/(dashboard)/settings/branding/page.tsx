@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getFirmBranding } from "@/lib/queries/settings";
 import { BrandingForm } from "@/components/settings/branding-form";
 import { Paintbrush } from "lucide-react";
@@ -10,8 +10,8 @@ export const metadata: Metadata = {
 };
 
 export default async function BrandingSettingsPage() {
-  await requireAdmin();
-  const branding = await getFirmBranding();
+  const { organizationId } = await requireOrg();
+  const branding = await getFirmBranding(organizationId);
 
   return (
     <div className="space-y-6">

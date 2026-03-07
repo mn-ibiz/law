@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getClients } from "@/lib/queries/clients";
 import { ClientDataTable } from "@/components/clients/client-data-table";
 import { Button } from "@/components/ui/button";
@@ -13,8 +13,8 @@ export const metadata: Metadata = {
 };
 
 export default async function ClientsPage() {
-  await requireAdminOrAttorney();
-  const { data } = await getClients({ limit: 500 });
+  const { organizationId } = await requireOrg();
+  const { data } = await getClients(organizationId, { limit: 500 });
 
   const activeCount = data.filter((c) => c.status === "active").length;
   const pepCount = data.filter((c) => c.isPep).length;

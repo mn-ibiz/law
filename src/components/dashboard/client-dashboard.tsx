@@ -4,9 +4,11 @@ import { StatCard } from "@/components/shared/stat-card";
 import { DashboardSkeleton } from "./dashboard-skeleton";
 import { formatKES, formatNumber } from "@/lib/utils/format";
 import { getClientDashboardStats } from "@/lib/queries/dashboard";
+import { requireOrg } from "@/lib/auth/get-session";
 
 async function ClientStats({ userId }: { userId: string }) {
-  const stats = await getClientDashboardStats(userId);
+  const { organizationId } = await requireOrg();
+  const stats = await getClientDashboardStats(organizationId, userId);
 
   return (
     <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">

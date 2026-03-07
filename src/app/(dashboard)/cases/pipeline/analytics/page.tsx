@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import {
   getAverageStageDuration,
   getPipelineThroughput,
@@ -24,15 +24,15 @@ export default async function PipelineAnalyticsPage({
 }: {
   searchParams: Promise<{ practiceArea?: string }>;
 }) {
-  await requireAdminOrAttorney();
+  const { organizationId } = await requireOrg();
   const { practiceArea } = await searchParams;
   const paId = practiceArea || null;
 
   const [avgDuration, throughput, conversion, bottlenecks] = await Promise.all([
-    getAverageStageDuration(paId),
-    getPipelineThroughput(paId),
-    getConversionRate(paId),
-    getBottleneckCases(paId),
+    getAverageStageDuration(organizationId, paId),
+    getPipelineThroughput(organizationId, paId),
+    getConversionRate(organizationId, paId),
+    getBottleneckCases(organizationId, paId),
   ]);
 
   return (

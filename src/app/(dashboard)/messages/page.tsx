@@ -1,4 +1,4 @@
-import { requireAuth } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getMessages, getSentMessages } from "@/lib/queries/messaging";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,11 +28,11 @@ const messageStatusStyles: Record<string, string> = {
 };
 
 export default async function MessagesPage() {
-  const session = await requireAuth();
+  const { session, organizationId } = await requireOrg();
   const userId = session.user.id as string;
   const [inbox, sent] = await Promise.all([
-    getMessages(userId),
-    getSentMessages(userId),
+    getMessages(organizationId, userId),
+    getSentMessages(organizationId, userId),
   ]);
 
   return (

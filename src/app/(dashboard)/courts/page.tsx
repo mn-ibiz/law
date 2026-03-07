@@ -1,4 +1,4 @@
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getCourtHierarchy, getAllCourtFilings, getAllServiceOfDocuments, getCourts } from "@/lib/queries/courts";
 import { getCases } from "@/lib/queries/cases";
 import { CourtsTabs } from "@/components/courts/courts-tabs";
@@ -11,14 +11,14 @@ export const metadata: Metadata = {
 };
 
 export default async function CourtsPage() {
-  const session = await requireAdminOrAttorney();
+  const { session, organizationId } = await requireOrg();
   const isAdmin = session.user.role === "admin";
   const [hierarchy, filings, serviceRecords, courtList, caseResult] = await Promise.all([
     getCourtHierarchy(isAdmin),
-    getAllCourtFilings(),
-    getAllServiceOfDocuments(),
+    getAllCourtFilings(organizationId),
+    getAllServiceOfDocuments(organizationId),
     getCourts(),
-    getCases({ limit: 200 }),
+    getCases(organizationId, { limit: 200 }),
   ]);
 
   const cases = caseResult.data.map((c) => ({

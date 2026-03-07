@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getFirmSettings } from "@/lib/queries/settings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -34,8 +34,8 @@ const SETTING_LABELS: Record<string, string> = {
 };
 
 export default async function FirmSettingsPage() {
-  await requireAdmin();
-  const settings = await getFirmSettings();
+  const { organizationId } = await requireOrg();
+  const settings = await getFirmSettings(organizationId);
 
   return (
     <div className="space-y-6">

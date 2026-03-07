@@ -3,7 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { NotificationBellWrapper } from "@/components/notifications/notification-bell-wrapper";
-import { requireAuth } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getPermissionsForRole } from "@/lib/queries/permissions";
 import { defaultPermissions } from "@/lib/auth/permissions";
 import type { Role } from "@/lib/auth/permissions";
@@ -13,13 +13,13 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await requireAuth();
+  const { session, organizationId } = await requireOrg();
 
   const role = session.user.role as Role;
   const userName = session.user.name ?? "User";
 
   // Resolve permissions server-side so sidebar renders correctly on first paint
-  const dbPerms = await getPermissionsForRole(role);
+  const dbPerms = await getPermissionsForRole(organizationId, role);
   const permissions: Record<string, string[]> =
     Object.keys(dbPerms).length > 0
       ? Object.fromEntries(

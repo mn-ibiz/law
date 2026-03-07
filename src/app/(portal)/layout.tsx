@@ -3,7 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { PortalSidebar } from "@/components/layout/portal-sidebar";
 import { Header } from "@/components/layout/header";
 import { NotificationBellWrapper } from "@/components/notifications/notification-bell-wrapper";
-import { requireRole } from "@/lib/auth/get-session";
+import { requireRole, requireOrg } from "@/lib/auth/get-session";
 import { getPermissionsForRole } from "@/lib/queries/permissions";
 import { defaultPermissions } from "@/lib/auth/permissions";
 
@@ -13,8 +13,9 @@ export default async function PortalLayout({
   children: React.ReactNode;
 }) {
   await requireRole("client");
+  const { organizationId } = await requireOrg();
 
-  const dbPerms = await getPermissionsForRole("client");
+  const dbPerms = await getPermissionsForRole(organizationId, "client");
   const permissions: Record<string, string[]> =
     Object.keys(dbPerms).length > 0
       ? Object.fromEntries(

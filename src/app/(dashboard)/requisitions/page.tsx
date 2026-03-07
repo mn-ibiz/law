@@ -1,4 +1,4 @@
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getRequisitions } from "@/lib/queries/time-expenses";
 import { getCasesForSelect } from "@/lib/queries/trust";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,8 +15,8 @@ export const metadata: Metadata = {
 };
 
 export default async function RequisitionsPage() {
-  const session = await requireAdminOrAttorney();
-  const [reqs, cases] = await Promise.all([getRequisitions(), getCasesForSelect()]);
+  const { session, organizationId } = await requireOrg();
+  const [reqs, cases] = await Promise.all([getRequisitions(organizationId), getCasesForSelect(organizationId)]);
   const userRole = session.user.role;
 
   const pendingCount = reqs.filter((r) => r.status === "pending_approval").length;

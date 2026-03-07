@@ -1,4 +1,4 @@
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getTasks } from "@/lib/queries/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,8 +24,8 @@ export const metadata: Metadata = {
 };
 
 export default async function TasksPage() {
-  await requireAdminOrAttorney();
-  const taskList = await getTasks();
+  const { organizationId } = await requireOrg();
+  const taskList = await getTasks(organizationId);
 
   return (
     <div className="space-y-6">

@@ -1,4 +1,4 @@
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getCases } from "@/lib/queries/cases";
 import { getUsers } from "@/lib/queries/settings";
 import { DeadlineForm } from "@/components/forms/deadline-form";
@@ -10,11 +10,11 @@ export const metadata: Metadata = {
 };
 
 export default async function NewDeadlinePage() {
-  await requireAdminOrAttorney();
+  const { organizationId } = await requireOrg();
 
   const [{ data: caseList }, userList] = await Promise.all([
-    getCases({ limit: 200 }),
-    getUsers(),
+    getCases(organizationId, { limit: 200 }),
+    getUsers(organizationId),
   ]);
 
   const cases = caseList.map((c) => ({

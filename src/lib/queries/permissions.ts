@@ -1,15 +1,16 @@
 import { db } from "@/lib/db";
 import { rolePermissions } from "@/lib/db/schema/settings";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import type { Resource, Action } from "@/lib/auth/permissions";
 
 export async function getPermissionsForRole(
+  organizationId: string,
   role: string
 ): Promise<Partial<Record<Resource, Action[]>>> {
   const rows = await db
     .select({ resource: rolePermissions.resource, actions: rolePermissions.actions })
     .from(rolePermissions)
-    .where(eq(rolePermissions.role, role));
+    .where(and(eq(rolePermissions.organizationId, organizationId), eq(rolePermissions.role, role)));
 
   const result: Partial<Record<Resource, Action[]>> = {};
   for (const row of rows) {
@@ -18,7 +19,7 @@ export async function getPermissionsForRole(
   return result;
 }
 
-export async function getAllRolePermissions(): Promise<
+export async function getAllRolePermissions(organizationId: string): Promise<
   Record<string, Partial<Record<Resource, Action[]>>>
 > {
   const rows = await db
@@ -27,7 +28,8 @@ export async function getAllRolePermissions(): Promise<
       resource: rolePermissions.resource,
       actions: rolePermissions.actions,
     })
-    .from(rolePermissions);
+    .from(rolePermissions)
+    .where(eq(rolePermissions.organizationId, organizationId));
 
   const result: Record<string, Partial<Record<Resource, Action[]>>> = {};
   for (const row of rows) {

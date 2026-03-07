@@ -1,4 +1,4 @@
-import { requireRole } from "@/lib/auth/get-session";
+import { requireRole, requireOrg } from "@/lib/auth/get-session";
 import { getUserById } from "@/lib/queries/settings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,8 @@ export const metadata: Metadata = {
 
 export default async function PortalProfilePage() {
   const session = await requireRole("client");
-  const user = await getUserById(session.user.id as string);
+  const { organizationId } = await requireOrg();
+  const user = await getUserById(organizationId, session.user.id as string);
 
   if (!user) {
     return (

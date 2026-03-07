@@ -1,4 +1,4 @@
-export type Role = "admin" | "attorney" | "client";
+export type Role = "super_admin" | "admin" | "attorney" | "client";
 export type Resource =
   | "attorneys"
   | "clients"
@@ -18,6 +18,22 @@ export type Action = "create" | "read" | "update" | "delete" | "export";
 
 /** Hardcoded fallback — used when DB permissions are not yet seeded */
 export const defaultPermissions: Record<Role, Partial<Record<Resource, Action[]>>> = {
+  super_admin: {
+    attorneys: ["create", "read", "update", "delete"],
+    clients: ["create", "read", "update", "delete"],
+    cases: ["create", "read", "update", "delete"],
+    documents: ["create", "read", "update", "delete"],
+    calendar: ["create", "read", "update", "delete"],
+    "time-tracking": ["create", "read", "update", "delete"],
+    expenses: ["create", "read", "update", "delete"],
+    billing: ["create", "read", "update", "delete"],
+    "trust-accounts": ["create", "read", "update", "delete"],
+    messages: ["create", "read", "update", "delete"],
+    reports: ["read", "export"],
+    settings: ["create", "read", "update", "delete"],
+    "audit-log": ["read", "export"],
+    users: ["create", "read", "update", "delete"],
+  },
   admin: {
     attorneys: ["create", "read", "update", "delete"],
     clients: ["create", "read", "update", "delete"],
@@ -70,7 +86,8 @@ export async function checkPermission(
 
   // Dynamic import to avoid pulling DB code into client bundles
   const { getPermissionsForRole } = await import("@/lib/queries/permissions");
-  const dbPerms = await getPermissionsForRole(session.user.role);
+  // checkPermission doesn't have organizationId context — pass empty string to use fallback
+  const dbPerms = await getPermissionsForRole("", session.user.role);
 
   // Use DB permissions if any exist for this role
   if (Object.keys(dbPerms).length > 0) {

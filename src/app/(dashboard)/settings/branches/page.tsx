@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getBranches } from "@/lib/queries/settings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BranchDataTable } from "@/components/branches/branch-data-table";
@@ -10,8 +10,8 @@ export const metadata: Metadata = {
 };
 
 export default async function BranchesPage() {
-  await requireAdmin();
-  const branchList = await getBranches();
+  const { organizationId } = await requireOrg();
+  const branchList = await getBranches(organizationId);
 
   return (
     <div className="space-y-6">

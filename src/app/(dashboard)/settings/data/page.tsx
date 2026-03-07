@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getRecentDataOperations } from "@/lib/queries/settings";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,9 +16,9 @@ export const metadata: Metadata = {
 };
 
 export default async function DataManagementPage() {
-  await requireAdmin();
+  const { organizationId } = await requireOrg();
 
-  const recentDataOps = await getRecentDataOperations();
+  const recentDataOps = await getRecentDataOperations(organizationId);
 
   return (
     <div className="space-y-6">

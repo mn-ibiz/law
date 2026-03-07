@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getClientById, getClientContacts } from "@/lib/queries/clients";
 import { getClientKycDocuments, getClientRiskAssessment } from "@/lib/queries/kyc";
 import { ClientDetailTabs } from "@/components/clients/client-detail-tabs";
@@ -12,22 +12,23 @@ import { Pencil } from "lucide-react";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { organizationId } = await requireOrg();
   const { id } = await params;
-  const client = await getClientById(id);
+  const client = await getClientById(organizationId, id);
   const name = client ? `${client.firstName} ${client.lastName}` : "Client Details";
   return { title: name, description: client ? `Client profile for ${name}` : "Client details" };
 }
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireAdminOrAttorney();
+  const { organizationId } = await requireOrg();
   const { id } = await params;
-  const client = await getClientById(id);
+  const client = await getClientById(organizationId, id);
   if (!client) notFound();
 
   const [contacts, kycDocuments, riskAssessment] = await Promise.all([
-    getClientContacts(id),
-    getClientKycDocuments(id),
-    getClientRiskAssessment(id),
+    getClientContacts(organizationId, id),
+    getClientKycDocuments(organizationId, id),
+    getClientRiskAssessment(organizationId, id),
   ]);
 
   const statusVariant: Record<string, "default" | "secondary" | "outline"> = {

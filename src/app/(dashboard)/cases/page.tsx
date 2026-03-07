@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getCases, getCaseStats } from "@/lib/queries/cases";
 import { CaseDataTable } from "@/components/cases/case-data-table";
 import { Button } from "@/components/ui/button";
@@ -13,8 +13,8 @@ export const metadata: Metadata = {
 };
 
 export default async function CasesPage() {
-  await requireAdminOrAttorney();
-  const [{ data }, stats] = await Promise.all([getCases(), getCaseStats()]);
+  const { organizationId } = await requireOrg();
+  const [{ data }, stats] = await Promise.all([getCases(organizationId), getCaseStats(organizationId)]);
 
   return (
     <div className="space-y-6">

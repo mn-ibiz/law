@@ -2,49 +2,51 @@
 
 import { db } from "@/lib/db";
 import { rolePermissions } from "@/lib/db/schema/settings";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { safeAction } from "@/lib/utils/safe-action";
 import { createAuditLog } from "@/lib/utils/audit";
-import { requireAdmin } from "@/lib/auth/get-session";
-import { auth } from "@/lib/auth/auth";
+import { getTenantContext } from "@/lib/auth/get-session";
 import { updateRolePermissionsSchema } from "@/lib/validators/permissions";
 import { getPermissionsForRole } from "@/lib/queries/permissions";
 
 /** Called by the client on login to load permissions into localStorage */
 export async function getMyPermissions() {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user?.role) {
-      return { error: "Not authenticated" } as unknown as Record<string, string[]>;
-    }
-    return await getPermissionsForRole(session.user.role);
+    const { organizationId, role } = await getTenantContext();
+    return await getPermissionsForRole(organizationId, role);
   });
 }
 
 export async function updateRolePermissions(input: unknown) {
   return safeAction(async () => {
-    const session = await requireAdmin();
+    const { organizationId, userId, role } = await getTenantContext();
+    if (role !== "admin") return { error: "Unauthorized" };
+
     const parsed = updateRolePermissionsSchema.parse(input);
 
-    // Delete existing permissions for the role
-    await db.delete(rolePermissions).where(eq(rolePermissions.role, parsed.role));
+    // Delete existing permissions for the role within this organization
+    await db.delete(rolePermissions).where(
+      and(eq(rolePermissions.role, parsed.role), eq(rolePermissions.organizationId, organizationId))
+    );
 
     // Insert new permissions
     if (parsed.permissions.length > 0) {
       await db.insert(rolePermissions).values(
         parsed.permissions.map((p) => ({
+          organizationId,
           role: parsed.role,
           resource: p.resource,
           actions: p.actions,
-          updatedBy: session.user.id,
+          updatedBy: userId,
           updatedAt: new Date(),
         }))
       );
     }
 
     await createAuditLog(
-      session.user.id,
+      organizationId,
+      userId,
       "update",
       "role_permissions",
       parsed.role,

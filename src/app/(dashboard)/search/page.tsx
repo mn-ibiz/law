@@ -1,4 +1,4 @@
-import { requireRole } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { fullTextSearch } from "@/lib/queries/search";
 import { SearchResults } from "@/components/search/search-results";
 import { Search } from "lucide-react";
@@ -14,10 +14,10 @@ interface SearchPageProps {
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
-  await requireRole("admin", "attorney");
+  const { organizationId } = await requireOrg();
   const params = await searchParams;
   const query = params.q ?? "";
-  const results = query ? await fullTextSearch(query) : [];
+  const results = query ? await fullTextSearch(organizationId, query) : [];
 
   return (
     <div className="space-y-6">

@@ -1,4 +1,4 @@
-import { requireRole } from "@/lib/auth/get-session";
+import { requireRole, requireOrg } from "@/lib/auth/get-session";
 import { getPortalInvoices } from "@/lib/queries/portal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +17,8 @@ export const metadata: Metadata = {
 
 export default async function PortalInvoicesPage() {
   const session = await requireRole("client");
-  const invoiceList = await getPortalInvoices(session.user.id as string);
+  const { organizationId } = await requireOrg();
+  const invoiceList = await getPortalInvoices(organizationId, session.user.id as string);
 
   return (
     <div className="space-y-6">

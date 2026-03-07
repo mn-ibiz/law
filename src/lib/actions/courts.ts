@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { courts, courtFilings, courtStations, causeLists, causeListEntries, courtRules } from "@/lib/db/schema/courts";
 import { bringUps, deadlines } from "@/lib/db/schema/calendar";
-import { auth } from "@/lib/auth/auth";
+import { getTenantContext } from "@/lib/auth/get-session";
 import { createAuditLog } from "@/lib/utils/audit";
 import { createCourtSchema, updateCourtSchema, createFilingSchema, updateFilingStatusSchema, createBringUpSchema, updateBringUpSchema, createServiceOfDocumentSchema, createCauseListSchema, createCauseListEntrySchema, createCourtRuleSchema, updateFilingSchema, updateCourtRuleSchema, updateCauseListSchema, updateCauseListEntrySchema } from "@/lib/validators/court";
 import { serviceOfDocuments } from "@/lib/db/schema/courts";
@@ -15,8 +15,8 @@ import { validateId } from "@/lib/utils/validate-id";
 
 export async function createCourt(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
@@ -25,9 +25,9 @@ export async function createCourt(data: unknown) {
       return { error: validated.error.issues[0].message };
     }
 
-    const result = await db.insert(courts).values(validated.data).returning();
+    const result = await db.insert(courts).values({ ...validated.data }).returning();
 
-    await createAuditLog(session.user.id, "create", "court", result[0].id, validated.data);
+    await createAuditLog(organizationId, userId, "create", "court", result[0].id, validated.data);
 
     revalidatePath("/courts");
     return { data: result[0] };
@@ -36,8 +36,8 @@ export async function createCourt(data: unknown) {
 
 export async function updateCourt(id: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
@@ -58,7 +58,7 @@ export async function updateCourt(id: string, data: unknown) {
       return { error: "Court not found" };
     }
 
-    await createAuditLog(session.user.id, "update", "court", id, validated.data);
+    await createAuditLog(organizationId, userId, "update", "court", id, validated.data);
 
     revalidatePath("/courts");
     return { data: result[0] };
@@ -67,8 +67,8 @@ export async function updateCourt(id: string, data: unknown) {
 
 export async function toggleCourtActive(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
@@ -84,7 +84,7 @@ export async function toggleCourtActive(id: string) {
       return { error: "Court not found" };
     }
 
-    await createAuditLog(session.user.id, "update", "court", id, {
+    await createAuditLog(organizationId, userId, "update", "court", id, {
       action: result[0].isActive ? "activate" : "deactivate",
     });
 
@@ -95,8 +95,8 @@ export async function toggleCourtActive(id: string) {
 
 export async function createCourtFiling(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -111,7 +111,8 @@ export async function createCourtFiling(data: unknown) {
       .insert(courtFilings)
       .values({
         ...rest,
-        filedBy: session.user.id,
+        organizationId,
+        filedBy: userId,
         filingDate: filingDate ? new Date(filingDate) : undefined,
         documentUrl: documentUrl || null,
       })
@@ -125,8 +126,8 @@ export async function createCourtFiling(data: unknown) {
 
 export async function updateFilingStatus(filingId: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -138,7 +139,7 @@ export async function updateFilingStatus(filingId: string, data: unknown) {
     await db
       .update(courtFilings)
       .set({ status: validated.data.status, updatedAt: new Date() })
-      .where(eq(courtFilings.id, filingId));
+      .where(and(eq(courtFilings.id, filingId), eq(courtFilings.organizationId, organizationId)));
 
     revalidatePath("/courts");
     return { success: true };
@@ -147,8 +148,8 @@ export async function updateFilingStatus(filingId: string, data: unknown) {
 
 export async function createServiceOfDocument(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -163,7 +164,8 @@ export async function createServiceOfDocument(data: unknown) {
       .insert(serviceOfDocuments)
       .values({
         ...rest,
-        servedBy: session.user.id,
+        organizationId,
+        servedBy: userId,
         serviceDate: serviceDate ? new Date(serviceDate) : undefined,
         proofOfServiceUrl: proofOfServiceUrl || null,
       })
@@ -176,8 +178,8 @@ export async function createServiceOfDocument(data: unknown) {
 
 export async function updateServiceOfDocument(id: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -197,7 +199,7 @@ export async function updateServiceOfDocument(id: string, data: unknown) {
         serviceDate: serviceDate ? new Date(serviceDate) : null,
         proofOfServiceUrl: proofOfServiceUrl || null,
       })
-      .where(eq(serviceOfDocuments.id, id))
+      .where(and(eq(serviceOfDocuments.id, id), eq(serviceOfDocuments.organizationId, organizationId)))
       .returning();
 
     if (result.length === 0) {
@@ -211,14 +213,14 @@ export async function updateServiceOfDocument(id: string, data: unknown) {
 
 export async function deleteServiceOfDocument(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
     if (!validateId(id)) return { error: "Invalid ID" };
 
-    await db.delete(serviceOfDocuments).where(eq(serviceOfDocuments.id, id));
+    await db.delete(serviceOfDocuments).where(and(eq(serviceOfDocuments.id, id), eq(serviceOfDocuments.organizationId, organizationId)));
 
     revalidatePath("/courts");
     return { success: true };
@@ -227,8 +229,8 @@ export async function deleteServiceOfDocument(id: string) {
 
 export async function createBringUp(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -243,8 +245,9 @@ export async function createBringUp(data: unknown) {
       .insert(bringUps)
       .values({
         ...rest,
+        organizationId,
         date: new Date(date),
-        createdBy: session.user.id,
+        createdBy: userId,
       })
       .returning();
 
@@ -256,8 +259,8 @@ export async function createBringUp(data: unknown) {
 
 export async function completeBringUp(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -267,7 +270,7 @@ export async function completeBringUp(id: string) {
     const result = await db
       .update(bringUps)
       .set({ status: "completed", completedAt: new Date(), updatedAt: new Date() })
-      .where(sql`${bringUps.id} = ${id} AND ${bringUps.status} != 'completed'`)
+      .where(sql`${bringUps.id} = ${id} AND ${bringUps.organizationId} = ${organizationId} AND ${bringUps.status} != 'completed'`)
       .returning({ id: bringUps.id });
 
     if (result.length === 0) {
@@ -281,8 +284,8 @@ export async function completeBringUp(id: string) {
 
 export async function updateBringUp(id: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -304,14 +307,14 @@ export async function updateBringUp(id: string, data: unknown) {
         date: new Date(date),
         updatedAt: new Date(),
       })
-      .where(sql`${bringUps.id} = ${id} AND ${bringUps.status} = 'pending'`)
+      .where(sql`${bringUps.id} = ${id} AND ${bringUps.organizationId} = ${organizationId} AND ${bringUps.status} = 'pending'`)
       .returning({ id: bringUps.id });
 
     if (result.length === 0) {
       return { error: "Bring-up not found or cannot be edited (not in pending status)" };
     }
 
-    await createAuditLog(session.user.id, "update", "bring_up", id, validated.data);
+    await createAuditLog(organizationId, userId, "update", "bring_up", id, validated.data);
 
     revalidatePath("/bring-ups");
     return { success: true };
@@ -329,8 +332,8 @@ const courtStationSchema = z.object({
 
 export async function createCourtStation(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
@@ -339,7 +342,7 @@ export async function createCourtStation(data: unknown) {
       return { error: validated.error.issues[0].message };
     }
 
-    const result = await db.insert(courtStations).values(validated.data).returning();
+    const result = await db.insert(courtStations).values({ ...validated.data }).returning();
 
     revalidatePath("/courts");
     return { data: result[0] };
@@ -348,8 +351,8 @@ export async function createCourtStation(data: unknown) {
 
 export async function updateCourtStation(id: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
@@ -367,14 +370,14 @@ export async function updateCourtStation(id: string, data: unknown) {
 
 export async function deleteBringUp(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
     if (!validateId(id)) return { error: "Invalid ID" };
 
-    await db.delete(bringUps).where(eq(bringUps.id, id));
+    await db.delete(bringUps).where(and(eq(bringUps.id, id), eq(bringUps.organizationId, organizationId)));
     revalidatePath("/bring-ups");
     return { success: true };
   });
@@ -382,8 +385,8 @@ export async function deleteBringUp(id: string) {
 
 export async function dismissBringUp(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -392,7 +395,7 @@ export async function dismissBringUp(id: string) {
     const result = await db
       .update(bringUps)
       .set({ status: "dismissed", updatedAt: new Date() })
-      .where(sql`${bringUps.id} = ${id} AND ${bringUps.status} != 'dismissed'`)
+      .where(sql`${bringUps.id} = ${id} AND ${bringUps.organizationId} = ${organizationId} AND ${bringUps.status} != 'dismissed'`)
       .returning({ id: bringUps.id });
 
     if (result.length === 0) {
@@ -406,8 +409,8 @@ export async function dismissBringUp(id: string) {
 
 export async function toggleCourtStationActive(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
@@ -424,8 +427,8 @@ export async function toggleCourtStationActive(id: string) {
 
 export async function createCauseList(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -440,8 +443,9 @@ export async function createCauseList(data: unknown) {
       .insert(causeLists)
       .values({
         ...rest,
+        organizationId,
         date: new Date(date),
-        createdBy: session.user.id,
+        createdBy: userId,
       })
       .returning();
 
@@ -452,8 +456,8 @@ export async function createCauseList(data: unknown) {
 
 export async function addCauseListEntry(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -464,7 +468,7 @@ export async function addCauseListEntry(data: unknown) {
 
     const result = await db
       .insert(causeListEntries)
-      .values(validated.data)
+      .values({ ...validated.data, organizationId })
       .returning();
 
     revalidatePath("/cause-lists");
@@ -476,8 +480,8 @@ export async function addCauseListEntry(data: unknown) {
 
 export async function createCourtRule(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
@@ -486,7 +490,7 @@ export async function createCourtRule(data: unknown) {
       return { error: validated.error.issues[0].message };
     }
 
-    const result = await db.insert(courtRules).values(validated.data).returning();
+    const result = await db.insert(courtRules).values({ ...validated.data, organizationId }).returning();
 
     revalidatePath("/settings/court-rules");
     return { data: result[0] };
@@ -495,14 +499,14 @@ export async function createCourtRule(data: unknown) {
 
 export async function deleteCourtRule(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
     if (!validateId(id)) return { error: "Invalid ID" };
 
-    await db.delete(courtRules).where(eq(courtRules.id, id));
+    await db.delete(courtRules).where(and(eq(courtRules.id, id), eq(courtRules.organizationId, organizationId)));
     revalidatePath("/settings/court-rules");
     return { success: true };
   });
@@ -510,8 +514,8 @@ export async function deleteCourtRule(id: string) {
 
 export async function toggleCourtRuleActive(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
@@ -520,7 +524,7 @@ export async function toggleCourtRuleActive(id: string) {
     await db
       .update(courtRules)
       .set({ isActive: sql`NOT ${courtRules.isActive}`, updatedAt: new Date() })
-      .where(eq(courtRules.id, id));
+      .where(and(eq(courtRules.id, id), eq(courtRules.organizationId, organizationId)));
 
     revalidatePath("/settings/court-rules");
     return { success: true };
@@ -531,8 +535,8 @@ export async function toggleCourtRuleActive(id: string) {
 
 export async function updateCourtFiling(id: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -552,7 +556,7 @@ export async function updateCourtFiling(id: string, data: unknown) {
         filingDate: filingDate ? new Date(filingDate) : null,
         updatedAt: new Date(),
       })
-      .where(eq(courtFilings.id, id))
+      .where(and(eq(courtFilings.id, id), eq(courtFilings.organizationId, organizationId)))
       .returning();
 
     if (result.length === 0) {
@@ -567,14 +571,14 @@ export async function updateCourtFiling(id: string, data: unknown) {
 
 export async function deleteCourtFiling(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
     if (!validateId(id)) return { error: "Invalid ID" };
 
-    await db.delete(courtFilings).where(eq(courtFilings.id, id));
+    await db.delete(courtFilings).where(and(eq(courtFilings.id, id), eq(courtFilings.organizationId, organizationId)));
 
     revalidatePath("/courts");
     return { success: true };
@@ -585,8 +589,8 @@ export async function deleteCourtFiling(id: string) {
 
 export async function updateCourtRule(id: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
@@ -600,7 +604,7 @@ export async function updateCourtRule(id: string, data: unknown) {
     const result = await db
       .update(courtRules)
       .set({ ...validated.data, updatedAt: new Date() })
-      .where(eq(courtRules.id, id))
+      .where(and(eq(courtRules.id, id), eq(courtRules.organizationId, organizationId)))
       .returning();
 
     if (result.length === 0) {
@@ -616,8 +620,8 @@ export async function updateCourtRule(id: string, data: unknown) {
 
 export async function updateCauseList(id: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -637,7 +641,7 @@ export async function updateCauseList(id: string, data: unknown) {
         date: new Date(date),
         updatedAt: new Date(),
       })
-      .where(eq(causeLists.id, id))
+      .where(and(eq(causeLists.id, id), eq(causeLists.organizationId, organizationId)))
       .returning();
 
     if (result.length === 0) {
@@ -651,14 +655,14 @@ export async function updateCauseList(id: string, data: unknown) {
 
 export async function deleteCauseList(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
     if (!validateId(id)) return { error: "Invalid ID" };
 
-    await db.delete(causeLists).where(eq(causeLists.id, id));
+    await db.delete(causeLists).where(and(eq(causeLists.id, id), eq(causeLists.organizationId, organizationId)));
 
     revalidatePath("/cause-lists");
     return { success: true };
@@ -669,8 +673,8 @@ export async function deleteCauseList(id: string) {
 
 export async function updateCauseListEntry(id: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -684,7 +688,7 @@ export async function updateCauseListEntry(id: string, data: unknown) {
     const result = await db
       .update(causeListEntries)
       .set({ ...validated.data, updatedAt: new Date() })
-      .where(eq(causeListEntries.id, id))
+      .where(and(eq(causeListEntries.id, id), eq(causeListEntries.organizationId, organizationId)))
       .returning();
 
     if (result.length === 0) {
@@ -698,14 +702,14 @@ export async function updateCauseListEntry(id: string, data: unknown) {
 
 export async function deleteCauseListEntry(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
     if (!validateId(id)) return { error: "Invalid ID" };
 
-    await db.delete(causeListEntries).where(eq(causeListEntries.id, id));
+    await db.delete(causeListEntries).where(and(eq(causeListEntries.id, id), eq(causeListEntries.organizationId, organizationId)));
 
     revalidatePath("/cause-lists");
     return { success: true };
@@ -716,10 +720,18 @@ export async function generateDeadlinesFromCourtDate(
   caseId: string,
   hearingDate: Date,
   courtId: string | null,
-  assignedTo: string
+  assignedTo: string,
+  organizationId?: string
 ) {
+  // If no organizationId passed, get it from tenant context
+  let orgId = organizationId;
+  if (!orgId) {
+    const ctx = await getTenantContext();
+    orgId = ctx.organizationId;
+  }
+
   // Find applicable court rules
-  const conditions = [eq(courtRules.isActive, true)];
+  const conditions = [eq(courtRules.isActive, true), eq(courtRules.organizationId, orgId)];
   if (courtId) {
     conditions.push(
       sql`(${courtRules.courtId} = ${courtId} OR ${courtRules.courtId} IS NULL)`
@@ -739,6 +751,7 @@ export async function generateDeadlinesFromCourtDate(
     const dueDate = new Date(hearingDate);
     dueDate.setDate(dueDate.getDate() + rule.offsetDays);
     return {
+      organizationId: orgId!,
       title: rule.deadlineTitle,
       description: `Auto-generated from court rule: ${rule.name}`,
       caseId,

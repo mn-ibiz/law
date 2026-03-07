@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { attorneys, attorneyLicenses, attorneyPracticeAreas, professionalIndemnity, lskMembership } from "@/lib/db/schema/attorneys";
-import { auth } from "@/lib/auth/auth";
+import { getTenantContext } from "@/lib/auth/get-session";
 import { createAuditLog } from "@/lib/utils/audit";
 import {
   createAttorneySchema,
@@ -19,8 +19,8 @@ import { z } from "zod";
 
 export async function createAttorney(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
@@ -35,13 +35,15 @@ export async function createAttorney(data: unknown) {
       .insert(attorneys)
       .values({
         ...rest,
+        organizationId,
         hourlyRate: hourlyRate != null ? String(hourlyRate) : undefined,
         dateAdmitted: dateAdmitted ? new Date(dateAdmitted) : undefined,
       })
       .returning();
 
     await createAuditLog(
-      session.user.id,
+      organizationId,
+      userId,
       "create",
       "attorney",
       result[0].id,
@@ -55,8 +57,8 @@ export async function createAttorney(data: unknown) {
 
 export async function updateAttorney(id: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
@@ -75,11 +77,12 @@ export async function updateAttorney(id: string, data: unknown) {
         dateAdmitted: dateAdmitted ? new Date(dateAdmitted) : undefined,
         updatedAt: new Date(),
       })
-      .where(eq(attorneys.id, id))
+      .where(and(eq(attorneys.id, id), eq(attorneys.organizationId, organizationId)))
       .returning();
 
     await createAuditLog(
-      session.user.id,
+      organizationId,
+      userId,
       "update",
       "attorney",
       id,
@@ -94,8 +97,8 @@ export async function updateAttorney(id: string, data: unknown) {
 
 export async function deactivateAttorney(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
@@ -104,10 +107,11 @@ export async function deactivateAttorney(id: string) {
     await db
       .update(attorneys)
       .set({ isActive: false, updatedAt: new Date() })
-      .where(eq(attorneys.id, id));
+      .where(and(eq(attorneys.id, id), eq(attorneys.organizationId, organizationId)));
 
     await createAuditLog(
-      session.user.id,
+      organizationId,
+      userId,
       "update",
       "attorney",
       id,
@@ -122,8 +126,8 @@ export async function deactivateAttorney(id: string) {
 
 export async function addAttorneyLicense(attorneyId: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
@@ -137,6 +141,7 @@ export async function addAttorneyLicense(attorneyId: string, data: unknown) {
     const result = await db
       .insert(attorneyLicenses)
       .values({
+        organizationId,
         attorneyId,
         ...rest,
         issueDate: new Date(issueDate),
@@ -145,7 +150,8 @@ export async function addAttorneyLicense(attorneyId: string, data: unknown) {
       .returning();
 
     await createAuditLog(
-      session.user.id,
+      organizationId,
+      userId,
       "create",
       "attorney_license",
       result[0].id,
@@ -166,8 +172,8 @@ export async function linkPracticeAreas(attorneyId: string, practiceAreaIds: str
     const parsed = schema.safeParse({ attorneyId, practiceAreaIds });
     if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
@@ -179,7 +185,7 @@ export async function linkPracticeAreas(attorneyId: string, practiceAreaIds: str
     if (validPracticeAreaIds.length > 0) {
       await db
         .insert(attorneyPracticeAreas)
-        .values(validPracticeAreaIds.map((paId) => ({ attorneyId: validAttorneyId, practiceAreaId: paId })))
+        .values(validPracticeAreaIds.map((paId) => ({ organizationId, attorneyId: validAttorneyId, practiceAreaId: paId })))
         .onConflictDoNothing();
     }
 
@@ -187,6 +193,7 @@ export async function linkPracticeAreas(attorneyId: string, practiceAreaIds: str
     await db.delete(attorneyPracticeAreas).where(
       and(
         eq(attorneyPracticeAreas.attorneyId, validAttorneyId),
+        eq(attorneyPracticeAreas.organizationId, organizationId),
         validPracticeAreaIds.length > 0
           ? sql`${attorneyPracticeAreas.practiceAreaId} NOT IN (${sql.join(validPracticeAreaIds.map((id) => sql`${id}`), sql`, `)})`
           : sql`1=1`
@@ -194,7 +201,8 @@ export async function linkPracticeAreas(attorneyId: string, practiceAreaIds: str
     );
 
     await createAuditLog(
-      session.user.id,
+      organizationId,
+      userId,
       "update",
       "attorney",
       validAttorneyId,
@@ -208,8 +216,8 @@ export async function linkPracticeAreas(attorneyId: string, practiceAreaIds: str
 
 export async function addProfessionalIndemnity(attorneyId: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
@@ -223,6 +231,7 @@ export async function addProfessionalIndemnity(attorneyId: string, data: unknown
     const result = await db
       .insert(professionalIndemnity)
       .values({
+        organizationId,
         attorneyId,
         ...rest,
         coverageAmount: String(coverageAmount),
@@ -239,8 +248,8 @@ export async function addProfessionalIndemnity(attorneyId: string, data: unknown
 
 export async function addLskMembership(attorneyId: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
@@ -254,6 +263,7 @@ export async function addLskMembership(attorneyId: string, data: unknown) {
     const result = await db
       .insert(lskMembership)
       .values({
+        organizationId,
         attorneyId,
         ...rest,
         amount: String(amount),

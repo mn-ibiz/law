@@ -2,16 +2,16 @@
 
 import { db } from "@/lib/db";
 import { workflowTemplates, workflowRules } from "@/lib/db/schema/workflows";
-import { auth } from "@/lib/auth/auth";
-import { eq, sql } from "drizzle-orm";
+import { getTenantContext } from "@/lib/auth/get-session";
+import { eq, and, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { createWorkflowTemplateSchema, createWorkflowRuleSchema } from "@/lib/validators/workflows";
 import { safeAction } from "@/lib/utils/safe-action";
 
 export async function createWorkflowTemplate(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
@@ -24,7 +24,8 @@ export async function createWorkflowTemplate(data: unknown) {
       .insert(workflowTemplates)
       .values({
         ...validated.data,
-        createdBy: session.user.id,
+        organizationId,
+        createdBy: userId,
       })
       .returning();
 
@@ -35,8 +36,8 @@ export async function createWorkflowTemplate(data: unknown) {
 
 export async function updateWorkflowTemplate(id: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
@@ -48,7 +49,7 @@ export async function updateWorkflowTemplate(id: string, data: unknown) {
     await db
       .update(workflowTemplates)
       .set({ ...validated.data, updatedAt: new Date() })
-      .where(eq(workflowTemplates.id, id));
+      .where(and(eq(workflowTemplates.id, id), eq(workflowTemplates.organizationId, organizationId)));
 
     revalidatePath("/settings");
     return { success: true };
@@ -57,15 +58,15 @@ export async function updateWorkflowTemplate(id: string, data: unknown) {
 
 export async function toggleWorkflowActive(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
     await db
       .update(workflowTemplates)
       .set({ isActive: sql`NOT ${workflowTemplates.isActive}`, updatedAt: new Date() })
-      .where(eq(workflowTemplates.id, id));
+      .where(and(eq(workflowTemplates.id, id), eq(workflowTemplates.organizationId, organizationId)));
 
     revalidatePath("/settings");
     return { success: true };
@@ -74,8 +75,8 @@ export async function toggleWorkflowActive(id: string) {
 
 export async function createWorkflowRule(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
@@ -83,6 +84,14 @@ export async function createWorkflowRule(data: unknown) {
     if (!validated.success) {
       return { error: validated.error.issues[0].message };
     }
+
+    // Verify the template belongs to this organization before adding a rule
+    const [template] = await db
+      .select({ id: workflowTemplates.id })
+      .from(workflowTemplates)
+      .where(and(eq(workflowTemplates.id, validated.data.templateId), eq(workflowTemplates.organizationId, organizationId)))
+      .limit(1);
+    if (!template) return { error: "Workflow template not found" };
 
     const result = await db
       .insert(workflowRules)
@@ -96,10 +105,19 @@ export async function createWorkflowRule(data: unknown) {
 
 export async function deleteWorkflowRule(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
+
+    // Verify the rule belongs to a template in this organization
+    const [rule] = await db
+      .select({ id: workflowRules.id })
+      .from(workflowRules)
+      .innerJoin(workflowTemplates, eq(workflowRules.templateId, workflowTemplates.id))
+      .where(and(eq(workflowRules.id, id), eq(workflowTemplates.organizationId, organizationId)))
+      .limit(1);
+    if (!rule) return { error: "Rule not found" };
 
     await db.delete(workflowRules).where(eq(workflowRules.id, id));
     revalidatePath("/settings");

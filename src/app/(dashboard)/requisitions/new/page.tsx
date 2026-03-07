@@ -1,4 +1,4 @@
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getCases } from "@/lib/queries/cases";
 import { RequisitionForm } from "@/components/forms/requisition-form";
 import type { Metadata } from "next";
@@ -9,8 +9,8 @@ export const metadata: Metadata = {
 };
 
 export default async function NewRequisitionPage() {
-  await requireAdminOrAttorney();
-  const { data: caseList } = await getCases({});
+  const { organizationId } = await requireOrg();
+  const { data: caseList } = await getCases(organizationId, {});
 
   const cases = caseList.map((c) => ({
     id: c.id,

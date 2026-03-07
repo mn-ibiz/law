@@ -1,6 +1,9 @@
 // Enums
 export * from "./enums";
 
+// Organizations (Tenants)
+export * from "./organizations";
+
 // Auth
 export * from "./auth";
 

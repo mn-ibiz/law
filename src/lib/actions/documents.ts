@@ -3,9 +3,9 @@
 import { db } from "@/lib/db";
 import { documents, documentTemplates, documentVersions } from "@/lib/db/schema/documents";
 import { clients } from "@/lib/db/schema/clients";
-import { auth } from "@/lib/auth/auth";
+import { getTenantContext } from "@/lib/auth/get-session";
 import { createTemplateSchema, createDocumentRecordSchema, createDocumentVersionSchema, clientUploadDocumentSchema, updateDocumentSchema } from "@/lib/validators/document";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { safeAction } from "@/lib/utils/safe-action";
@@ -19,24 +19,23 @@ export async function createDocumentRecord(data: unknown) {
       return { error: validated.error.issues[0].message };
     }
 
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId, userId } = await getTenantContext();
 
     const result = await db
       .insert(documents)
       .values({
         ...validated.data,
-        uploadedBy: session.user.id,
+        organizationId,
+        uploadedBy: userId,
       })
       .returning();
 
     // Fire workflow event for document upload (fire-and-forget)
     dispatchWorkflowEvent("document_uploaded", {
+      organizationId,
       entityId: result[0].id,
       entityType: "document",
-      userId: session.user.id,
+      userId,
     }).catch(console.error);
 
     revalidatePath("/documents");
@@ -53,12 +52,9 @@ export async function updateDocumentStatus(id: string, status: "draft" | "final"
     const statusParsed = statusSchema.safeParse(status);
     if (!statusParsed.success) return { error: "Invalid status" };
 
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId } = await getTenantContext();
 
-    await db.update(documents).set({ status: statusParsed.data, updatedAt: new Date() }).where(eq(documents.id, idParsed.data));
+    await db.update(documents).set({ status: statusParsed.data, updatedAt: new Date() }).where(and(eq(documents.id, idParsed.data), eq(documents.organizationId, organizationId)));
     revalidatePath("/documents");
     return { success: true };
   });
@@ -71,22 +67,19 @@ export async function updateDocument(data: unknown) {
       return { error: validated.error.issues[0].message };
     }
 
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId, userId, role } = await getTenantContext();
 
     const { id, ...fields } = validated.data;
 
     // Only allow editing own documents unless admin
-    if (session.user.role !== "admin") {
+    if (role !== "admin") {
       const [doc] = await db
         .select({ uploadedBy: documents.uploadedBy })
         .from(documents)
-        .where(eq(documents.id, id))
+        .where(and(eq(documents.id, id), eq(documents.organizationId, organizationId)))
         .limit(1);
       if (!doc) return { error: "Document not found" };
-      if (doc.uploadedBy !== session.user.id) {
+      if (doc.uploadedBy !== userId) {
         return { error: "You can only edit your own documents" };
       }
     }
@@ -99,7 +92,7 @@ export async function updateDocument(data: unknown) {
         clientId: fields.clientId ?? null,
         updatedAt: new Date(),
       })
-      .where(eq(documents.id, id));
+      .where(and(eq(documents.id, id), eq(documents.organizationId, organizationId)));
 
     revalidatePath("/documents");
     return { success: true };
@@ -108,10 +101,8 @@ export async function updateDocument(data: unknown) {
 
 export async function createTemplate(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId, userId, role } = await getTenantContext();
+    if (role !== "admin") return { error: "Unauthorized" };
 
     const validated = createTemplateSchema.safeParse(data);
     if (!validated.success) {
@@ -122,7 +113,8 @@ export async function createTemplate(data: unknown) {
       .insert(documentTemplates)
       .values({
         ...validated.data,
-        createdBy: session.user.id,
+        organizationId,
+        createdBy: userId,
       })
       .returning();
 
@@ -136,25 +128,22 @@ export async function deleteDocument(id: string) {
     const idParsed = z.string().uuid().safeParse(id);
     if (!idParsed.success) return { error: "Invalid document ID" };
 
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId, userId, role } = await getTenantContext();
 
     // Only allow deletion of own uploads (unless admin)
-    if (session.user.role !== "admin") {
+    if (role !== "admin") {
       const [doc] = await db
         .select({ uploadedBy: documents.uploadedBy })
         .from(documents)
-        .where(eq(documents.id, idParsed.data))
+        .where(and(eq(documents.id, idParsed.data), eq(documents.organizationId, organizationId)))
         .limit(1);
       if (!doc) return { error: "Document not found" };
-      if (doc.uploadedBy !== session.user.id) {
+      if (doc.uploadedBy !== userId) {
         return { error: "You can only delete your own documents" };
       }
     }
 
-    await db.delete(documents).where(eq(documents.id, idParsed.data));
+    await db.delete(documents).where(and(eq(documents.id, idParsed.data), eq(documents.organizationId, organizationId)));
     revalidatePath("/documents");
     return { success: true };
   });
@@ -168,16 +157,14 @@ export async function createDocumentVersion(data: unknown) {
       return { error: validated.error.issues[0].message };
     }
 
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId, userId } = await getTenantContext();
 
     const result = await db
       .insert(documentVersions)
       .values({
         ...validated.data,
-        uploadedBy: session.user.id,
+        organizationId,
+        uploadedBy: userId,
       })
       .returning();
 
@@ -189,8 +176,7 @@ export async function createDocumentVersion(data: unknown) {
 // --- Client Document Upload ---
 export async function clientUploadDocument(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user) return { error: "Unauthorized" };
+    const { organizationId, userId } = await getTenantContext();
 
     const validated = clientUploadDocumentSchema.safeParse(data);
     if (!validated.success) {
@@ -201,14 +187,15 @@ export async function clientUploadDocument(data: unknown) {
     const [client] = await db
       .select({ id: clients.id })
       .from(clients)
-      .where(eq(clients.userId, session.user.id))
+      .where(and(eq(clients.userId, userId), eq(clients.organizationId, organizationId)))
       .limit(1);
 
     const result = await db
       .insert(documents)
       .values({
         ...validated.data,
-        uploadedBy: session.user.id,
+        organizationId,
+        uploadedBy: userId,
         clientId: client?.id,
         status: "draft",
         reviewStatus: "pending_review",
@@ -226,29 +213,26 @@ export async function approveDocument(documentId: string) {
     const idParsed = z.string().uuid().safeParse(documentId);
     if (!idParsed.success) return { error: "Invalid document ID" };
 
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId, userId } = await getTenantContext();
 
     // Atomic conditional update — only approve documents pending review
     const result = await db
       .update(documents)
       .set({
         reviewStatus: "approved",
-        reviewedBy: session.user.id,
+        reviewedBy: userId,
         reviewedAt: new Date(),
         status: "final",
         updatedAt: new Date(),
       })
-      .where(sql`${documents.id} = ${idParsed.data} AND ${documents.reviewStatus} = 'pending_review'`)
+      .where(sql`${documents.id} = ${idParsed.data} AND ${documents.organizationId} = ${organizationId} AND ${documents.reviewStatus} = 'pending_review'`)
       .returning({ id: documents.id });
 
     if (result.length === 0) {
       return { error: "Document not found or not in pending review status" };
     }
 
-    await createAuditLog(session.user.id, "update", "document", idParsed.data, { action: "approve" });
+    await createAuditLog(organizationId, userId, "update", "document", idParsed.data, { action: "approve" });
 
     revalidatePath("/documents/review");
     revalidatePath("/portal/documents");
@@ -261,10 +245,7 @@ export async function rejectDocument(documentId: string, notes: string) {
     const idParsed = z.string().uuid().safeParse(documentId);
     if (!idParsed.success) return { error: "Invalid document ID" };
 
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId, userId } = await getTenantContext();
 
     const safeNotes = (notes ?? "").slice(0, 5000);
 
@@ -273,19 +254,19 @@ export async function rejectDocument(documentId: string, notes: string) {
       .update(documents)
       .set({
         reviewStatus: "rejected",
-        reviewedBy: session.user.id,
+        reviewedBy: userId,
         reviewedAt: new Date(),
         reviewNotes: safeNotes,
         updatedAt: new Date(),
       })
-      .where(sql`${documents.id} = ${idParsed.data} AND ${documents.reviewStatus} = 'pending_review'`)
+      .where(sql`${documents.id} = ${idParsed.data} AND ${documents.organizationId} = ${organizationId} AND ${documents.reviewStatus} = 'pending_review'`)
       .returning({ id: documents.id });
 
     if (result.length === 0) {
       return { error: "Document not found or not in pending review status" };
     }
 
-    await createAuditLog(session.user.id, "update", "document", idParsed.data, { action: "reject" });
+    await createAuditLog(organizationId, userId, "update", "document", idParsed.data, { action: "reject" });
 
     revalidatePath("/documents/review");
     revalidatePath("/portal/documents");

@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getPipelineStages } from "@/lib/queries/cases";
 import { getPracticeAreas } from "@/lib/queries/settings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,10 +19,10 @@ export const metadata: Metadata = {
 };
 
 export default async function PipelineStagesPage() {
-  await requireAdmin();
+  const { organizationId } = await requireOrg();
   const [stages, practiceAreas] = await Promise.all([
-    getPipelineStages(),
-    getPracticeAreas(),
+    getPipelineStages(organizationId),
+    getPracticeAreas(organizationId),
   ]);
 
   const activePracticeAreas = practiceAreas

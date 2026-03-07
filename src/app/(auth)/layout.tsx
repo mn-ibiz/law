@@ -1,9 +1,11 @@
 import { Scale } from "lucide-react";
 import { getFirmBranding } from "@/lib/queries/settings";
+import { requireOrg } from "@/lib/auth/get-session";
 import Image from "next/image";
 
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
-  const branding = await getFirmBranding();
+  const { organizationId } = await requireOrg();
+  const branding = await getFirmBranding(organizationId);
 
   return (
     <div className="relative flex min-h-screen items-center justify-center px-4">

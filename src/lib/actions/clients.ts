@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { clients, clientContacts, kycDocuments, clientRiskAssessments } from "@/lib/db/schema/clients";
-import { auth } from "@/lib/auth/auth";
+import { getTenantContext } from "@/lib/auth/get-session";
 import { createAuditLog } from "@/lib/utils/audit";
 import { createClientSchema, updateClientSchema, createContactLogSchema, createKycDocumentSchema, updateKycDocumentSchema, createRiskAssessmentSchema } from "@/lib/validators/client";
 import { eq, and } from "drizzle-orm";
@@ -13,8 +13,8 @@ import { z } from "zod";
 
 export async function createClient(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -29,13 +29,15 @@ export async function createClient(data: unknown) {
       .insert(clients)
       .values({
         ...rest,
+        organizationId,
         dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
         followUpDate: followUpDate ? new Date(followUpDate) : undefined,
       })
       .returning();
 
     await createAuditLog(
-      session.user.id,
+      organizationId,
+      userId,
       "create",
       "client",
       result[0].id,
@@ -49,8 +51,8 @@ export async function createClient(data: unknown) {
 
 export async function updateClient(id: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -69,11 +71,12 @@ export async function updateClient(id: string, data: unknown) {
         followUpDate: followUpDate ? new Date(followUpDate) : undefined,
         updatedAt: new Date(),
       })
-      .where(eq(clients.id, id))
+      .where(and(eq(clients.id, id), eq(clients.organizationId, organizationId)))
       .returning();
 
     await createAuditLog(
-      session.user.id,
+      organizationId,
+      userId,
       "update",
       "client",
       id,
@@ -88,8 +91,8 @@ export async function updateClient(id: string, data: unknown) {
 
 export async function deactivateClient(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
@@ -98,10 +101,11 @@ export async function deactivateClient(id: string) {
     await db
       .update(clients)
       .set({ status: "inactive", updatedAt: new Date() })
-      .where(eq(clients.id, id));
+      .where(and(eq(clients.id, id), eq(clients.organizationId, organizationId)));
 
     await createAuditLog(
-      session.user.id,
+      organizationId,
+      userId,
       "update",
       "client",
       id,
@@ -115,8 +119,8 @@ export async function deactivateClient(id: string) {
 
 export async function addContactLog(clientId: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -128,8 +132,9 @@ export async function addContactLog(clientId: string, data: unknown) {
     const result = await db
       .insert(clientContacts)
       .values({
+        organizationId,
         clientId,
-        contactedBy: session.user.id,
+        contactedBy: userId,
         type: validated.data.type,
         subject: validated.data.subject,
         notes: validated.data.notes,
@@ -146,8 +151,8 @@ export async function addContactLog(clientId: string, data: unknown) {
 
 export async function updateContactLog(contactId: string, clientId: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
     if (!validateId(contactId) || !validateId(clientId)) return { error: "Invalid ID" };
@@ -163,7 +168,7 @@ export async function updateContactLog(contactId: string, clientId: string, data
         notes: validated.data.notes,
         contactDate: new Date(validated.data.contactDate),
       })
-      .where(and(eq(clientContacts.id, contactId), eq(clientContacts.clientId, clientId)));
+      .where(and(eq(clientContacts.id, contactId), eq(clientContacts.clientId, clientId), eq(clientContacts.organizationId, organizationId)));
 
     revalidatePath(`/clients/${clientId}`);
     return { success: true };
@@ -172,13 +177,13 @@ export async function updateContactLog(contactId: string, clientId: string, data
 
 export async function deleteContactLog(contactId: string, clientId: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
     if (!validateId(contactId) || !validateId(clientId)) return { error: "Invalid ID" };
 
-    await db.delete(clientContacts).where(and(eq(clientContacts.id, contactId), eq(clientContacts.clientId, clientId)));
+    await db.delete(clientContacts).where(and(eq(clientContacts.id, contactId), eq(clientContacts.clientId, clientId), eq(clientContacts.organizationId, organizationId)));
     revalidatePath(`/clients/${clientId}`);
     return { success: true };
   });
@@ -188,8 +193,8 @@ export async function deleteContactLog(contactId: string, clientId: string) {
 
 export async function addKycDocument(clientId: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
     if (!validateId(clientId)) return { error: "Invalid ID" };
@@ -200,6 +205,7 @@ export async function addKycDocument(clientId: string, data: unknown) {
     const result = await db
       .insert(kycDocuments)
       .values({
+        organizationId,
         clientId,
         documentType: validated.data.documentType,
         documentNumber: validated.data.documentNumber,
@@ -214,8 +220,8 @@ export async function addKycDocument(clientId: string, data: unknown) {
 
 export async function updateKycDocument(docId: string, clientId: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
     if (!validateId(docId) || !validateId(clientId)) return { error: "Invalid ID" };
@@ -231,11 +237,11 @@ export async function updateKycDocument(docId: string, clientId: string, data: u
         ...rest,
         status: status ?? undefined,
         expiryDate: expiryDate ? new Date(expiryDate) : undefined,
-        verifiedBy: status === "verified" ? session.user.id : undefined,
+        verifiedBy: status === "verified" ? userId : undefined,
         verifiedAt: status === "verified" ? new Date() : undefined,
         updatedAt: new Date(),
       })
-      .where(and(eq(kycDocuments.id, docId), eq(kycDocuments.clientId, clientId)));
+      .where(and(eq(kycDocuments.id, docId), eq(kycDocuments.clientId, clientId), eq(kycDocuments.organizationId, organizationId)));
 
     revalidatePath(`/clients/${clientId}`);
     return { success: true };
@@ -244,13 +250,13 @@ export async function updateKycDocument(docId: string, clientId: string, data: u
 
 export async function deleteKycDocument(docId: string, clientId: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
     if (!validateId(docId) || !validateId(clientId)) return { error: "Invalid ID" };
 
-    await db.delete(kycDocuments).where(and(eq(kycDocuments.id, docId), eq(kycDocuments.clientId, clientId)));
+    await db.delete(kycDocuments).where(and(eq(kycDocuments.id, docId), eq(kycDocuments.clientId, clientId), eq(kycDocuments.organizationId, organizationId)));
     revalidatePath(`/clients/${clientId}`);
     return { success: true };
   });
@@ -260,8 +266,8 @@ export async function deleteKycDocument(docId: string, clientId: string) {
 
 export async function addRiskAssessment(clientId: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
     if (!validateId(clientId)) return { error: "Invalid ID" };
@@ -272,11 +278,12 @@ export async function addRiskAssessment(clientId: string, data: unknown) {
     const result = await db
       .insert(clientRiskAssessments)
       .values({
+        organizationId,
         clientId,
         riskLevel: validated.data.riskLevel,
         factors: validated.data.factors,
         notes: validated.data.notes,
-        assessedBy: session.user.id,
+        assessedBy: userId,
       })
       .returning();
 
@@ -287,8 +294,8 @@ export async function addRiskAssessment(clientId: string, data: unknown) {
 
 export async function updateRiskAssessment(assessmentId: string, clientId: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
     if (!validateId(assessmentId) || !validateId(clientId)) return { error: "Invalid ID" };
@@ -302,10 +309,10 @@ export async function updateRiskAssessment(assessmentId: string, clientId: strin
         riskLevel: validated.data.riskLevel,
         factors: validated.data.factors,
         notes: validated.data.notes,
-        assessedBy: session.user.id,
+        assessedBy: userId,
         updatedAt: new Date(),
       })
-      .where(and(eq(clientRiskAssessments.id, assessmentId), eq(clientRiskAssessments.clientId, clientId)));
+      .where(and(eq(clientRiskAssessments.id, assessmentId), eq(clientRiskAssessments.clientId, clientId), eq(clientRiskAssessments.organizationId, organizationId)));
 
     revalidatePath(`/clients/${clientId}`);
     return { success: true };
@@ -314,13 +321,13 @@ export async function updateRiskAssessment(assessmentId: string, clientId: strin
 
 export async function deleteRiskAssessment(assessmentId: string, clientId: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
     if (!validateId(assessmentId) || !validateId(clientId)) return { error: "Invalid ID" };
 
-    await db.delete(clientRiskAssessments).where(and(eq(clientRiskAssessments.id, assessmentId), eq(clientRiskAssessments.clientId, clientId)));
+    await db.delete(clientRiskAssessments).where(and(eq(clientRiskAssessments.id, assessmentId), eq(clientRiskAssessments.clientId, clientId), eq(clientRiskAssessments.organizationId, organizationId)));
     revalidatePath(`/clients/${clientId}`);
     return { success: true };
   });
@@ -330,8 +337,8 @@ export async function deleteRiskAssessment(assessmentId: string, clientId: strin
 
 export async function updateClientPipelineStage(clientId: string, status: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -344,7 +351,7 @@ export async function updateClientPipelineStage(clientId: string, status: string
     await db
       .update(clients)
       .set({ status: parsed.data, updatedAt: new Date() })
-      .where(eq(clients.id, clientId));
+      .where(and(eq(clients.id, clientId), eq(clients.organizationId, organizationId)));
 
     revalidatePath("/clients");
     revalidatePath("/clients/pipeline");

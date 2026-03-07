@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { requireAdmin } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getAttorneyById } from "@/lib/queries/attorneys";
 import { AttorneyForm } from "@/components/forms/attorney-form";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { organizationId } = await requireOrg();
   const { id } = await params;
-  const attorney = await getAttorneyById(id);
+  const attorney = await getAttorneyById(organizationId, id);
   return {
     title: attorney ? `Edit ${attorney.name}` : "Edit Attorney",
     description: "Update attorney profile",
@@ -15,9 +16,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 }
 
 export default async function EditAttorneyPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireAdmin();
+  const { organizationId } = await requireOrg();
   const { id } = await params;
-  const attorney = await getAttorneyById(id);
+  const attorney = await getAttorneyById(organizationId, id);
   if (!attorney) notFound();
 
   return (

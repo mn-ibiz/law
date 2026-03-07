@@ -2,9 +2,9 @@
 
 import { db } from "@/lib/db";
 import { calendarEvents, eventAttendees, deadlines, tasks } from "@/lib/db/schema/calendar";
-import { auth } from "@/lib/auth/auth";
+import { getTenantContext } from "@/lib/auth/get-session";
 import { createEventSchema, createDeadlineSchema, createTaskSchema } from "@/lib/validators/calendar";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { safeAction } from "@/lib/utils/safe-action";
@@ -13,10 +13,7 @@ import { dispatchWorkflowEvent } from "@/lib/workflows/engine";
 
 export async function createEvent(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId, userId } = await getTenantContext();
 
     const validated = createEventSchema.safeParse(data);
     if (!validated.success) {
@@ -29,10 +26,11 @@ export async function createEvent(data: unknown) {
       .insert(calendarEvents)
       .values({
         ...rest,
+        organizationId,
         caseId: caseId || undefined,
         startTime: new Date(startTime),
         endTime: new Date(endTime),
-        createdBy: session.user.id,
+        createdBy: userId,
       })
       .returning();
 
@@ -42,7 +40,7 @@ export async function createEvent(data: unknown) {
         validated.data.caseId,
         new Date(validated.data.startTime),
         null, // courtId not available on event, use general rules
-        session.user.id
+        userId
       ).catch(console.error);
     }
 
@@ -54,10 +52,7 @@ export async function createEvent(data: unknown) {
 
 export async function createDeadline(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId } = await getTenantContext();
 
     const validated = createDeadlineSchema.safeParse(data);
     if (!validated.success) {
@@ -70,6 +65,7 @@ export async function createDeadline(data: unknown) {
       .insert(deadlines)
       .values({
         ...rest,
+        organizationId,
         dueDate: new Date(dueDate),
         caseId: caseId || undefined,
         assignedTo: assignedTo || undefined,
@@ -88,15 +84,12 @@ export async function completeDeadline(id: string) {
     const idParsed = z.string().uuid().safeParse(id);
     if (!idParsed.success) return { error: "Invalid deadline ID" };
 
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId } = await getTenantContext();
 
     await db
       .update(deadlines)
       .set({ completedAt: new Date(), updatedAt: new Date() })
-      .where(eq(deadlines.id, idParsed.data));
+      .where(and(eq(deadlines.id, idParsed.data), eq(deadlines.organizationId, organizationId)));
 
     revalidatePath("/calendar");
     return { success: true };
@@ -105,10 +98,7 @@ export async function completeDeadline(id: string) {
 
 export async function createTask(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId, userId } = await getTenantContext();
 
     const validated = createTaskSchema.safeParse(data);
     if (!validated.success) {
@@ -121,10 +111,11 @@ export async function createTask(data: unknown) {
       .insert(tasks)
       .values({
         ...rest,
+        organizationId,
         dueDate: dueDate ? new Date(dueDate) : undefined,
         caseId: caseId || undefined,
         assignedTo: assignedTo || undefined,
-        createdBy: session.user.id,
+        createdBy: userId,
       })
       .returning();
 
@@ -143,10 +134,7 @@ export async function updateTaskStatus(id: string, status: "pending" | "in_progr
     const statusParsed = statusSchema.safeParse(status);
     if (!statusParsed.success) return { error: "Invalid status" };
 
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId, userId } = await getTenantContext();
 
     await db
       .update(tasks)
@@ -155,14 +143,15 @@ export async function updateTaskStatus(id: string, status: "pending" | "in_progr
         completedAt: statusParsed.data === "completed" ? new Date() : null,
         updatedAt: new Date(),
       })
-      .where(eq(tasks.id, idParsed.data));
+      .where(and(eq(tasks.id, idParsed.data), eq(tasks.organizationId, organizationId)));
 
     // Fire workflow event when task is completed (fire-and-forget)
     if (statusParsed.data === "completed") {
       dispatchWorkflowEvent("task_completed", {
+        organizationId,
         entityId: idParsed.data,
         entityType: "task",
-        userId: session.user.id,
+        userId,
       }).catch(console.error);
     }
 
@@ -172,22 +161,19 @@ export async function updateTaskStatus(id: string, status: "pending" | "in_progr
 }
 
 // --- Event Attendees ---
-export async function addEventAttendee(eventId: string, userId: string) {
+export async function addEventAttendee(eventId: string, attendeeUserId: string) {
   return safeAction(async () => {
     const eventIdParsed = z.string().uuid().safeParse(eventId);
     if (!eventIdParsed.success) return { error: "Invalid event ID" };
 
-    const userIdParsed = z.string().uuid().safeParse(userId);
+    const userIdParsed = z.string().uuid().safeParse(attendeeUserId);
     if (!userIdParsed.success) return { error: "Invalid user ID" };
 
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId } = await getTenantContext();
 
     const result = await db
       .insert(eventAttendees)
-      .values({ eventId: eventIdParsed.data, userId: userIdParsed.data })
+      .values({ organizationId, eventId: eventIdParsed.data, userId: userIdParsed.data })
       .returning();
 
     revalidatePath("/calendar");
@@ -200,12 +186,9 @@ export async function removeEventAttendee(id: string) {
     const idParsed = z.string().uuid().safeParse(id);
     if (!idParsed.success) return { error: "Invalid attendee ID" };
 
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId } = await getTenantContext();
 
-    await db.delete(eventAttendees).where(eq(eventAttendees.id, idParsed.data));
+    await db.delete(eventAttendees).where(and(eq(eventAttendees.id, idParsed.data), eq(eventAttendees.organizationId, organizationId)));
     revalidatePath("/calendar");
     return { success: true };
   });
@@ -218,12 +201,9 @@ export async function deleteTask(id: string) {
     const idParsed = z.string().uuid().safeParse(id);
     if (!idParsed.success) return { error: "Invalid task ID" };
 
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId } = await getTenantContext();
 
-    await db.delete(tasks).where(eq(tasks.id, idParsed.data));
+    await db.delete(tasks).where(and(eq(tasks.id, idParsed.data), eq(tasks.organizationId, organizationId)));
     revalidatePath("/tasks");
     return { success: true };
   });
@@ -234,12 +214,9 @@ export async function deleteDeadline(id: string) {
     const idParsed = z.string().uuid().safeParse(id);
     if (!idParsed.success) return { error: "Invalid deadline ID" };
 
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId } = await getTenantContext();
 
-    await db.delete(deadlines).where(eq(deadlines.id, idParsed.data));
+    await db.delete(deadlines).where(and(eq(deadlines.id, idParsed.data), eq(deadlines.organizationId, organizationId)));
     revalidatePath("/deadlines");
     return { success: true };
   });
@@ -250,12 +227,9 @@ export async function deleteEvent(id: string) {
     const idParsed = z.string().uuid().safeParse(id);
     if (!idParsed.success) return { error: "Invalid event ID" };
 
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId } = await getTenantContext();
 
-    await db.delete(calendarEvents).where(eq(calendarEvents.id, idParsed.data));
+    await db.delete(calendarEvents).where(and(eq(calendarEvents.id, idParsed.data), eq(calendarEvents.organizationId, organizationId)));
     revalidatePath("/calendar");
     return { success: true };
   });
@@ -268,10 +242,7 @@ export async function updateTask(id: string, data: unknown) {
     const idParsed = z.string().uuid().safeParse(id);
     if (!idParsed.success) return { error: "Invalid task ID" };
 
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId } = await getTenantContext();
 
     const updateSchema = z.object({
       title: z.string().min(1).optional(),
@@ -293,7 +264,7 @@ export async function updateTask(id: string, data: unknown) {
         dueDate: dueDate ? new Date(dueDate) : undefined,
         updatedAt: new Date(),
       })
-      .where(eq(tasks.id, idParsed.data));
+      .where(and(eq(tasks.id, idParsed.data), eq(tasks.organizationId, organizationId)));
 
     revalidatePath("/tasks");
     return { success: true };
@@ -305,10 +276,7 @@ export async function updateDeadline(id: string, data: unknown) {
     const idParsed = z.string().uuid().safeParse(id);
     if (!idParsed.success) return { error: "Invalid deadline ID" };
 
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId } = await getTenantContext();
 
     const updateSchema = z.object({
       title: z.string().min(1).optional(),
@@ -331,7 +299,7 @@ export async function updateDeadline(id: string, data: unknown) {
         dueDate: dueDate ? new Date(dueDate) : undefined,
         updatedAt: new Date(),
       })
-      .where(eq(deadlines.id, idParsed.data));
+      .where(and(eq(deadlines.id, idParsed.data), eq(deadlines.organizationId, organizationId)));
 
     revalidatePath("/deadlines");
     return { success: true };
@@ -343,10 +311,7 @@ export async function updateEvent(id: string, data: unknown) {
     const idParsed = z.string().uuid().safeParse(id);
     if (!idParsed.success) return { error: "Invalid event ID" };
 
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId } = await getTenantContext();
 
     const updateSchema = z.object({
       title: z.string().min(1).optional(),
@@ -372,7 +337,7 @@ export async function updateEvent(id: string, data: unknown) {
         endTime: endTime ? new Date(endTime) : undefined,
         updatedAt: new Date(),
       })
-      .where(eq(calendarEvents.id, idParsed.data));
+      .where(and(eq(calendarEvents.id, idParsed.data), eq(calendarEvents.organizationId, organizationId)));
 
     revalidatePath("/calendar");
     return { success: true };

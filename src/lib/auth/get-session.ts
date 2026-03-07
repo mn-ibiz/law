@@ -30,3 +30,39 @@ export async function requireAdmin() {
 export async function requireAdminOrAttorney() {
   return requireRole("admin", "attorney");
 }
+
+export async function requireSuperAdmin() {
+  return requireRole("super_admin");
+}
+
+/**
+ * Returns the authenticated user's organizationId.
+ * Redirects to login if not authenticated.
+ * Use this in server actions and queries to scope data by tenant.
+ */
+export async function requireOrg() {
+  const session = await requireAuth();
+  if (!session.user.organizationId) {
+    redirect("/login");
+  }
+  return {
+    session,
+    organizationId: session.user.organizationId,
+    organizationSlug: session.user.organizationSlug,
+  };
+}
+
+/**
+ * Convenience alias for use in server actions.
+ * Returns organizationId + userId + role for tenant-scoped operations.
+ */
+export async function getTenantContext() {
+  const { session, organizationId, organizationSlug } = await requireOrg();
+  return {
+    organizationId,
+    organizationSlug,
+    userId: session.user.id,
+    role: session.user.role,
+    session,
+  };
+}

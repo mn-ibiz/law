@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { ConflictCheckPage } from "@/components/clients/conflict-check-page";
 
 export const metadata: Metadata = {
@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ConflictsPage() {
-  await requireAdminOrAttorney();
+  await requireOrg();
 
   return (
     <div className="space-y-6">

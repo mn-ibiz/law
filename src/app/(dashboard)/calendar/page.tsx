@@ -1,4 +1,4 @@
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getCalendarEvents, getDeadlines } from "@/lib/queries/calendar";
 import { CalendarView } from "@/components/calendar/calendar-view";
 import { CalendarMonthGrid } from "@/components/calendar/calendar-month-grid";
@@ -28,7 +28,7 @@ interface CalendarPageProps {
 }
 
 export default async function CalendarPage({ searchParams }: CalendarPageProps) {
-  await requireAdminOrAttorney();
+  const { organizationId } = await requireOrg();
 
   const params = await searchParams;
 
@@ -60,8 +60,8 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
   }
 
   const [events, deadlineList] = await Promise.all([
-    getCalendarEvents(start, end),
-    getDeadlines(),
+    getCalendarEvents(organizationId, start, end),
+    getDeadlines(organizationId),
   ]);
 
   const serializedEvents = serializeEvents(events);

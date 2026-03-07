@@ -1,16 +1,20 @@
-import { pgTable, uuid, text, timestamp, numeric, index } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, numeric, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { invoiceStatus, paymentMethod, trustAccountType, trustTransactionType, quoteStatus } from "./enums";
 import { users } from "./auth";
 import { cases } from "./cases";
 import { clients } from "./clients";
 import { timeEntries, expenses } from "./time-expenses";
+import { organizations } from "./organizations";
 
 export const invoices = pgTable(
   "invoices",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    invoiceNumber: text("invoice_number").notNull().unique(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    invoiceNumber: text("invoice_number").notNull(),
     caseId: uuid("case_id").references(() => cases.id, { onDelete: "set null" }),
     clientId: uuid("client_id")
       .notNull()
@@ -33,115 +37,184 @@ export const invoices = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
+    uniqueIndex("invoices_org_invoice_number_idx").on(table.organizationId, table.invoiceNumber),
     index("invoices_invoice_number_idx").on(table.invoiceNumber),
     index("invoices_status_idx").on(table.status),
     index("invoices_client_id_idx").on(table.clientId),
+    index("invoices_organization_id_idx").on(table.organizationId),
   ]
 );
 
-export const invoiceLineItems = pgTable("invoice_line_items", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  invoiceId: uuid("invoice_id")
-    .notNull()
-    .references(() => invoices.id, { onDelete: "cascade" }),
-  description: text("description").notNull(),
-  quantity: numeric("quantity", { precision: 10, scale: 2 }).notNull().default("1"),
-  unitPrice: numeric("unit_price", { precision: 12, scale: 2 }).notNull(),
-  amount: numeric("amount", { precision: 14, scale: 2 }).notNull(),
-  timeEntryId: uuid("time_entry_id").references(() => timeEntries.id, { onDelete: "set null" }),
-  expenseId: uuid("expense_id").references(() => expenses.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const invoiceLineItems = pgTable(
+  "invoice_line_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    invoiceId: uuid("invoice_id")
+      .notNull()
+      .references(() => invoices.id, { onDelete: "cascade" }),
+    description: text("description").notNull(),
+    quantity: numeric("quantity", { precision: 10, scale: 2 }).notNull().default("1"),
+    unitPrice: numeric("unit_price", { precision: 12, scale: 2 }).notNull(),
+    amount: numeric("amount", { precision: 14, scale: 2 }).notNull(),
+    timeEntryId: uuid("time_entry_id").references(() => timeEntries.id, { onDelete: "set null" }),
+    expenseId: uuid("expense_id").references(() => expenses.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("invoice_line_items_organization_id_idx").on(table.organizationId),
+  ]
+);
 
-export const payments = pgTable("payments", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  invoiceId: uuid("invoice_id")
-    .notNull()
-    .references(() => invoices.id, { onDelete: "restrict" }),
-  amount: numeric("amount", { precision: 14, scale: 2 }).notNull(),
-  method: paymentMethod("method").notNull(),
-  reference: text("reference"),
-  mpesaTransactionId: text("mpesa_transaction_id"),
-  receivedBy: uuid("received_by").references(() => users.id, { onDelete: "set null" }),
-  paymentDate: timestamp("payment_date", { withTimezone: true }).defaultNow().notNull(),
-  notes: text("notes"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const payments = pgTable(
+  "payments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    invoiceId: uuid("invoice_id")
+      .notNull()
+      .references(() => invoices.id, { onDelete: "restrict" }),
+    amount: numeric("amount", { precision: 14, scale: 2 }).notNull(),
+    method: paymentMethod("method").notNull(),
+    reference: text("reference"),
+    mpesaTransactionId: text("mpesa_transaction_id"),
+    receivedBy: uuid("received_by").references(() => users.id, { onDelete: "set null" }),
+    paymentDate: timestamp("payment_date", { withTimezone: true }).defaultNow().notNull(),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("payments_organization_id_idx").on(table.organizationId),
+  ]
+);
 
-export const trustAccounts = pgTable("trust_accounts", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  accountName: text("account_name").notNull(),
-  accountNumber: text("account_number").notNull().unique(),
-  type: trustAccountType("type").notNull().default("client"),
-  clientId: uuid("client_id").references(() => clients.id, { onDelete: "set null" }),
-  balance: numeric("balance", { precision: 14, scale: 2 }).notNull().default("0"),
-  bankName: text("bank_name"),
-  branchName: text("branch_name"),
-  currency: text("currency").notNull().default("KES"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const trustAccounts = pgTable(
+  "trust_accounts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    accountName: text("account_name").notNull(),
+    accountNumber: text("account_number").notNull(),
+    type: trustAccountType("type").notNull().default("client"),
+    clientId: uuid("client_id").references(() => clients.id, { onDelete: "set null" }),
+    balance: numeric("balance", { precision: 14, scale: 2 }).notNull().default("0"),
+    bankName: text("bank_name"),
+    branchName: text("branch_name"),
+    currency: text("currency").notNull().default("KES"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("trust_accounts_org_account_number_idx").on(table.organizationId, table.accountNumber),
+    index("trust_accounts_organization_id_idx").on(table.organizationId),
+  ]
+);
 
-export const trustTransactions = pgTable("trust_transactions", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  accountId: uuid("account_id")
-    .notNull()
-    .references(() => trustAccounts.id, { onDelete: "restrict" }),
-  type: trustTransactionType("type").notNull(),
-  amount: numeric("amount", { precision: 14, scale: 2 }).notNull(),
-  description: text("description").notNull(),
-  reference: text("reference"),
-  caseId: uuid("case_id").references(() => cases.id, { onDelete: "set null" }),
-  performedBy: uuid("performed_by")
-    .notNull()
-    .references(() => users.id, { onDelete: "restrict" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const trustTransactions = pgTable(
+  "trust_transactions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    accountId: uuid("account_id")
+      .notNull()
+      .references(() => trustAccounts.id, { onDelete: "restrict" }),
+    type: trustTransactionType("type").notNull(),
+    amount: numeric("amount", { precision: 14, scale: 2 }).notNull(),
+    description: text("description").notNull(),
+    reference: text("reference"),
+    caseId: uuid("case_id").references(() => cases.id, { onDelete: "set null" }),
+    performedBy: uuid("performed_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("trust_transactions_organization_id_idx").on(table.organizationId),
+  ]
+);
 
-export const quotes = pgTable("quotes", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  quoteNumber: text("quote_number").notNull().unique(),
-  clientId: uuid("client_id")
-    .notNull()
-    .references(() => clients.id, { onDelete: "restrict" }),
-  caseId: uuid("case_id").references(() => cases.id, { onDelete: "set null" }),
-  createdBy: uuid("created_by")
-    .notNull()
-    .references(() => users.id, { onDelete: "restrict" }),
-  status: quoteStatus("status").notNull().default("draft"),
-  subtotal: numeric("subtotal", { precision: 14, scale: 2 }).notNull().default("0"),
-  vatAmount: numeric("vat_amount", { precision: 14, scale: 2 }).notNull().default("0"),
-  totalAmount: numeric("total_amount", { precision: 14, scale: 2 }).notNull().default("0"),
-  validUntil: timestamp("valid_until", { withTimezone: true }),
-  notes: text("notes"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const quotes = pgTable(
+  "quotes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    quoteNumber: text("quote_number").notNull(),
+    clientId: uuid("client_id")
+      .notNull()
+      .references(() => clients.id, { onDelete: "restrict" }),
+    caseId: uuid("case_id").references(() => cases.id, { onDelete: "set null" }),
+    createdBy: uuid("created_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    status: quoteStatus("status").notNull().default("draft"),
+    subtotal: numeric("subtotal", { precision: 14, scale: 2 }).notNull().default("0"),
+    vatAmount: numeric("vat_amount", { precision: 14, scale: 2 }).notNull().default("0"),
+    totalAmount: numeric("total_amount", { precision: 14, scale: 2 }).notNull().default("0"),
+    validUntil: timestamp("valid_until", { withTimezone: true }),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("quotes_org_quote_number_idx").on(table.organizationId, table.quoteNumber),
+    index("quotes_organization_id_idx").on(table.organizationId),
+  ]
+);
 
-export const receipts = pgTable("receipts", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  receiptNumber: text("receipt_number").notNull().unique(),
-  paymentId: uuid("payment_id")
-    .notNull()
-    .references(() => payments.id, { onDelete: "restrict" }),
-  issuedTo: text("issued_to").notNull(),
-  amount: numeric("amount", { precision: 14, scale: 2 }).notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const receipts = pgTable(
+  "receipts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    receiptNumber: text("receipt_number").notNull(),
+    paymentId: uuid("payment_id")
+      .notNull()
+      .references(() => payments.id, { onDelete: "restrict" }),
+    issuedTo: text("issued_to").notNull(),
+    amount: numeric("amount", { precision: 14, scale: 2 }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("receipts_org_receipt_number_idx").on(table.organizationId, table.receiptNumber),
+    index("receipts_organization_id_idx").on(table.organizationId),
+  ]
+);
 
-export const creditNotes = pgTable("credit_notes", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  creditNoteNumber: text("credit_note_number").notNull().unique(),
-  invoiceId: uuid("invoice_id")
-    .notNull()
-    .references(() => invoices.id, { onDelete: "restrict" }),
-  amount: numeric("amount", { precision: 14, scale: 2 }).notNull(),
-  reason: text("reason").notNull(),
-  createdBy: uuid("created_by")
-    .notNull()
-    .references(() => users.id, { onDelete: "restrict" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const creditNotes = pgTable(
+  "credit_notes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    creditNoteNumber: text("credit_note_number").notNull(),
+    invoiceId: uuid("invoice_id")
+      .notNull()
+      .references(() => invoices.id, { onDelete: "restrict" }),
+    amount: numeric("amount", { precision: 14, scale: 2 }).notNull(),
+    reason: text("reason").notNull(),
+    createdBy: uuid("created_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("credit_notes_org_credit_note_number_idx").on(table.organizationId, table.creditNoteNumber),
+    index("credit_notes_organization_id_idx").on(table.organizationId),
+  ]
+);
 
 export const invoicesRelations = relations(invoices, ({ one, many }) => ({
   case: one(cases, { fields: [invoices.caseId], references: [cases.id] }),

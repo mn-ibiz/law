@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getCaseById, getCaseAssignments, getCaseNotes, getCaseTimeline, getCaseParties } from "@/lib/queries/cases";
 import { getDocuments } from "@/lib/queries/documents";
 import { getInvoices } from "@/lib/queries/billing";
@@ -17,8 +17,9 @@ import { formatKES } from "@/lib/utils/format";
 import { Clock, Receipt, AlertTriangle, CheckCircle2 } from "lucide-react";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { organizationId } = await requireOrg();
   const { id } = await params;
-  const caseData = await getCaseById(id);
+  const caseData = await getCaseById(organizationId, id);
   return {
     title: caseData ? `${caseData.caseNumber} — ${caseData.title}` : "Case Details",
     description: caseData ? `Details for case ${caseData.caseNumber}` : "Case details",
@@ -26,23 +27,23 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 }
 
 export default async function CaseDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireAdminOrAttorney();
+  const { organizationId } = await requireOrg();
   const { id } = await params;
-  const caseData = await getCaseById(id);
+  const caseData = await getCaseById(organizationId, id);
   if (!caseData) notFound();
 
   const [assignments, notes, timeline, parties, documents, caseInvoices, caseTimeEntries, caseExpenses, caseDeadlines, caseTasks, allUsers] = await Promise.all([
-    getCaseAssignments(id),
-    getCaseNotes(id),
-    getCaseTimeline(id),
-    getCaseParties(id),
-    getDocuments({ caseId: id }),
-    getInvoices({ caseId: id }),
-    getTimeEntries({ caseId: id }),
-    getExpenses({ caseId: id }),
-    getDeadlines({ caseId: id }),
-    getTasks({ caseId: id }),
-    getUsers(),
+    getCaseAssignments(organizationId, id),
+    getCaseNotes(organizationId, id),
+    getCaseTimeline(organizationId, id),
+    getCaseParties(organizationId, id),
+    getDocuments(organizationId, { caseId: id }),
+    getInvoices(organizationId, { caseId: id }),
+    getTimeEntries(organizationId, { caseId: id }),
+    getExpenses(organizationId, { caseId: id }),
+    getDeadlines(organizationId, { caseId: id }),
+    getTasks(organizationId, { caseId: id }),
+    getUsers(organizationId),
   ]);
 
   // Compute financial stats

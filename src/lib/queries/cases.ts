@@ -15,10 +15,10 @@ interface CaseFilters {
   limit?: number;
 }
 
-export async function getCases(filters: CaseFilters = {}) {
+export async function getCases(organizationId: string, filters: CaseFilters = {}) {
   const { search, status, priority, clientId, page = 1, limit = 20 } = filters;
 
-  const conditions = [];
+  const conditions = [eq(cases.organizationId, organizationId)];
   if (status) conditions.push(eq(cases.status, status as "open" | "in_progress" | "hearing" | "resolved" | "closed" | "archived"));
   if (priority) conditions.push(eq(cases.priority, priority as "low" | "medium" | "high" | "urgent"));
   if (clientId) conditions.push(eq(cases.clientId, clientId));
@@ -31,7 +31,7 @@ export async function getCases(filters: CaseFilters = {}) {
         ilike(cases.caseNumber, `%${escaped}%`),
         ilike(cases.fileNumber, `%${escaped}%`),
         ilike(cases.opposingParty, `%${escaped}%`)
-      )
+      )!
     );
   }
 
@@ -74,7 +74,7 @@ export async function getCases(filters: CaseFilters = {}) {
   };
 }
 
-export async function getCaseStats() {
+export async function getCaseStats(organizationId: string) {
   const now = new Date();
   const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
@@ -85,12 +85,13 @@ export async function getCaseStats() {
       highPriority: sql<number>`count(*) FILTER (WHERE ${cases.priority} IN ('high', 'urgent'))::int`,
       closedThisMonth: sql<number>`count(*) FILTER (WHERE ${cases.status} = 'closed' AND ${cases.updatedAt} >= ${firstOfMonth.toISOString()})::int`,
     })
-    .from(cases);
+    .from(cases)
+    .where(eq(cases.organizationId, organizationId));
 
   return result ?? { total: 0, open: 0, highPriority: 0, closedThisMonth: 0 };
 }
 
-export const getCaseById = cache(async (id: string) => {
+export const getCaseById = cache(async (organizationId: string, id: string) => {
   const result = await db
     .select({
       id: cases.id,
@@ -122,13 +123,13 @@ export const getCaseById = cache(async (id: string) => {
     })
     .from(cases)
     .innerJoin(clients, eq(cases.clientId, clients.id))
-    .where(eq(cases.id, id))
+    .where(and(eq(cases.organizationId, organizationId), eq(cases.id, id)))
     .limit(1);
 
   return result[0] ?? null;
 });
 
-export async function getCaseAssignments(caseId: string) {
+export async function getCaseAssignments(organizationId: string, caseId: string) {
   return db
     .select({
       id: caseAssignments.id,
@@ -140,11 +141,11 @@ export async function getCaseAssignments(caseId: string) {
     })
     .from(caseAssignments)
     .innerJoin(users, eq(caseAssignments.userId, users.id))
-    .where(and(eq(caseAssignments.caseId, caseId), sql`${caseAssignments.unassignedAt} IS NULL`))
+    .where(and(eq(caseAssignments.organizationId, organizationId), eq(caseAssignments.caseId, caseId), sql`${caseAssignments.unassignedAt} IS NULL`))
     .orderBy(asc(caseAssignments.assignedAt));
 }
 
-export async function getCaseNotes(caseId: string) {
+export async function getCaseNotes(organizationId: string, caseId: string) {
   return db
     .select({
       id: caseNotes.id,
@@ -155,12 +156,12 @@ export async function getCaseNotes(caseId: string) {
     })
     .from(caseNotes)
     .innerJoin(users, eq(caseNotes.authorId, users.id))
-    .where(eq(caseNotes.caseId, caseId))
+    .where(and(eq(caseNotes.organizationId, organizationId), eq(caseNotes.caseId, caseId)))
     .orderBy(desc(caseNotes.createdAt))
     .limit(200);
 }
 
-export async function getCaseTimeline(caseId: string) {
+export async function getCaseTimeline(organizationId: string, caseId: string) {
   return db
     .select({
       id: caseTimeline.id,
@@ -173,31 +174,32 @@ export async function getCaseTimeline(caseId: string) {
     })
     .from(caseTimeline)
     .leftJoin(users, eq(caseTimeline.userId, users.id))
-    .where(eq(caseTimeline.caseId, caseId))
+    .where(and(eq(caseTimeline.organizationId, organizationId), eq(caseTimeline.caseId, caseId)))
     .orderBy(desc(caseTimeline.createdAt))
     .limit(200);
 }
 
-export async function getCaseParties(caseId: string) {
+export async function getCaseParties(organizationId: string, caseId: string) {
   return db
     .select()
     .from(caseParties)
-    .where(eq(caseParties.caseId, caseId))
+    .where(and(eq(caseParties.organizationId, organizationId), eq(caseParties.caseId, caseId)))
     .orderBy(asc(caseParties.createdAt));
 }
 
-export async function getPipelineStages() {
+export async function getPipelineStages(organizationId: string) {
   return db
     .select()
     .from(pipelineStages)
+    .where(eq(pipelineStages.organizationId, organizationId))
     .orderBy(asc(pipelineStages.order));
 }
 
-export async function getCasesByPipelineStage(practiceAreaId?: string | null) {
+export async function getCasesByPipelineStage(organizationId: string, practiceAreaId?: string | null) {
   // Fetch stages filtered by practice area (null = default/universal stages)
   const stageCondition = practiceAreaId
-    ? eq(pipelineStages.practiceAreaId, practiceAreaId)
-    : sql`${pipelineStages.practiceAreaId} IS NULL`;
+    ? and(eq(pipelineStages.organizationId, organizationId), eq(pipelineStages.practiceAreaId, practiceAreaId))
+    : and(eq(pipelineStages.organizationId, organizationId), sql`${pipelineStages.practiceAreaId} IS NULL`);
 
   const stages = await db
     .select()
@@ -222,7 +224,7 @@ export async function getCasesByPipelineStage(practiceAreaId?: string | null) {
     })
     .from(cases)
     .leftJoin(clients, eq(cases.clientId, clients.id))
-    .where(inArray(cases.pipelineStageId, stageIds));
+    .where(and(eq(cases.organizationId, organizationId), inArray(cases.pipelineStageId, stageIds)));
 
   // Group cases by pipeline stage
   const casesByStage = new Map<string, typeof allCases>();
@@ -243,13 +245,13 @@ export async function getCasesByPipelineStage(practiceAreaId?: string | null) {
   }));
 }
 
-export async function generateCaseNumber(): Promise<string> {
+export async function generateCaseNumber(organizationId: string): Promise<string> {
   const year = new Date().getFullYear();
   const prefix = `CASE-${year}-`;
   const [result] = await db
     .select({ maxNum: sql<string>`MAX(${cases.caseNumber})` })
     .from(cases)
-    .where(sql`${cases.caseNumber} LIKE ${prefix + '%'}`);
+    .where(and(eq(cases.organizationId, organizationId), sql`${cases.caseNumber} LIKE ${prefix + '%'}`));
 
   const maxNum = result?.maxNum;
   let next = 1;
@@ -262,7 +264,7 @@ export async function generateCaseNumber(): Promise<string> {
 }
 
 /** Lightweight case list for select dropdowns (id, caseNumber, title) */
-export async function getCaseOptions() {
+export async function getCaseOptions(organizationId: string) {
   return db
     .select({
       id: cases.id,
@@ -270,5 +272,6 @@ export async function getCaseOptions() {
       title: cases.title,
     })
     .from(cases)
+    .where(eq(cases.organizationId, organizationId))
     .orderBy(desc(cases.createdAt));
 }

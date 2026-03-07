@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getAllRolePermissions } from "@/lib/queries/permissions";
 import { PermissionsManager } from "@/components/settings/permissions-manager";
 import { Shield } from "lucide-react";
@@ -10,8 +10,8 @@ export const metadata: Metadata = {
 };
 
 export default async function PermissionsPage() {
-  await requireAdmin();
-  const allPermissions = await getAllRolePermissions();
+  const { organizationId } = await requireOrg();
+  const allPermissions = await getAllRolePermissions(organizationId);
 
   return (
     <div className="space-y-6">

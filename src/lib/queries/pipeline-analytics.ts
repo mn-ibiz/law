@@ -3,7 +3,7 @@ import { caseStageHistory, pipelineStages, cases } from "@/lib/db/schema/cases";
 import { clients } from "@/lib/db/schema/clients";
 import { eq, sql, and, isNotNull } from "drizzle-orm";
 
-export async function getAverageStageDuration(practiceAreaId?: string | null) {
+export async function getAverageStageDuration(organizationId: string, practiceAreaId?: string | null) {
   const paCondition = practiceAreaId
     ? eq(pipelineStages.practiceAreaId, practiceAreaId)
     : sql`${pipelineStages.practiceAreaId} IS NULL`;
@@ -18,12 +18,12 @@ export async function getAverageStageDuration(practiceAreaId?: string | null) {
     })
     .from(caseStageHistory)
     .innerJoin(pipelineStages, eq(caseStageHistory.stageId, pipelineStages.id))
-    .where(and(isNotNull(caseStageHistory.exitedAt), paCondition))
+    .where(and(eq(caseStageHistory.organizationId, organizationId), isNotNull(caseStageHistory.exitedAt), paCondition))
     .groupBy(caseStageHistory.stageId, pipelineStages.name, pipelineStages.order, pipelineStages.color)
     .orderBy(pipelineStages.order);
 }
 
-export async function getPipelineThroughput(practiceAreaId?: string | null, months = 6) {
+export async function getPipelineThroughput(organizationId: string, practiceAreaId?: string | null, months = 6) {
   const paCondition = practiceAreaId
     ? eq(pipelineStages.practiceAreaId, practiceAreaId)
     : sql`${pipelineStages.practiceAreaId} IS NULL`;
@@ -39,6 +39,7 @@ export async function getPipelineThroughput(practiceAreaId?: string | null, mont
     .innerJoin(pipelineStages, eq(caseStageHistory.stageId, pipelineStages.id))
     .where(
       and(
+        eq(caseStageHistory.organizationId, organizationId),
         paCondition,
         sql`${caseStageHistory.enteredAt} >= NOW() - make_interval(months => ${months})`
       )
@@ -47,7 +48,7 @@ export async function getPipelineThroughput(practiceAreaId?: string | null, mont
     .orderBy(sql`to_char(${caseStageHistory.enteredAt}, 'YYYY-MM')`);
 }
 
-export async function getConversionRate(practiceAreaId?: string | null) {
+export async function getConversionRate(organizationId: string, practiceAreaId?: string | null) {
   const paCondition = practiceAreaId
     ? eq(pipelineStages.practiceAreaId, practiceAreaId)
     : sql`${pipelineStages.practiceAreaId} IS NULL`;
@@ -62,12 +63,12 @@ export async function getConversionRate(practiceAreaId?: string | null) {
     })
     .from(caseStageHistory)
     .innerJoin(pipelineStages, eq(caseStageHistory.stageId, pipelineStages.id))
-    .where(paCondition)
+    .where(and(eq(caseStageHistory.organizationId, organizationId), paCondition))
     .groupBy(caseStageHistory.stageId, pipelineStages.name, pipelineStages.order, pipelineStages.color)
     .orderBy(pipelineStages.order);
 }
 
-export async function getBottleneckCases(practiceAreaId?: string | null) {
+export async function getBottleneckCases(organizationId: string, practiceAreaId?: string | null) {
   const paCondition = practiceAreaId
     ? eq(pipelineStages.practiceAreaId, practiceAreaId)
     : sql`${pipelineStages.practiceAreaId} IS NULL`;
@@ -89,6 +90,7 @@ export async function getBottleneckCases(practiceAreaId?: string | null) {
     .leftJoin(clients, eq(cases.clientId, clients.id))
     .where(
       and(
+        eq(cases.organizationId, organizationId),
         paCondition,
         isNotNull(cases.stageEnteredAt),
         isNotNull(pipelineStages.maxDurationDays),

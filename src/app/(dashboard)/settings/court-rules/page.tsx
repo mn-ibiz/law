@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getCourtRules } from "@/lib/queries/courts";
 import { getCourts } from "@/lib/queries/courts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,9 +18,9 @@ export const metadata: Metadata = {
 };
 
 export default async function CourtRulesPage() {
-  await requireAdmin();
+  const { organizationId } = await requireOrg();
   const [rules, courts] = await Promise.all([
-    getCourtRules(),
+    getCourtRules(organizationId),
     getCourts(),
   ]);
 

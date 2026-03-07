@@ -1,4 +1,4 @@
-import { requireAuth } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getCases } from "@/lib/queries/cases";
 import { getClients } from "@/lib/queries/clients";
 import { InvoiceForm } from "@/components/forms/invoice-form";
@@ -10,10 +10,10 @@ export const metadata: Metadata = {
 };
 
 export default async function NewInvoicePage() {
-  await requireAuth();
+  const { organizationId } = await requireOrg();
   const [caseResult, clientResult] = await Promise.all([
-    getCases({ limit: 200 }),
-    getClients({ limit: 200 }),
+    getCases(organizationId, { limit: 200 }),
+    getClients(organizationId, { limit: 200 }),
   ]);
 
   const cases = caseResult.data.map((c) => ({

@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getPracticeAreas, getBillingRates } from "@/lib/queries/settings";
 import { formatKES } from "@/lib/utils/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,10 +16,10 @@ export const metadata: Metadata = {
 };
 
 export default async function PracticeAreasPage() {
-  await requireAdmin();
+  const { organizationId } = await requireOrg();
   const [areas, rates] = await Promise.all([
-    getPracticeAreas(),
-    getBillingRates(),
+    getPracticeAreas(organizationId),
+    getBillingRates(organizationId),
   ]);
 
   return (

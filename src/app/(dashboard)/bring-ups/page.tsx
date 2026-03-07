@@ -1,4 +1,4 @@
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getBringUps } from "@/lib/queries/calendar";
 import { getCases } from "@/lib/queries/cases";
 import { getUsers } from "@/lib/queries/settings";
@@ -26,11 +26,11 @@ export const metadata: Metadata = {
 };
 
 export default async function BringUpsPage() {
-  await requireAdminOrAttorney();
+  const { organizationId } = await requireOrg();
   const [bringUpList, { data: caseList }, userList] = await Promise.all([
-    getBringUps(),
-    getCases({ limit: 200 }),
-    getUsers(),
+    getBringUps(organizationId),
+    getCases(organizationId, { limit: 200 }),
+    getUsers(organizationId),
   ]);
 
   const cases = caseList.map((c) => ({

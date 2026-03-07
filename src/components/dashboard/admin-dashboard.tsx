@@ -27,9 +27,11 @@ import {
   getOverdueInvoices,
 } from "@/lib/queries/dashboard-charts";
 import { getUtilizationRate, getRealizationRate, getCollectionRate, getARAgingBuckets } from "@/lib/queries/kpi";
+import { requireOrg } from "@/lib/auth/get-session";
 
 async function AdminStats() {
-  const stats = await getAdminDashboardStats();
+  const { organizationId } = await requireOrg();
+  const stats = await getAdminDashboardStats(organizationId);
 
   return (
     <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
@@ -75,23 +77,25 @@ async function AdminStats() {
 }
 
 async function AdminKPIs() {
+  const { organizationId } = await requireOrg();
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
   const [utilization, realization, collection] = await Promise.all([
-    getUtilizationRate(startOfMonth, now),
-    getRealizationRate(startOfMonth, now),
-    getCollectionRate(startOfMonth, now),
+    getUtilizationRate(organizationId, startOfMonth, now),
+    getRealizationRate(organizationId, startOfMonth, now),
+    getCollectionRate(organizationId, startOfMonth, now),
   ]);
 
   return <KPICards utilization={utilization} realization={realization} collection={collection} />;
 }
 
 async function AdminCharts() {
+  const { organizationId } = await requireOrg();
   const [revenue, caseStatus, arAging] = await Promise.all([
-    getMonthlyRevenue(),
-    getCaseStatusDistribution(),
-    getARAgingBuckets(),
+    getMonthlyRevenue(organizationId),
+    getCaseStatusDistribution(organizationId),
+    getARAgingBuckets(organizationId),
   ]);
 
   return (
@@ -107,15 +111,17 @@ async function AdminCharts() {
 }
 
 async function AdminARChart() {
-  const arAging = await getARAgingBuckets();
+  const { organizationId } = await requireOrg();
+  const arAging = await getARAgingBuckets(organizationId);
   return <ARAgingChart data={arAging} />;
 }
 
 async function AdminWidgets() {
+  const { organizationId } = await requireOrg();
   const [recentCases, deadlines, overdueInvoices] = await Promise.all([
-    getRecentCases(10),
-    getUpcomingDeadlines(10),
-    getOverdueInvoices(),
+    getRecentCases(organizationId, 10),
+    getUpcomingDeadlines(organizationId, 10),
+    getOverdueInvoices(organizationId),
   ]);
 
   return (

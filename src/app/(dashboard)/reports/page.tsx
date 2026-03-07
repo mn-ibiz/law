@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import {
   getRevenueReport,
   getAccountsReceivableAgingReport,
@@ -70,9 +70,11 @@ function fmtPct(n: unknown): string {
 // ---------------------------------------------------------------------------
 
 async function FinancialReports({
+  organizationId,
   startDate,
   endDate,
 }: {
+  organizationId: string;
   startDate?: Date;
   endDate?: Date;
 }) {
@@ -94,14 +96,14 @@ async function FinancialReports({
     expenseSummary,
     billing,
   ] = await Promise.all([
-    getRevenueReport(dateRange),
-    getAccountsReceivableAgingReport(),
-    getTrustAccountSummaryReport(),
-    getTrustTransactionReport(dateRange),
-    getWIPReport(),
-    getCollectionReport(dateRange),
-    getExpenseSummaryReport(dateRange),
-    getBillingReport(dateRange),
+    getRevenueReport(organizationId, dateRange),
+    getAccountsReceivableAgingReport(organizationId),
+    getTrustAccountSummaryReport(organizationId),
+    getTrustTransactionReport(organizationId, dateRange),
+    getWIPReport(organizationId),
+    getCollectionReport(organizationId, dateRange),
+    getExpenseSummaryReport(organizationId, dateRange),
+    getBillingReport(organizationId, dateRange),
   ]);
 
   const totalRevenue = revenue.reduce(
@@ -469,9 +471,11 @@ async function FinancialReports({
 // ---------------------------------------------------------------------------
 
 async function OperationalReports({
+  organizationId,
   startDate,
   endDate,
 }: {
+  organizationId: string;
   startDate?: Date;
   endDate?: Date;
 }) {
@@ -485,12 +489,12 @@ async function OperationalReports({
 
   const [caseload, caseType, attorneys, profitability, productivity, clients] =
     await Promise.all([
-      getCaseloadReport(dateRange),
-      getCaseTypeReport(dateRange),
-      getAttorneyProductivityReport(dateRange),
-      getMatterProfitabilityReport(dateRange),
-      getProductivityReport(dateRange),
-      getClientReport(dateRange),
+      getCaseloadReport(organizationId, dateRange),
+      getCaseTypeReport(organizationId, dateRange),
+      getAttorneyProductivityReport(organizationId, dateRange),
+      getMatterProfitabilityReport(organizationId, dateRange),
+      getProductivityReport(organizationId, dateRange),
+      getClientReport(organizationId, dateRange),
     ]);
 
   const totalCases = caseload.reduce((s, r) => s + Number(r.count), 0);
@@ -754,9 +758,11 @@ async function OperationalReports({
 // ---------------------------------------------------------------------------
 
 async function ComplianceReports({
+  organizationId,
   startDate,
   endDate,
 }: {
+  organizationId: string;
   startDate?: Date;
   endDate?: Date;
 }) {
@@ -769,8 +775,8 @@ async function ComplianceReports({
     : undefined;
 
   const [deadlineCompliance, pepReport] = await Promise.all([
-    getDeadlineComplianceReport(dateRange),
-    getPEPReport(),
+    getDeadlineComplianceReport(organizationId, dateRange),
+    getPEPReport(organizationId),
   ]);
 
   const { summary: dlSummary, byPriority } = deadlineCompliance;
@@ -957,7 +963,7 @@ export default async function ReportsPage({
 }: {
   searchParams: Promise<{ start?: string; end?: string }>;
 }) {
-  await requireAdminOrAttorney();
+  const { organizationId } = await requireOrg();
   const params = await searchParams;
   const startDate = parseDateParam(params.start);
   const endDate = parseDateParam(params.end);
@@ -1004,7 +1010,7 @@ export default async function ReportsPage({
               <div className="animate-pulse h-96 bg-muted rounded-lg" />
             }
           >
-            <FinancialReports startDate={startDate} endDate={endDate} />
+            <FinancialReports organizationId={organizationId} startDate={startDate} endDate={endDate} />
           </Suspense>
         </TabsContent>
 
@@ -1014,7 +1020,7 @@ export default async function ReportsPage({
               <div className="animate-pulse h-96 bg-muted rounded-lg" />
             }
           >
-            <OperationalReports startDate={startDate} endDate={endDate} />
+            <OperationalReports organizationId={organizationId} startDate={startDate} endDate={endDate} />
           </Suspense>
         </TabsContent>
 
@@ -1024,7 +1030,7 @@ export default async function ReportsPage({
               <div className="animate-pulse h-96 bg-muted rounded-lg" />
             }
           >
-            <ComplianceReports startDate={startDate} endDate={endDate} />
+            <ComplianceReports organizationId={organizationId} startDate={startDate} endDate={endDate} />
           </Suspense>
         </TabsContent>
       </Tabs>

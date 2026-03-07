@@ -12,10 +12,10 @@ interface ClientFilters {
   limit?: number;
 }
 
-export async function getClients(filters: ClientFilters = {}) {
+export async function getClients(organizationId: string, filters: ClientFilters = {}) {
   const { search, status, type, page = 1, limit = 20 } = filters;
 
-  const conditions = [];
+  const conditions = [eq(clients.organizationId, organizationId)];
   if (status) conditions.push(eq(clients.status, status as "active" | "inactive" | "prospective"));
   if (type) conditions.push(eq(clients.type, type as "individual" | "organization"));
 
@@ -27,7 +27,7 @@ export async function getClients(filters: ClientFilters = {}) {
         ilike(clients.lastName, `%${escaped}%`),
         ilike(clients.email, `%${escaped}%`),
         ilike(clients.companyName, `%${escaped}%`)
-      )
+      )!
     );
   }
 
@@ -65,17 +65,17 @@ export async function getClients(filters: ClientFilters = {}) {
   };
 }
 
-export const getClientById = cache(async (id: string) => {
+export const getClientById = cache(async (organizationId: string, id: string) => {
   const result = await db
     .select()
     .from(clients)
-    .where(eq(clients.id, id))
+    .where(and(eq(clients.organizationId, organizationId), eq(clients.id, id)))
     .limit(1);
 
   return result[0] ?? null;
 });
 
-export async function getClientsByPipelineStage() {
+export async function getClientsByPipelineStage(organizationId: string) {
   const result = await db
     .select({
       id: clients.id,
@@ -92,6 +92,7 @@ export async function getClientsByPipelineStage() {
       createdAt: clients.createdAt,
     })
     .from(clients)
+    .where(eq(clients.organizationId, organizationId))
     .orderBy(desc(clients.createdAt));
 
   const grouped: Record<string, typeof result> = {
@@ -110,7 +111,7 @@ export async function getClientsByPipelineStage() {
   return grouped;
 }
 
-export async function getClientContacts(clientId: string) {
+export async function getClientContacts(organizationId: string, clientId: string) {
   return db
     .select({
       id: clientContacts.id,
@@ -122,6 +123,6 @@ export async function getClientContacts(clientId: string) {
     })
     .from(clientContacts)
     .leftJoin(users, eq(clientContacts.contactedBy, users.id))
-    .where(eq(clientContacts.clientId, clientId))
+    .where(and(eq(clientContacts.organizationId, organizationId), eq(clientContacts.clientId, clientId)))
     .orderBy(desc(clientContacts.contactDate));
 }

@@ -1,4 +1,4 @@
-import { requireRole } from "@/lib/auth/get-session";
+import { requireOrg, requireRole } from "@/lib/auth/get-session";
 import { getPendingReviewDocuments } from "@/lib/queries/documents";
 import { DocumentReviewQueue } from "@/components/documents/document-review-queue";
 import { FileCheck } from "lucide-react";
@@ -10,8 +10,9 @@ export const metadata: Metadata = {
 };
 
 export default async function DocumentReviewPage() {
+  const { organizationId } = await requireOrg();
   await requireRole("admin", "attorney");
-  const documents = await getPendingReviewDocuments();
+  const documents = await getPendingReviewDocuments(organizationId);
 
   return (
     <div className="space-y-6">

@@ -22,7 +22,11 @@ import { submitIntake } from "@/lib/actions/intake";
 import { CASE_TYPES } from "@/lib/constants/case-types";
 import { formatEnum } from "@/lib/utils/format-enum";
 
-export function PublicIntakeForm() {
+interface PublicIntakeFormProps {
+  organizationSlug: string;
+}
+
+export function PublicIntakeForm({ organizationSlug }: PublicIntakeFormProps) {
   const router = useRouter();
 
   const form = useForm<PublicIntakeInput>({
@@ -42,7 +46,7 @@ export function PublicIntakeForm() {
 
   async function onSubmit(data: PublicIntakeInput) {
     try {
-      const result = await submitIntake(data);
+      const result = await submitIntake(organizationSlug, data);
 
       if (result.error) {
         toast.error(result.error);

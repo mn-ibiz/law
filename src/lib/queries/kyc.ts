@@ -3,7 +3,7 @@ import { kycDocuments, clientRiskAssessments } from "@/lib/db/schema/clients";
 import { users } from "@/lib/db/schema/auth";
 import { eq, and, sql, desc, lte } from "drizzle-orm";
 
-export async function getClientKycDocuments(clientId: string) {
+export async function getClientKycDocuments(organizationId: string, clientId: string) {
   return db
     .select({
       id: kycDocuments.id,
@@ -18,31 +18,32 @@ export async function getClientKycDocuments(clientId: string) {
     })
     .from(kycDocuments)
     .leftJoin(users, eq(kycDocuments.verifiedBy, users.id))
-    .where(eq(kycDocuments.clientId, clientId))
+    .where(and(eq(kycDocuments.organizationId, organizationId), eq(kycDocuments.clientId, clientId)))
     .orderBy(desc(kycDocuments.createdAt));
 }
 
-export async function getClientRiskAssessment(clientId: string) {
+export async function getClientRiskAssessment(organizationId: string, clientId: string) {
   const result = await db
     .select()
     .from(clientRiskAssessments)
-    .where(eq(clientRiskAssessments.clientId, clientId))
+    .where(and(eq(clientRiskAssessments.organizationId, organizationId), eq(clientRiskAssessments.clientId, clientId)))
     .orderBy(desc(clientRiskAssessments.createdAt))
     .limit(1);
   return result[0] ?? null;
 }
 
-export async function getKycComplianceStats() {
+export async function getKycComplianceStats(organizationId: string) {
   const [pendingKyc, expiredDocs, riskDistribution] = await Promise.all([
     db
       .select({ count: sql<number>`count(distinct ${kycDocuments.clientId})::int` })
       .from(kycDocuments)
-      .where(eq(kycDocuments.status, "pending")),
+      .where(and(eq(kycDocuments.organizationId, organizationId), eq(kycDocuments.status, "pending"))),
     db
       .select({ count: sql<number>`count(*)::int` })
       .from(kycDocuments)
       .where(
         and(
+          eq(kycDocuments.organizationId, organizationId),
           eq(kycDocuments.status, "verified"),
           lte(kycDocuments.expiryDate, new Date())
         )
@@ -53,6 +54,7 @@ export async function getKycComplianceStats() {
         count: sql<number>`count(*)::int`,
       })
       .from(clientRiskAssessments)
+      .where(eq(clientRiskAssessments.organizationId, organizationId))
       .groupBy(clientRiskAssessments.riskLevel),
   ]);
 

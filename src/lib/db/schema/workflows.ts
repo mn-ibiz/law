@@ -1,19 +1,29 @@
-import { pgTable, uuid, text, boolean, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, boolean, timestamp, integer, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { workflowTriggerType, workflowActionType } from "./enums";
 import { users } from "./auth";
+import { organizations } from "./organizations";
 
-export const workflowTemplates = pgTable("workflow_templates", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  name: text("name").notNull(),
-  description: text("description"),
-  triggerType: workflowTriggerType("trigger_type").notNull(),
-  triggerConfig: text("trigger_config"),
-  isActive: boolean("is_active").notNull().default(true),
-  createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const workflowTemplates = pgTable(
+  "workflow_templates",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    triggerType: workflowTriggerType("trigger_type").notNull(),
+    triggerConfig: text("trigger_config"),
+    isActive: boolean("is_active").notNull().default(true),
+    createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("workflow_templates_organization_id_idx").on(table.organizationId),
+  ]
+);
 
 export const workflowRules = pgTable("workflow_rules", {
   id: uuid("id").primaryKey().defaultRandom(),

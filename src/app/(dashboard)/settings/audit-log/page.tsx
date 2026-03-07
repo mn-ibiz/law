@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getAuditLogs } from "@/lib/queries/settings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,9 +15,9 @@ export const metadata: Metadata = {
 };
 
 export default async function AuditLogPage() {
-  await requireAdmin();
+  const { organizationId } = await requireOrg();
 
-  const logs = await getAuditLogs();
+  const logs = await getAuditLogs(organizationId);
 
   return (
     <div className="space-y-6">

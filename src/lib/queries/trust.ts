@@ -5,9 +5,9 @@ import { pettyCashTransactions, bankAccounts, bankReconciliations } from "@/lib/
 import { clients } from "@/lib/db/schema/clients";
 import { cases } from "@/lib/db/schema/cases";
 import { users } from "@/lib/db/schema/auth";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and } from "drizzle-orm";
 
-export async function getTrustAccounts() {
+export async function getTrustAccounts(organizationId: string) {
   return db
     .select({
       id: trustAccounts.id,
@@ -22,10 +22,11 @@ export async function getTrustAccounts() {
     })
     .from(trustAccounts)
     .leftJoin(clients, eq(trustAccounts.clientId, clients.id))
+    .where(eq(trustAccounts.organizationId, organizationId))
     .orderBy(desc(trustAccounts.createdAt));
 }
 
-export const getTrustAccountById = cache(async (id: string) => {
+export const getTrustAccountById = cache(async (organizationId: string, id: string) => {
   const result = await db
     .select({
       id: trustAccounts.id,
@@ -43,13 +44,13 @@ export const getTrustAccountById = cache(async (id: string) => {
     })
     .from(trustAccounts)
     .leftJoin(clients, eq(trustAccounts.clientId, clients.id))
-    .where(eq(trustAccounts.id, id))
+    .where(and(eq(trustAccounts.organizationId, organizationId), eq(trustAccounts.id, id)))
     .limit(1);
 
   return result[0] ?? null;
 });
 
-export async function getTrustTransactions(accountId: string) {
+export async function getTrustTransactions(organizationId: string, accountId: string) {
   return db
     .select({
       id: trustTransactions.id,
@@ -64,22 +65,22 @@ export async function getTrustTransactions(accountId: string) {
     .from(trustTransactions)
     .innerJoin(users, eq(trustTransactions.performedBy, users.id))
     .leftJoin(cases, eq(trustTransactions.caseId, cases.id))
-    .where(eq(trustTransactions.accountId, accountId))
+    .where(and(eq(trustTransactions.organizationId, organizationId), eq(trustTransactions.accountId, accountId)))
     .orderBy(desc(trustTransactions.createdAt));
 }
 
-export async function getClientsForSelect() {
+export async function getClientsForSelect(organizationId: string) {
   return db
     .select({
       id: clients.id,
       name: sql<string>`${clients.firstName} || ' ' || ${clients.lastName}`,
     })
     .from(clients)
-    .where(eq(clients.status, "active"))
+    .where(and(eq(clients.organizationId, organizationId), eq(clients.status, "active")))
     .orderBy(clients.firstName, clients.lastName);
 }
 
-export async function getCasesForSelect() {
+export async function getCasesForSelect(organizationId: string) {
   return db
     .select({
       id: cases.id,
@@ -87,11 +88,12 @@ export async function getCasesForSelect() {
       title: cases.title,
     })
     .from(cases)
+    .where(eq(cases.organizationId, organizationId))
     .orderBy(desc(cases.createdAt))
     .limit(200);
 }
 
-export async function getPettyCashTransactions() {
+export async function getPettyCashTransactions(organizationId: string) {
   return db
     .select({
       id: pettyCashTransactions.id,
@@ -105,14 +107,15 @@ export async function getPettyCashTransactions() {
     })
     .from(pettyCashTransactions)
     .innerJoin(users, eq(pettyCashTransactions.performedBy, users.id))
+    .where(eq(pettyCashTransactions.organizationId, organizationId))
     .orderBy(desc(pettyCashTransactions.transactionDate));
 }
 
-export async function getBankAccounts() {
-  return db.select().from(bankAccounts).where(eq(bankAccounts.isActive, true));
+export async function getBankAccounts(organizationId: string) {
+  return db.select().from(bankAccounts).where(and(eq(bankAccounts.organizationId, organizationId), eq(bankAccounts.isActive, true)));
 }
 
-export async function getBankReconciliations() {
+export async function getBankReconciliations(organizationId: string) {
   return db
     .select({
       id: bankReconciliations.id,
@@ -125,5 +128,6 @@ export async function getBankReconciliations() {
     })
     .from(bankReconciliations)
     .innerJoin(bankAccounts, eq(bankReconciliations.bankAccountId, bankAccounts.id))
+    .where(eq(bankReconciliations.organizationId, organizationId))
     .orderBy(desc(bankReconciliations.statementDate));
 }

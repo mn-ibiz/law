@@ -1,4 +1,4 @@
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getDeadlines } from "@/lib/queries/calendar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,8 +13,8 @@ export const metadata: Metadata = {
 };
 
 export default async function DeadlinesPage() {
-  await requireAdminOrAttorney();
-  const deadlineList = await getDeadlines();
+  const { organizationId } = await requireOrg();
+  const deadlineList = await getDeadlines(organizationId);
 
   const now = new Date();
   const overdueCount = deadlineList.filter(

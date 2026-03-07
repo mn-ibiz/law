@@ -1,14 +1,14 @@
-import { auth } from "@/lib/auth/auth";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getNotifications, getUnreadNotificationCount } from "@/lib/queries/notifications";
 import { NotificationBell } from "./notification-bell";
 
 export async function NotificationBellWrapper() {
-  const session = await auth();
+  const { session, organizationId } = await requireOrg();
   if (!session?.user?.id) return null;
 
   const [count, notifications] = await Promise.all([
-    getUnreadNotificationCount(session.user.id),
-    getNotifications(session.user.id),
+    getUnreadNotificationCount(organizationId, session.user.id),
+    getNotifications(organizationId, session.user.id),
   ]);
 
   // Serialize dates for client component

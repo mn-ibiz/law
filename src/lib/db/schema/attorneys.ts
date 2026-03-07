@@ -1,18 +1,22 @@
-import { pgTable, pgEnum, uuid, text, boolean, timestamp, numeric, index, unique } from "drizzle-orm/pg-core";
+import { pgTable, pgEnum, uuid, text, boolean, timestamp, numeric, index, unique, uniqueIndex } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { attorneyTitle, licenseStatus } from "./enums";
 import { users } from "./auth";
 import { practiceAreas } from "./settings";
+import { organizations } from "./organizations";
 
 export const attorneys = pgTable(
   "attorneys",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "restrict" })
       .unique(),
-    barNumber: text("bar_number").notNull().unique(),
+    barNumber: text("bar_number").notNull(),
     jurisdiction: text("jurisdiction").notNull(),
     title: attorneyTitle("title").notNull().default("associate"),
     department: text("department"),
@@ -29,9 +33,11 @@ export const attorneys = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
+    uniqueIndex("attorneys_org_bar_number_idx").on(table.organizationId, table.barNumber),
     index("attorneys_bar_number_idx").on(table.barNumber),
     index("attorneys_lsk_number_idx").on(table.lskNumber),
     index("attorneys_user_id_idx").on(table.userId),
+    index("attorneys_organization_id_idx").on(table.organizationId),
   ]
 );
 
@@ -39,6 +45,9 @@ export const attorneyPracticeAreas = pgTable(
   "attorney_practice_areas",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
     attorneyId: uuid("attorney_id")
       .notNull()
       .references(() => attorneys.id, { onDelete: "cascade" }),
@@ -49,51 +58,79 @@ export const attorneyPracticeAreas = pgTable(
   },
   (table) => [
     unique("attorney_practice_areas_unique").on(table.attorneyId, table.practiceAreaId),
+    index("attorney_practice_areas_organization_id_idx").on(table.organizationId),
   ]
 );
 
-export const attorneyLicenses = pgTable("attorney_licenses", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  attorneyId: uuid("attorney_id")
-    .notNull()
-    .references(() => attorneys.id, { onDelete: "cascade" }),
-  jurisdiction: text("jurisdiction").notNull(),
-  licenseNumber: text("license_number").notNull(),
-  status: licenseStatus("status").notNull().default("active"),
-  issueDate: timestamp("issue_date", { withTimezone: true }),
-  expiryDate: timestamp("expiry_date", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const attorneyLicenses = pgTable(
+  "attorney_licenses",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    attorneyId: uuid("attorney_id")
+      .notNull()
+      .references(() => attorneys.id, { onDelete: "cascade" }),
+    jurisdiction: text("jurisdiction").notNull(),
+    licenseNumber: text("license_number").notNull(),
+    status: licenseStatus("status").notNull().default("active"),
+    issueDate: timestamp("issue_date", { withTimezone: true }),
+    expiryDate: timestamp("expiry_date", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("attorney_licenses_organization_id_idx").on(table.organizationId),
+  ]
+);
 
-export const practisingCertificates = pgTable("practising_certificates", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  attorneyId: uuid("attorney_id")
-    .notNull()
-    .references(() => attorneys.id, { onDelete: "cascade" }),
-  year: text("year").notNull(),
-  certificateNumber: text("certificate_number"),
-  issueDate: timestamp("issue_date", { withTimezone: true }),
-  expiryDate: timestamp("expiry_date", { withTimezone: true }),
-  status: licenseStatus("status").notNull().default("active"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const practisingCertificates = pgTable(
+  "practising_certificates",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    attorneyId: uuid("attorney_id")
+      .notNull()
+      .references(() => attorneys.id, { onDelete: "cascade" }),
+    year: text("year").notNull(),
+    certificateNumber: text("certificate_number"),
+    issueDate: timestamp("issue_date", { withTimezone: true }),
+    expiryDate: timestamp("expiry_date", { withTimezone: true }),
+    status: licenseStatus("status").notNull().default("active"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("practising_certificates_organization_id_idx").on(table.organizationId),
+  ]
+);
 
-export const cpdRecords = pgTable("cpd_records", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  attorneyId: uuid("attorney_id")
-    .notNull()
-    .references(() => attorneys.id, { onDelete: "cascade" }),
-  title: text("title").notNull(),
-  provider: text("provider"),
-  units: numeric("units", { precision: 5, scale: 2 }).notNull(),
-  completionDate: timestamp("completion_date", { withTimezone: true }).notNull(),
-  certificateUrl: text("certificate_url"),
-  isLskProgram: boolean("is_lsk_program").notNull().default(false),
-  year: text("year").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const cpdRecords = pgTable(
+  "cpd_records",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    attorneyId: uuid("attorney_id")
+      .notNull()
+      .references(() => attorneys.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    provider: text("provider"),
+    units: numeric("units", { precision: 5, scale: 2 }).notNull(),
+    completionDate: timestamp("completion_date", { withTimezone: true }).notNull(),
+    certificateUrl: text("certificate_url"),
+    isLskProgram: boolean("is_lsk_program").notNull().default(false),
+    year: text("year").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("cpd_records_organization_id_idx").on(table.organizationId),
+  ]
+);
 
 export const disciplinaryStatus = pgEnum("disciplinary_status", [
   "pending",
@@ -101,42 +138,63 @@ export const disciplinaryStatus = pgEnum("disciplinary_status", [
   "dismissed",
 ]);
 
-export const disciplinaryRecords = pgTable("disciplinary_records", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  attorneyId: uuid("attorney_id")
-    .notNull()
-    .references(() => attorneys.id, { onDelete: "cascade" }),
-  date: timestamp("date", { withTimezone: true }).notNull(),
-  caseReference: text("case_reference").notNull(),
-  status: disciplinaryStatus("status").notNull().default("pending"),
-  outcome: text("outcome"),
-  notes: text("notes"),
-  createdBy: uuid("created_by").references(() => users.id, { onDelete: "restrict" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const disciplinaryRecords = pgTable(
+  "disciplinary_records",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    attorneyId: uuid("attorney_id")
+      .notNull()
+      .references(() => attorneys.id, { onDelete: "cascade" }),
+    date: timestamp("date", { withTimezone: true }).notNull(),
+    caseReference: text("case_reference").notNull(),
+    status: disciplinaryStatus("status").notNull().default("pending"),
+    outcome: text("outcome"),
+    notes: text("notes"),
+    createdBy: uuid("created_by").references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("disciplinary_records_organization_id_idx").on(table.organizationId),
+  ]
+);
 
-export const professionalIndemnity = pgTable("professional_indemnity", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  attorneyId: uuid("attorney_id")
-    .notNull()
-    .references(() => attorneys.id, { onDelete: "cascade" }),
-  insurer: text("insurer").notNull(),
-  policyNumber: text("policy_number").notNull(),
-  coverageAmount: numeric("coverage_amount", { precision: 14, scale: 2 }).notNull(),
-  premium: numeric("premium", { precision: 12, scale: 2 }),
-  startDate: timestamp("start_date", { withTimezone: true }).notNull(),
-  expiryDate: timestamp("expiry_date", { withTimezone: true }).notNull(),
-  status: text("status").notNull().default("active"),
-  notes: text("notes"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const professionalIndemnity = pgTable(
+  "professional_indemnity",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    attorneyId: uuid("attorney_id")
+      .notNull()
+      .references(() => attorneys.id, { onDelete: "cascade" }),
+    insurer: text("insurer").notNull(),
+    policyNumber: text("policy_number").notNull(),
+    coverageAmount: numeric("coverage_amount", { precision: 14, scale: 2 }).notNull(),
+    premium: numeric("premium", { precision: 12, scale: 2 }),
+    startDate: timestamp("start_date", { withTimezone: true }).notNull(),
+    expiryDate: timestamp("expiry_date", { withTimezone: true }).notNull(),
+    status: text("status").notNull().default("active"),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("professional_indemnity_organization_id_idx").on(table.organizationId),
+  ]
+);
 
 export const lskMembership = pgTable(
   "lsk_membership",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
     attorneyId: uuid("attorney_id")
       .notNull()
       .references(() => attorneys.id, { onDelete: "cascade" }),
@@ -151,6 +209,7 @@ export const lskMembership = pgTable(
   },
   (table) => [
     unique("lsk_membership_attorney_year").on(table.attorneyId, table.year),
+    index("lsk_membership_organization_id_idx").on(table.organizationId),
   ]
 );
 

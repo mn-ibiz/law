@@ -1,4 +1,4 @@
-import { requireAuth } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getUserById } from "@/lib/queries/settings";
 import { notFound } from "next/navigation";
 import { ProfileForm } from "@/components/profile/profile-form";
@@ -11,8 +11,8 @@ export const metadata: Metadata = {
 };
 
 export default async function ProfilePage() {
-  const session = await requireAuth();
-  const user = await getUserById(session.user.id);
+  const { session, organizationId } = await requireOrg();
+  const user = await getUserById(organizationId, session.user.id);
   if (!user) notFound();
 
   return (

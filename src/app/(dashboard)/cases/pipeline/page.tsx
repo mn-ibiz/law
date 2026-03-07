@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getCasesByPipelineStage } from "@/lib/queries/cases";
 import { getPracticeAreas } from "@/lib/queries/settings";
 import { CasePipeline } from "@/components/cases/case-pipeline";
@@ -18,12 +18,12 @@ export default async function CasePipelinePage({
 }: {
   searchParams: Promise<{ practiceArea?: string }>;
 }) {
-  await requireAdminOrAttorney();
+  const { organizationId } = await requireOrg();
   const { practiceArea } = await searchParams;
 
   const [stages, allPracticeAreas] = await Promise.all([
-    getCasesByPipelineStage(practiceArea || null),
-    getPracticeAreas(),
+    getCasesByPipelineStage(organizationId, practiceArea || null),
+    getPracticeAreas(organizationId),
   ]);
 
   // Only show practice areas that have pipeline stages configured

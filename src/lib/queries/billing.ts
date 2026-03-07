@@ -13,8 +13,8 @@ interface InvoiceFilters {
   caseId?: string;
 }
 
-export async function getInvoices(filters: InvoiceFilters = {}) {
-  const conditions = [];
+export async function getInvoices(organizationId: string, filters: InvoiceFilters = {}) {
+  const conditions = [eq(invoices.organizationId, organizationId)];
   if (filters.status) conditions.push(eq(invoices.status, filters.status as "draft" | "sent" | "viewed" | "partially_paid" | "paid" | "overdue" | "cancelled" | "written_off"));
   if (filters.clientId) conditions.push(eq(invoices.clientId, filters.clientId));
   if (filters.caseId) conditions.push(eq(invoices.caseId, filters.caseId));
@@ -40,7 +40,7 @@ export async function getInvoices(filters: InvoiceFilters = {}) {
     .limit(500);
 }
 
-export const getInvoiceById = cache(async (id: string) => {
+export const getInvoiceById = cache(async (organizationId: string, id: string) => {
   const result = await db
     .select({
       id: invoices.id,
@@ -75,17 +75,17 @@ export const getInvoiceById = cache(async (id: string) => {
     .innerJoin(clients, eq(invoices.clientId, clients.id))
     .leftJoin(cases, eq(invoices.caseId, cases.id))
     .innerJoin(users, eq(invoices.createdBy, users.id))
-    .where(eq(invoices.id, id))
+    .where(and(eq(invoices.organizationId, organizationId), eq(invoices.id, id)))
     .limit(1);
 
   return result[0] ?? null;
 });
 
-export async function getInvoiceLineItems(invoiceId: string) {
-  return db.select().from(invoiceLineItems).where(eq(invoiceLineItems.invoiceId, invoiceId));
+export async function getInvoiceLineItems(organizationId: string, invoiceId: string) {
+  return db.select().from(invoiceLineItems).where(and(eq(invoiceLineItems.organizationId, organizationId), eq(invoiceLineItems.invoiceId, invoiceId)));
 }
 
-export async function getInvoicePayments(invoiceId: string) {
+export async function getInvoicePayments(organizationId: string, invoiceId: string) {
   return db
     .select({
       id: payments.id,
@@ -98,11 +98,11 @@ export async function getInvoicePayments(invoiceId: string) {
     })
     .from(payments)
     .leftJoin(users, eq(payments.receivedBy, users.id))
-    .where(eq(payments.invoiceId, invoiceId))
+    .where(and(eq(payments.organizationId, organizationId), eq(payments.invoiceId, invoiceId)))
     .orderBy(desc(payments.paymentDate));
 }
 
-export async function getQuotes() {
+export async function getQuotes(organizationId: string) {
   return db
     .select({
       id: quotes.id,
@@ -115,11 +115,12 @@ export async function getQuotes() {
     })
     .from(quotes)
     .innerJoin(clients, eq(quotes.clientId, clients.id))
+    .where(eq(quotes.organizationId, organizationId))
     .orderBy(desc(quotes.createdAt))
     .limit(500);
 }
 
-export async function getInvoiceHistory(invoiceId: string) {
+export async function getInvoiceHistory(organizationId: string, invoiceId: string) {
   return db
     .select({
       id: auditLog.id,
@@ -131,18 +132,18 @@ export async function getInvoiceHistory(invoiceId: string) {
     })
     .from(auditLog)
     .leftJoin(users, eq(auditLog.userId, users.id))
-    .where(and(eq(auditLog.entityType, "invoice"), eq(auditLog.entityId, invoiceId)))
+    .where(and(eq(auditLog.organizationId, organizationId), eq(auditLog.entityType, "invoice"), eq(auditLog.entityId, invoiceId)))
     .orderBy(desc(auditLog.createdAt))
     .limit(50);
 }
 
-export async function generateInvoiceNumber(): Promise<string> {
+export async function generateInvoiceNumber(organizationId: string): Promise<string> {
   const year = new Date().getFullYear();
   const prefix = `INV-${year}-`;
   const [result] = await db
     .select({ maxNum: sql<string>`MAX(${invoices.invoiceNumber})` })
     .from(invoices)
-    .where(sql`${invoices.invoiceNumber} LIKE ${prefix + '%'}`);
+    .where(and(eq(invoices.organizationId, organizationId), sql`${invoices.invoiceNumber} LIKE ${prefix + '%'}`));
 
   const maxNum = result?.maxNum;
   let next = 1;

@@ -4,6 +4,7 @@ import { timeEntries } from "@/lib/db/schema/time-expenses";
 import { sql, eq, and, isNull, inArray } from "drizzle-orm";
 
 export async function getAttorneyPerformanceMetrics(
+  organizationId: string,
   attorneyId: string,
   userId: string
 ) {
@@ -15,6 +16,7 @@ export async function getAttorneyPerformanceMetrics(
       .innerJoin(cases, eq(caseAssignments.caseId, cases.id))
       .where(
         and(
+          eq(cases.organizationId, organizationId),
           eq(caseAssignments.userId, userId),
           isNull(caseAssignments.unassignedAt),
           inArray(cases.status, ["resolved", "closed"])
@@ -26,7 +28,8 @@ export async function getAttorneyPerformanceMetrics(
       SELECT coalesce(avg(extract(epoch from (c.updated_at - c.created_at)) / 86400), 0)::float as avg_days
       FROM case_assignments ca
       INNER JOIN cases c ON ca.case_id = c.id
-      WHERE ca.user_id = ${userId}
+      WHERE c.organization_id = ${organizationId}
+        AND ca.user_id = ${userId}
         AND ca.unassigned_at IS NULL
         AND c.status IN ('resolved', 'closed')
     `),
@@ -39,7 +42,8 @@ export async function getAttorneyPerformanceMetrics(
       FROM case_assignments ca
       INNER JOIN cases c ON ca.case_id = c.id
       INNER JOIN invoices i ON i.case_id = c.id
-      WHERE ca.user_id = ${userId}
+      WHERE c.organization_id = ${organizationId}
+        AND ca.user_id = ${userId}
         AND ca.unassigned_at IS NULL
     `),
 
@@ -51,6 +55,7 @@ export async function getAttorneyPerformanceMetrics(
       .from(timeEntries)
       .where(
         and(
+          eq(timeEntries.organizationId, organizationId),
           eq(timeEntries.userId, userId),
           eq(timeEntries.isBillable, true),
           sql`${timeEntries.date} >= date_trunc('month', now())`
@@ -85,20 +90,21 @@ export async function getAttorneyPerformanceMetrics(
   };
 }
 
-export async function getAttorneyRevenue(userId: string) {
+export async function getAttorneyRevenue(organizationId: string, userId: string) {
   const result = await db.execute<{ revenue: number }>(sql`
     SELECT coalesce(sum(p.amount::numeric), 0)::float as revenue
     FROM case_assignments ca
     INNER JOIN cases c ON ca.case_id = c.id
     INNER JOIN invoices i ON i.case_id = c.id
     INNER JOIN payments p ON p.invoice_id = i.id
-    WHERE ca.user_id = ${userId}
+    WHERE c.organization_id = ${organizationId}
+      AND ca.user_id = ${userId}
       AND ca.unassigned_at IS NULL
   `);
   return (result.rows?.[0]?.revenue ?? 0) as number;
 }
 
-export async function getAttorneyCasesByStatus(userId: string) {
+export async function getAttorneyCasesByStatus(organizationId: string, userId: string) {
   return db
     .select({
       status: cases.status,
@@ -107,7 +113,7 @@ export async function getAttorneyCasesByStatus(userId: string) {
     .from(caseAssignments)
     .innerJoin(cases, eq(caseAssignments.caseId, cases.id))
     .where(
-      and(eq(caseAssignments.userId, userId), isNull(caseAssignments.unassignedAt))
+      and(eq(cases.organizationId, organizationId), eq(caseAssignments.userId, userId), isNull(caseAssignments.unassignedAt))
     )
     .groupBy(cases.status);
 }

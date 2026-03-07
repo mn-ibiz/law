@@ -7,31 +7,33 @@ import { payments } from "@/lib/db/schema/billing";
 import { deadlines } from "@/lib/db/schema/calendar";
 import { sql, eq, and, lte, isNull, desc, ne, gte } from "drizzle-orm";
 
-export async function getMonthlyRevenue() {
+export async function getMonthlyRevenue(organizationId: string) {
   const result = await db.execute<{ month: string; revenue: number }>(sql`
     SELECT
       to_char(date_trunc('month', ${payments.paymentDate}), 'Mon') as month,
       coalesce(sum(${payments.amount}::numeric), 0)::float as revenue
     FROM ${payments}
-    WHERE ${payments.paymentDate} >= date_trunc('month', now()) - interval '11 months'
+    WHERE ${payments.organizationId} = ${organizationId}
+      AND ${payments.paymentDate} >= date_trunc('month', now()) - interval '11 months'
     GROUP BY date_trunc('month', ${payments.paymentDate})
     ORDER BY date_trunc('month', ${payments.paymentDate})
   `);
   return result.rows ?? [];
 }
 
-export async function getCaseStatusDistribution() {
+export async function getCaseStatusDistribution(organizationId: string) {
   const result = await db
     .select({
       status: cases.status,
       count: sql<number>`count(*)::int`,
     })
     .from(cases)
+    .where(eq(cases.organizationId, organizationId))
     .groupBy(cases.status);
   return result;
 }
 
-export async function getRecentCases(limit = 10) {
+export async function getRecentCases(organizationId: string, limit = 10) {
   const result = await db
     .select({
       id: cases.id,
@@ -44,12 +46,13 @@ export async function getRecentCases(limit = 10) {
     })
     .from(cases)
     .innerJoin(clients, eq(cases.clientId, clients.id))
+    .where(eq(cases.organizationId, organizationId))
     .orderBy(desc(cases.createdAt))
     .limit(limit);
   return result;
 }
 
-export async function getUpcomingDeadlines(limit = 10) {
+export async function getUpcomingDeadlines(organizationId: string, limit = 10) {
   const now = new Date();
   const result = await db
     .select({
@@ -64,13 +67,13 @@ export async function getUpcomingDeadlines(limit = 10) {
     .from(deadlines)
     .leftJoin(cases, eq(deadlines.caseId, cases.id))
     .leftJoin(users, eq(deadlines.assignedTo, users.id))
-    .where(and(gte(deadlines.dueDate, now), isNull(deadlines.completedAt)))
+    .where(and(eq(deadlines.organizationId, organizationId), gte(deadlines.dueDate, now), isNull(deadlines.completedAt)))
     .orderBy(deadlines.dueDate)
     .limit(limit);
   return result;
 }
 
-export async function getOverdueInvoices() {
+export async function getOverdueInvoices(organizationId: string) {
   const now = new Date();
   const result = await db
     .select({
@@ -86,6 +89,7 @@ export async function getOverdueInvoices() {
     .innerJoin(clients, eq(invoices.clientId, clients.id))
     .where(
       and(
+        eq(invoices.organizationId, organizationId),
         lte(invoices.dueDate, now),
         ne(invoices.status, "paid"),
         ne(invoices.status, "cancelled")

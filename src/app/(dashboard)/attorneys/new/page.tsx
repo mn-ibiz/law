@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { requireAdmin } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { AttorneyForm } from "@/components/forms/attorney-form";
 import { getUsers } from "@/lib/queries/settings";
 
@@ -9,8 +9,8 @@ export const metadata: Metadata = {
 };
 
 export default async function NewAttorneyPage() {
-  await requireAdmin();
-  const allUsers = await getUsers();
+  const { organizationId } = await requireOrg();
+  const allUsers = await getUsers(organizationId);
   // Only show active users that can be linked to an attorney profile
   const availableUsers = allUsers
     .filter((u) => u.isActive)

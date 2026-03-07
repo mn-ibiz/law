@@ -16,9 +16,11 @@ import {
   getAttorneyRecentTimeEntries,
   getAttorneyTasks,
 } from "@/lib/queries/dashboard-attorney";
+import { requireOrg } from "@/lib/auth/get-session";
 
 async function AttorneyStats({ userId }: { userId: string }) {
-  const stats = await getAttorneyDashboardStats(userId);
+  const { organizationId } = await requireOrg();
+  const stats = await getAttorneyDashboardStats(organizationId, userId);
 
   return (
     <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
@@ -58,16 +60,18 @@ async function AttorneyStats({ userId }: { userId: string }) {
 }
 
 async function AttorneyTimeTracker({ userId }: { userId: string }) {
-  const timeStats = await getAttorneyTimeStats(userId);
+  const { organizationId } = await requireOrg();
+  const timeStats = await getAttorneyTimeStats(organizationId, userId);
   return <TimeTrackerWidget {...timeStats} />;
 }
 
 async function AttorneyWidgets({ userId }: { userId: string }) {
+  const { organizationId } = await requireOrg();
   const [myCases, deadlines, timeEntries, tasks] = await Promise.all([
-    getAttorneyCases(userId),
-    getAttorneyDeadlines(userId),
-    getAttorneyRecentTimeEntries(userId),
-    getAttorneyTasks(userId),
+    getAttorneyCases(organizationId, userId),
+    getAttorneyDeadlines(organizationId, userId),
+    getAttorneyRecentTimeEntries(organizationId, userId),
+    getAttorneyTasks(organizationId, userId),
   ]);
 
   return (

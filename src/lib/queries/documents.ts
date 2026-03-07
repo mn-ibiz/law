@@ -12,14 +12,14 @@ interface DocFilters {
   limit?: number;
 }
 
-export async function getDocuments(filters: DocFilters = {}) {
+export async function getDocuments(organizationId: string, filters: DocFilters = {}) {
   const { search, caseId, category, page = 1, limit = 20 } = filters;
-  const conditions = [];
+  const conditions = [eq(documents.organizationId, organizationId)];
   if (caseId) conditions.push(eq(documents.caseId, caseId));
   if (category) conditions.push(eq(documents.category, category as "pleading" | "correspondence" | "contract" | "evidence" | "court_order" | "filing" | "template" | "other"));
   if (search) {
     const escaped = search.replace(/[%_\\]/g, "\\$&");
-    conditions.push(or(ilike(documents.title, `%${escaped}%`), ilike(documents.fileName, `%${escaped}%`)));
+    conditions.push(or(ilike(documents.title, `%${escaped}%`), ilike(documents.fileName, `%${escaped}%`))!);
   }
 
   const result = await db
@@ -50,11 +50,11 @@ export async function getDocuments(filters: DocFilters = {}) {
   return result;
 }
 
-export async function getDocumentTemplates() {
-  return db.select().from(documentTemplates).orderBy(desc(documentTemplates.createdAt)).limit(200);
+export async function getDocumentTemplates(organizationId: string) {
+  return db.select().from(documentTemplates).where(eq(documentTemplates.organizationId, organizationId)).orderBy(desc(documentTemplates.createdAt)).limit(200);
 }
 
-export async function getDocumentVersions(documentId: string) {
+export async function getDocumentVersions(organizationId: string, documentId: string) {
   return db
     .select({
       id: documentVersions.id,
@@ -67,11 +67,11 @@ export async function getDocumentVersions(documentId: string) {
     })
     .from(documentVersions)
     .innerJoin(users, eq(documentVersions.uploadedBy, users.id))
-    .where(eq(documentVersions.documentId, documentId))
+    .where(and(eq(documentVersions.organizationId, organizationId), eq(documentVersions.documentId, documentId)))
     .orderBy(desc(documentVersions.versionNumber));
 }
 
-export async function getPendingReviewDocuments() {
+export async function getPendingReviewDocuments(organizationId: string) {
   return db
     .select({
       id: documents.id,
@@ -86,6 +86,6 @@ export async function getPendingReviewDocuments() {
     })
     .from(documents)
     .innerJoin(users, eq(documents.uploadedBy, users.id))
-    .where(eq(documents.reviewStatus, "pending_review"))
+    .where(and(eq(documents.organizationId, organizationId), eq(documents.reviewStatus, "pending_review")))
     .orderBy(desc(documents.createdAt));
 }

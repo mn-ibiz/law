@@ -2,20 +2,20 @@
 
 import { db } from "@/lib/db";
 import { disciplinaryRecords } from "@/lib/db/schema/attorneys";
-import { auth } from "@/lib/auth/auth";
+import { getTenantContext } from "@/lib/auth/get-session";
 import { createAuditLog } from "@/lib/utils/audit";
 import {
   createDisciplinaryRecordSchema,
   updateDisciplinaryRecordSchema,
 } from "@/lib/validators/disciplinary";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { safeAction } from "@/lib/utils/safe-action";
 
 export async function addDisciplinaryRecord(attorneyId: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
@@ -27,18 +27,20 @@ export async function addDisciplinaryRecord(attorneyId: string, data: unknown) {
     const result = await db
       .insert(disciplinaryRecords)
       .values({
+        organizationId,
         attorneyId,
         date: new Date(validated.data.date),
         caseReference: validated.data.caseReference,
         status: validated.data.status,
         outcome: validated.data.outcome,
         notes: validated.data.notes,
-        createdBy: session.user.id,
+        createdBy: userId,
       })
       .returning();
 
     await createAuditLog(
-      session.user.id,
+      organizationId,
+      userId,
       "create",
       "disciplinary_record",
       result[0].id,
@@ -52,8 +54,8 @@ export async function addDisciplinaryRecord(attorneyId: string, data: unknown) {
 
 export async function updateDisciplinaryRecord(recordId: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
@@ -72,10 +74,11 @@ export async function updateDisciplinaryRecord(recordId: string, data: unknown) 
     await db
       .update(disciplinaryRecords)
       .set(updateData)
-      .where(eq(disciplinaryRecords.id, recordId));
+      .where(and(eq(disciplinaryRecords.id, recordId), eq(disciplinaryRecords.organizationId, organizationId)));
 
     await createAuditLog(
-      session.user.id,
+      organizationId,
+      userId,
       "update",
       "disciplinary_record",
       recordId,

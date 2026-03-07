@@ -1,13 +1,17 @@
-import { pgTable, uuid, text, boolean, timestamp, numeric, index } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, boolean, timestamp, numeric, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { expenseCategory, requisitionStatus } from "./enums";
 import { users } from "./auth";
 import { cases } from "./cases";
+import { organizations } from "./organizations";
 
 export const timeEntries = pgTable(
   "time_entries",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "restrict" }),
@@ -29,6 +33,7 @@ export const timeEntries = pgTable(
     index("time_entries_date_idx").on(table.date),
     index("time_entries_user_id_idx").on(table.userId),
     index("time_entries_case_id_idx").on(table.caseId),
+    index("time_entries_organization_id_idx").on(table.organizationId),
   ]
 );
 
@@ -36,6 +41,9 @@ export const expenses = pgTable(
   "expenses",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "restrict" }),
@@ -54,25 +62,36 @@ export const expenses = pgTable(
   (table) => [
     index("expenses_user_id_idx").on(table.userId),
     index("expenses_date_idx").on(table.date),
+    index("expenses_organization_id_idx").on(table.organizationId),
   ]
 );
 
-export const requisitions = pgTable("requisitions", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  requisitionNumber: text("requisition_number").notNull().unique(),
-  requestedBy: uuid("requested_by")
-    .notNull()
-    .references(() => users.id, { onDelete: "restrict" }),
-  approvedBy: uuid("approved_by").references(() => users.id, { onDelete: "set null" }),
-  caseId: uuid("case_id").references(() => cases.id, { onDelete: "set null" }),
-  description: text("description").notNull(),
-  amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
-  status: requisitionStatus("status").notNull().default("draft"),
-  approvedAt: timestamp("approved_at", { withTimezone: true }),
-  notes: text("notes"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const requisitions = pgTable(
+  "requisitions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    requisitionNumber: text("requisition_number").notNull(),
+    requestedBy: uuid("requested_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    approvedBy: uuid("approved_by").references(() => users.id, { onDelete: "set null" }),
+    caseId: uuid("case_id").references(() => cases.id, { onDelete: "set null" }),
+    description: text("description").notNull(),
+    amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+    status: requisitionStatus("status").notNull().default("draft"),
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("requisitions_org_requisition_number_idx").on(table.organizationId, table.requisitionNumber),
+    index("requisitions_organization_id_idx").on(table.organizationId),
+  ]
+);
 
 export const timeEntriesRelations = relations(timeEntries, ({ one }) => ({
   user: one(users, { fields: [timeEntries.userId], references: [users.id] }),

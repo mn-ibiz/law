@@ -3,19 +3,17 @@
 import { db } from "@/lib/db";
 import { trustAccounts, trustTransactions } from "@/lib/db/schema/billing";
 import { pettyCashTransactions } from "@/lib/db/schema/financial";
-import { auth } from "@/lib/auth/auth";
+import { getTenantContext } from "@/lib/auth/get-session";
 import { createAuditLog } from "@/lib/utils/audit";
 import { createTrustTransactionSchema, createTrustAccountSchema, createPettyCashSchema, updateTrustAccountSchema } from "@/lib/validators/trust";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { safeAction } from "@/lib/utils/safe-action";
 
 export async function createTrustTransaction(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
-      return { error: "Unauthorized: admin access required" };
-    }
+    const { organizationId, userId, role } = await getTenantContext();
+    if (role !== "admin") return { error: "Unauthorized: admin access required" };
 
     const validated = createTrustTransactionSchema.safeParse(data);
     if (!validated.success) {
@@ -26,12 +24,13 @@ export async function createTrustTransaction(data: unknown) {
     const result = await db
       .insert(trustTransactions)
       .values({
+        organizationId,
         accountId: validated.data.accountId,
         type: validated.data.type,
         amount: String(validated.data.amount),
         description: validated.data.description,
         reference: validated.data.referenceNumber,
-        performedBy: session.user.id,
+        performedBy: userId,
       })
       .returning();
 
@@ -40,7 +39,7 @@ export async function createTrustTransaction(data: unknown) {
       await db
         .update(trustAccounts)
         .set({ balance: sql`${trustAccounts.balance}::numeric + ${String(validated.data.amount)}::numeric`, updatedAt: new Date() })
-        .where(eq(trustAccounts.id, validated.data.accountId));
+        .where(and(eq(trustAccounts.id, validated.data.accountId), eq(trustAccounts.organizationId, organizationId)));
     } else {
       // Atomic conditional withdrawal — prevents TOCTOU race condition
       const withdrawResult = await db
@@ -49,7 +48,7 @@ export async function createTrustTransaction(data: unknown) {
           balance: sql`${trustAccounts.balance}::numeric - ${String(validated.data.amount)}::numeric`,
           updatedAt: new Date(),
         })
-        .where(sql`${trustAccounts.id} = ${validated.data.accountId} AND ${trustAccounts.balance}::numeric >= ${String(validated.data.amount)}::numeric`)
+        .where(sql`${trustAccounts.id} = ${validated.data.accountId} AND ${trustAccounts.organizationId} = ${organizationId} AND ${trustAccounts.balance}::numeric >= ${String(validated.data.amount)}::numeric`)
         .returning({ id: trustAccounts.id });
 
       if (withdrawResult.length === 0) {
@@ -58,7 +57,8 @@ export async function createTrustTransaction(data: unknown) {
     }
 
     await createAuditLog(
-      session.user.id,
+      organizationId,
+      userId,
       "create",
       "trust_transaction",
       result[0].id,
@@ -72,10 +72,8 @@ export async function createTrustTransaction(data: unknown) {
 
 export async function createTrustAccount(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
-      return { error: "Unauthorized: admin access required" };
-    }
+    const { organizationId, userId, role } = await getTenantContext();
+    if (role !== "admin") return { error: "Unauthorized: admin access required" };
 
     const validated = createTrustAccountSchema.safeParse(data);
     if (!validated.success) {
@@ -88,7 +86,7 @@ export async function createTrustAccount(data: unknown) {
     const [maxResult] = await db
       .select({ maxNum: sql<string>`MAX(${trustAccounts.accountNumber})` })
       .from(trustAccounts)
-      .where(sql`${trustAccounts.accountNumber} LIKE ${prefix + "%"}`);
+      .where(sql`${trustAccounts.organizationId} = ${organizationId} AND ${trustAccounts.accountNumber} LIKE ${prefix + "%"}`);
 
     let next = 1;
     if (maxResult?.maxNum) {
@@ -101,6 +99,7 @@ export async function createTrustAccount(data: unknown) {
     const result = await db
       .insert(trustAccounts)
       .values({
+        organizationId,
         accountName: validated.data.accountName,
         accountNumber,
         type: validated.data.accountType,
@@ -112,7 +111,8 @@ export async function createTrustAccount(data: unknown) {
       .returning();
 
     await createAuditLog(
-      session.user.id,
+      organizationId,
+      userId,
       "create",
       "trust_account",
       result[0].id,
@@ -126,10 +126,8 @@ export async function createTrustAccount(data: unknown) {
 
 export async function updateTrustAccount(id: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
-      return { error: "Unauthorized: admin access required" };
-    }
+    const { organizationId, userId, role } = await getTenantContext();
+    if (role !== "admin") return { error: "Unauthorized: admin access required" };
 
     if (!id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
       return { error: "Invalid ID" };
@@ -149,7 +147,7 @@ export async function updateTrustAccount(id: string, data: unknown) {
         branchName: validated.data.branchName || null,
         updatedAt: new Date(),
       })
-      .where(eq(trustAccounts.id, id))
+      .where(and(eq(trustAccounts.id, id), eq(trustAccounts.organizationId, organizationId)))
       .returning({ id: trustAccounts.id });
 
     if (result.length === 0) {
@@ -157,7 +155,8 @@ export async function updateTrustAccount(id: string, data: unknown) {
     }
 
     await createAuditLog(
-      session.user.id,
+      organizationId,
+      userId,
       "update",
       "trust_account",
       id,
@@ -172,10 +171,7 @@ export async function updateTrustAccount(id: string, data: unknown) {
 
 export async function createPettyCashTransaction(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
-      return { error: "Unauthorized" };
-    }
+    const { organizationId, userId } = await getTenantContext();
 
     const validated = createPettyCashSchema.safeParse(data);
     if (!validated.success) {
@@ -185,17 +181,19 @@ export async function createPettyCashTransaction(data: unknown) {
     const result = await db
       .insert(pettyCashTransactions)
       .values({
+        organizationId,
         type: validated.data.type,
         amount: String(validated.data.amount),
         description: validated.data.description,
         category: validated.data.category,
         receiptUrl: validated.data.receiptUrl || null,
-        performedBy: session.user.id,
+        performedBy: userId,
       })
       .returning();
 
     await createAuditLog(
-      session.user.id,
+      organizationId,
+      userId,
       "create",
       "petty_cash_transaction",
       result[0].id,

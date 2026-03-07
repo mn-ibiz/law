@@ -11,8 +11,8 @@ interface TimeFilters {
   endDate?: Date;
 }
 
-export async function getTimeEntries(filters: TimeFilters = {}) {
-  const conditions = [];
+export async function getTimeEntries(organizationId: string, filters: TimeFilters = {}) {
+  const conditions = [eq(timeEntries.organizationId, organizationId)];
   if (filters.userId) conditions.push(eq(timeEntries.userId, filters.userId));
   if (filters.caseId) conditions.push(eq(timeEntries.caseId, filters.caseId));
   if (filters.startDate) conditions.push(gte(timeEntries.date, filters.startDate));
@@ -41,14 +41,14 @@ export async function getTimeEntries(filters: TimeFilters = {}) {
     .orderBy(desc(timeEntries.date));
 }
 
-export async function getWeeklyTimesheet(userId: string, weekStart: Date) {
+export async function getWeeklyTimesheet(organizationId: string, userId: string, weekStart: Date) {
   const weekEnd = new Date(weekStart);
   weekEnd.setDate(weekEnd.getDate() + 7);
 
-  return getTimeEntries({ userId, startDate: weekStart, endDate: weekEnd });
+  return getTimeEntries(organizationId, { userId, startDate: weekStart, endDate: weekEnd });
 }
 
-export async function getWeeklyTimeEntries(userId: string, weekStart: string, weekEnd: string) {
+export async function getWeeklyTimeEntries(organizationId: string, userId: string, weekStart: string, weekEnd: string) {
   return db
     .select({
       id: timeEntries.id,
@@ -61,6 +61,7 @@ export async function getWeeklyTimeEntries(userId: string, weekStart: string, we
     .from(timeEntries)
     .where(
       and(
+        eq(timeEntries.organizationId, organizationId),
         eq(timeEntries.userId, userId),
         sql`${timeEntries.date} >= ${weekStart}::timestamptz`,
         sql`${timeEntries.date} <= ${weekEnd}::timestamptz`
@@ -69,8 +70,8 @@ export async function getWeeklyTimeEntries(userId: string, weekStart: string, we
     .orderBy(timeEntries.date);
 }
 
-export async function getExpenses(filters: { userId?: string; caseId?: string } = {}) {
-  const conditions = [];
+export async function getExpenses(organizationId: string, filters: { userId?: string; caseId?: string } = {}) {
+  const conditions = [eq(expenses.organizationId, organizationId)];
   if (filters.userId) conditions.push(eq(expenses.userId, filters.userId));
   if (filters.caseId) conditions.push(eq(expenses.caseId, filters.caseId));
 
@@ -96,7 +97,7 @@ export async function getExpenses(filters: { userId?: string; caseId?: string } 
     .orderBy(desc(expenses.date));
 }
 
-export async function getRequisitions() {
+export async function getRequisitions(organizationId: string) {
   return db
     .select({
       id: requisitions.id,
@@ -113,5 +114,6 @@ export async function getRequisitions() {
     .from(requisitions)
     .innerJoin(users, eq(requisitions.requestedBy, users.id))
     .leftJoin(cases, eq(requisitions.caseId, cases.id))
+    .where(eq(requisitions.organizationId, organizationId))
     .orderBy(desc(requisitions.createdAt));
 }

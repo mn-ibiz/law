@@ -3,11 +3,15 @@ import { relations } from "drizzle-orm";
 import { messageStatus, notificationType } from "./enums";
 import { users } from "./auth";
 import { cases } from "./cases";
+import { organizations } from "./organizations";
 
 export const messages = pgTable(
   "messages",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
     senderId: uuid("sender_id")
       .notNull()
       .references(() => users.id, { onDelete: "restrict" }),
@@ -27,6 +31,7 @@ export const messages = pgTable(
   (table) => [
     index("messages_sender_id_idx").on(table.senderId),
     index("messages_recipient_id_idx").on(table.recipientId),
+    index("messages_organization_id_idx").on(table.organizationId),
   ]
 );
 
@@ -34,6 +39,9 @@ export const notifications = pgTable(
   "notifications",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
@@ -48,22 +56,32 @@ export const notifications = pgTable(
   (table) => [
     index("notifications_user_id_idx").on(table.userId),
     index("notifications_is_read_idx").on(table.isRead),
+    index("notifications_organization_id_idx").on(table.organizationId),
   ]
 );
 
-export const smsLog = pgTable("sms_log", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  recipientPhone: text("recipient_phone").notNull(),
-  message: text("message").notNull(),
-  status: text("status").notNull().default("pending"),
-  provider: text("provider"),
-  providerMessageId: text("provider_message_id"),
-  sentAt: timestamp("sent_at", { withTimezone: true }),
-  deliveredAt: timestamp("delivered_at", { withTimezone: true }),
-  userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
-  caseId: uuid("case_id").references(() => cases.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const smsLog = pgTable(
+  "sms_log",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    recipientPhone: text("recipient_phone").notNull(),
+    message: text("message").notNull(),
+    status: text("status").notNull().default("pending"),
+    provider: text("provider"),
+    providerMessageId: text("provider_message_id"),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    deliveredAt: timestamp("delivered_at", { withTimezone: true }),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+    caseId: uuid("case_id").references(() => cases.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("sms_log_organization_id_idx").on(table.organizationId),
+  ]
+);
 
 export const messagesRelations = relations(messages, ({ one }) => ({
   sender: one(users, { fields: [messages.senderId], references: [users.id] }),

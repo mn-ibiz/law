@@ -1,7 +1,7 @@
 "use server";
 
 import { sendEmail } from "@/lib/email/send-email";
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { getTenantContext } from "@/lib/auth/get-session";
 
 interface EmailReportInput {
   to: string;
@@ -12,7 +12,10 @@ interface EmailReportInput {
 }
 
 export async function emailReport(input: EmailReportInput) {
-  await requireAdminOrAttorney();
+  const { role } = await getTenantContext();
+  if (!["admin", "attorney"].includes(role)) {
+    return { success: false, error: "Unauthorized" };
+  }
 
   const { to, subject, reportTitle, pdfBase64, fileName } = input;
 

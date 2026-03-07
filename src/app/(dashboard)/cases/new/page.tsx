@@ -1,4 +1,4 @@
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getClients } from "@/lib/queries/clients";
 import { CaseForm } from "@/components/forms/case-form";
 import type { Metadata } from "next";
@@ -9,8 +9,8 @@ export const metadata: Metadata = {
 };
 
 export default async function NewCasePage() {
-  await requireAdminOrAttorney();
-  const { data: clientList } = await getClients({ limit: 200 });
+  const { organizationId } = await requireOrg();
+  const { data: clientList } = await getClients(organizationId, { limit: 200 });
 
   const clients = clientList.map((c) => ({
     id: c.id,

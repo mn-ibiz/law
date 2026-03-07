@@ -4,6 +4,7 @@ import type { InferSelectModel } from "drizzle-orm";
 import { filingStatus, serviceMethod } from "./enums";
 import { users } from "./auth";
 import { cases } from "./cases";
+import { organizations } from "./organizations";
 
 export const courts = pgTable("courts", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -33,6 +34,9 @@ export const courtFilings = pgTable(
   "court_filings",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
     caseId: uuid("case_id")
       .notNull()
       .references(() => cases.id, { onDelete: "cascade" }),
@@ -52,28 +56,43 @@ export const courtFilings = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
-  (table) => [index("court_filings_case_id_idx").on(table.caseId)]
+  (table) => [
+    index("court_filings_case_id_idx").on(table.caseId),
+    index("court_filings_organization_id_idx").on(table.organizationId),
+  ]
 );
 
-export const serviceOfDocuments = pgTable("service_of_documents", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  caseId: uuid("case_id")
-    .notNull()
-    .references(() => cases.id, { onDelete: "cascade" }),
-  documentTitle: text("document_title").notNull(),
-  servedTo: text("served_to").notNull(),
-  method: serviceMethod("method").notNull(),
-  servedBy: uuid("served_by").references(() => users.id, { onDelete: "set null" }),
-  serviceDate: timestamp("service_date", { withTimezone: true }),
-  proofOfServiceUrl: text("proof_of_service_url"),
-  notes: text("notes"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const serviceOfDocuments = pgTable(
+  "service_of_documents",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    caseId: uuid("case_id")
+      .notNull()
+      .references(() => cases.id, { onDelete: "cascade" }),
+    documentTitle: text("document_title").notNull(),
+    servedTo: text("served_to").notNull(),
+    method: serviceMethod("method").notNull(),
+    servedBy: uuid("served_by").references(() => users.id, { onDelete: "set null" }),
+    serviceDate: timestamp("service_date", { withTimezone: true }),
+    proofOfServiceUrl: text("proof_of_service_url"),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("service_of_documents_organization_id_idx").on(table.organizationId),
+  ]
+);
 
 export const causeLists = pgTable(
   "cause_lists",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
     courtId: uuid("court_id").references(() => courts.id, { onDelete: "set null" }),
     date: timestamp("date", { withTimezone: true }).notNull(),
     judge: text("judge"),
@@ -83,39 +102,60 @@ export const causeLists = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
-  (table) => [index("cause_lists_date_idx").on(table.date)]
+  (table) => [
+    index("cause_lists_date_idx").on(table.date),
+    index("cause_lists_organization_id_idx").on(table.organizationId),
+  ]
 );
 
-export const causeListEntries = pgTable("cause_list_entries", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  causeListId: uuid("cause_list_id")
-    .notNull()
-    .references(() => causeLists.id, { onDelete: "cascade" }),
-  caseId: uuid("case_id").references(() => cases.id, { onDelete: "set null" }),
-  caseNumber: text("case_number"),
-  parties: text("parties"),
-  matter: text("matter"),
-  time: text("time"),
-  order: integer("order").notNull().default(0),
-  outcome: text("outcome"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const causeListEntries = pgTable(
+  "cause_list_entries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    causeListId: uuid("cause_list_id")
+      .notNull()
+      .references(() => causeLists.id, { onDelete: "cascade" }),
+    caseId: uuid("case_id").references(() => cases.id, { onDelete: "set null" }),
+    caseNumber: text("case_number"),
+    parties: text("parties"),
+    matter: text("matter"),
+    time: text("time"),
+    order: integer("order").notNull().default(0),
+    outcome: text("outcome"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("cause_list_entries_organization_id_idx").on(table.organizationId),
+  ]
+);
 
-export const courtRules = pgTable("court_rules", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  courtId: uuid("court_id").references(() => courts.id, { onDelete: "cascade" }),
-  name: text("name").notNull(),
-  description: text("description"),
-  triggerEvent: text("trigger_event").notNull().default("hearing_date"),
-  offsetDays: integer("offset_days").notNull(),
-  deadlineTitle: text("deadline_title").notNull(),
-  priority: text("priority").notNull().default("high"),
-  isStatutory: boolean("is_statutory").notNull().default(true),
-  isActive: boolean("is_active").notNull().default(true),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const courtRules = pgTable(
+  "court_rules",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    courtId: uuid("court_id").references(() => courts.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    triggerEvent: text("trigger_event").notNull().default("hearing_date"),
+    offsetDays: integer("offset_days").notNull(),
+    deadlineTitle: text("deadline_title").notNull(),
+    priority: text("priority").notNull().default("high"),
+    isStatutory: boolean("is_statutory").notNull().default(true),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("court_rules_organization_id_idx").on(table.organizationId),
+  ]
+);
 
 export type CourtRule = InferSelectModel<typeof courtRules>;
 

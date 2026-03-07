@@ -5,12 +5,14 @@ import { ShieldCheck, AlertTriangle, Award, GraduationCap, ChevronRight } from "
 import { getExpiringCertificates, getNonCompliantCpdAttorneys } from "@/lib/queries/compliance";
 import { PersonAvatar } from "@/components/shared/person-avatar";
 import { formatRelativeDate } from "@/lib/utils/format";
+import { requireOrg } from "@/lib/auth/get-session";
 import Link from "next/link";
 
 export async function ComplianceWidget() {
+  const { organizationId } = await requireOrg();
   const [expiring, nonCompliant] = await Promise.all([
-    getExpiringCertificates(60),
-    getNonCompliantCpdAttorneys(),
+    getExpiringCertificates(organizationId, 60),
+    getNonCompliantCpdAttorneys(organizationId),
   ]);
 
   const hasIssues = expiring.length > 0 || nonCompliant.length > 0;

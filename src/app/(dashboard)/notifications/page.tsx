@@ -1,4 +1,4 @@
-import { requireAuth } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getNotifications } from "@/lib/queries/notifications";
 import { NotificationList } from "@/components/notifications/notification-list";
 import type { Metadata } from "next";
@@ -9,8 +9,8 @@ export const metadata: Metadata = {
 };
 
 export default async function NotificationsPage() {
-  const session = await requireAuth();
-  const notificationList = await getNotifications(session.user.id as string);
+  const { session, organizationId } = await requireOrg();
+  const notificationList = await getNotifications(organizationId, session.user.id as string);
 
   return (
     <div className="space-y-6">

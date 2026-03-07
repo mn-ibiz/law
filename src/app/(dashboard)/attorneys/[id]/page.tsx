@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getAttorneyById, getAttorneyIndemnity, getAttorneyLskMemberships } from "@/lib/queries/attorneys";
 import { getActiveDisciplinaryProceedings } from "@/lib/queries/disciplinary";
 import { AttorneyDetailTabs } from "@/components/attorneys/attorney-detail-tabs";
@@ -11,8 +11,9 @@ import { formatEnum } from "@/lib/utils/format-enum";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { organizationId } = await requireOrg();
   const { id } = await params;
-  const attorney = await getAttorneyById(id);
+  const attorney = await getAttorneyById(organizationId, id);
   return {
     title: attorney ? attorney.name : "Attorney Details",
     description: attorney ? `Profile for ${attorney.name}` : "Attorney profile details",
@@ -20,15 +21,15 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 }
 
 export default async function AttorneyDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireAdminOrAttorney();
+  const { organizationId } = await requireOrg();
   const { id } = await params;
-  const attorney = await getAttorneyById(id);
+  const attorney = await getAttorneyById(organizationId, id);
   if (!attorney) notFound();
 
   const [activeDisciplinary, indemnityRecords, lskMembershipRecords] = await Promise.all([
-    getActiveDisciplinaryProceedings(id),
-    getAttorneyIndemnity(id),
-    getAttorneyLskMemberships(id),
+    getActiveDisciplinaryProceedings(organizationId, id),
+    getAttorneyIndemnity(organizationId, id),
+    getAttorneyLskMemberships(organizationId, id),
   ]);
 
   return (

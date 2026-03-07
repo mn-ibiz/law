@@ -1,4 +1,4 @@
-import { requireAuth } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getCases } from "@/lib/queries/cases";
 import { EventForm } from "@/components/forms/event-form";
 import type { Metadata } from "next";
@@ -9,8 +9,8 @@ export const metadata: Metadata = {
 };
 
 export default async function NewEventPage() {
-  await requireAuth();
-  const caseResult = await getCases({ limit: 200 });
+  const { organizationId } = await requireOrg();
+  const caseResult = await getCases(organizationId, { limit: 200 });
 
   const cases = caseResult.data.map((c) => ({
     id: c.id,

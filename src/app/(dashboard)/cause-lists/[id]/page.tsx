@@ -1,4 +1,4 @@
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getCauseLists, getCauseListEntries } from "@/lib/queries/courts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,17 +28,17 @@ export default async function CauseListDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireAdminOrAttorney();
+  const { organizationId } = await requireOrg();
   const { id } = await params;
 
-  const allCauseLists = await getCauseLists();
+  const allCauseLists = await getCauseLists(organizationId);
   const causeList = allCauseLists.find((cl) => cl.id === id);
 
   if (!causeList) {
     notFound();
   }
 
-  const entries = await getCauseListEntries(id);
+  const entries = await getCauseListEntries(organizationId, id);
 
   return (
     <div className="space-y-6">

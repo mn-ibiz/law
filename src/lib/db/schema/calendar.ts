@@ -3,11 +3,15 @@ import { relations } from "drizzle-orm";
 import { eventType, taskStatus, deadlinePriority, bringUpStatus } from "./enums";
 import { users } from "./auth";
 import { cases } from "./cases";
+import { organizations } from "./organizations";
 
 export const calendarEvents = pgTable(
   "calendar_events",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
     description: text("description"),
     type: eventType("type").notNull().default("meeting"),
@@ -28,6 +32,7 @@ export const calendarEvents = pgTable(
   (table) => [
     index("calendar_events_start_time_idx").on(table.startTime),
     index("calendar_events_created_by_idx").on(table.createdBy),
+    index("calendar_events_organization_id_idx").on(table.organizationId),
   ]
 );
 
@@ -35,6 +40,9 @@ export const eventAttendees = pgTable(
   "event_attendees",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
     eventId: uuid("event_id")
       .notNull()
       .references(() => calendarEvents.id, { onDelete: "cascade" }),
@@ -46,6 +54,7 @@ export const eventAttendees = pgTable(
   },
   (table) => [
     unique("event_attendees_event_user_unique").on(table.eventId, table.userId),
+    index("event_attendees_organization_id_idx").on(table.organizationId),
   ]
 );
 
@@ -53,6 +62,9 @@ export const deadlines = pgTable(
   "deadlines",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
     description: text("description"),
     caseId: uuid("case_id").references(() => cases.id, { onDelete: "cascade" }),
@@ -67,6 +79,7 @@ export const deadlines = pgTable(
   (table) => [
     index("deadlines_due_date_idx").on(table.dueDate),
     index("deadlines_case_id_idx").on(table.caseId),
+    index("deadlines_organization_id_idx").on(table.organizationId),
   ]
 );
 
@@ -74,6 +87,9 @@ export const tasks = pgTable(
   "tasks",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
     description: text("description"),
     caseId: uuid("case_id").references(() => cases.id, { onDelete: "set null" }),
@@ -91,6 +107,7 @@ export const tasks = pgTable(
   (table) => [
     index("tasks_assigned_to_idx").on(table.assignedTo),
     index("tasks_status_idx").on(table.status),
+    index("tasks_organization_id_idx").on(table.organizationId),
   ]
 );
 
@@ -98,6 +115,9 @@ export const bringUps = pgTable(
   "bring_ups",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
     caseId: uuid("case_id")
       .notNull()
       .references(() => cases.id, { onDelete: "cascade" }),
@@ -117,6 +137,7 @@ export const bringUps = pgTable(
     index("bring_ups_date_idx").on(table.date),
     index("bring_ups_status_idx").on(table.status),
     index("bring_ups_case_id_idx").on(table.caseId),
+    index("bring_ups_organization_id_idx").on(table.organizationId),
   ]
 );
 

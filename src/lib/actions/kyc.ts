@@ -2,10 +2,10 @@
 
 import { db } from "@/lib/db";
 import { kycDocuments, clientRiskAssessments } from "@/lib/db/schema/clients";
-import { auth } from "@/lib/auth/auth";
+import { getTenantContext } from "@/lib/auth/get-session";
 import { createAuditLog } from "@/lib/utils/audit";
 import { riskAssessmentSchema, verifyKycDocumentSchema } from "@/lib/validators/kyc";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { safeAction } from "@/lib/utils/safe-action";
@@ -18,8 +18,8 @@ export async function verifyKycDocument(docId: string, status: "verified" | "rej
     const validated = verifyKycDocumentSchema.safeParse({ status, notes });
     if (!validated.success) return { error: validated.error.issues[0].message };
 
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -27,14 +27,15 @@ export async function verifyKycDocument(docId: string, status: "verified" | "rej
       .update(kycDocuments)
       .set({
         status: validated.data.status,
-        verifiedBy: session.user.id,
+        verifiedBy: userId,
         verifiedAt: new Date(),
         updatedAt: new Date(),
       })
-      .where(eq(kycDocuments.id, docIdParsed.data));
+      .where(and(eq(kycDocuments.id, docIdParsed.data), eq(kycDocuments.organizationId, organizationId)));
 
     await createAuditLog(
-      session.user.id,
+      organizationId,
+      userId,
       "update",
       "kyc_document",
       docIdParsed.data,
@@ -48,8 +49,8 @@ export async function verifyKycDocument(docId: string, status: "verified" | "rej
 
 export async function addRiskAssessment(clientId: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -61,16 +62,18 @@ export async function addRiskAssessment(clientId: string, data: unknown) {
     const result = await db
       .insert(clientRiskAssessments)
       .values({
+        organizationId,
         clientId,
         riskLevel: validated.data.riskLevel,
         factors: validated.data.factors,
         notes: validated.data.notes,
-        assessedBy: session.user.id,
+        assessedBy: userId,
       })
       .returning();
 
     await createAuditLog(
-      session.user.id,
+      organizationId,
+      userId,
       "create",
       "risk_assessment",
       result[0].id,

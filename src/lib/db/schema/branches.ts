@@ -1,21 +1,31 @@
-import { pgTable, uuid, text, boolean, timestamp, unique } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, boolean, timestamp, unique, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { users } from "./auth";
+import { organizations } from "./organizations";
 
-export const branches = pgTable("branches", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  name: text("name").notNull(),
-  address: text("address"),
-  city: text("city"),
-  county: text("county"),
-  phone: text("phone"),
-  email: text("email"),
-  isMain: boolean("is_main").notNull().default(false),
-  isActive: boolean("is_active").notNull().default(true),
-  settings: text("settings"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const branches = pgTable(
+  "branches",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    address: text("address"),
+    city: text("city"),
+    county: text("county"),
+    phone: text("phone"),
+    email: text("email"),
+    isMain: boolean("is_main").notNull().default(false),
+    isActive: boolean("is_active").notNull().default(true),
+    settings: text("settings"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("branches_organization_id_idx").on(table.organizationId),
+  ]
+);
 
 export const branchUsers = pgTable(
   "branch_users",
@@ -36,6 +46,10 @@ export const branchUsers = pgTable(
 );
 
 export const usersRelations = relations(users, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [users.organizationId],
+    references: [organizations.id],
+  }),
   branch: one(branches, {
     fields: [users.branchId],
     references: [branches.id],

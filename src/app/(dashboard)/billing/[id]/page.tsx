@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import {
   getInvoiceById,
   getInvoiceLineItems,
@@ -97,8 +97,9 @@ export async function generateMetadata({
 }: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
+  const { organizationId } = await requireOrg();
   const { id } = await params;
-  const invoice = await getInvoiceById(id);
+  const invoice = await getInvoiceById(organizationId, id);
   return {
     title: invoice ? `Invoice ${invoice.invoiceNumber}` : "Invoice Details",
     description: invoice
@@ -112,16 +113,16 @@ export default async function InvoiceDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireAdminOrAttorney();
+  const { organizationId } = await requireOrg();
   const { id } = await params;
-  const invoice = await getInvoiceById(id);
+  const invoice = await getInvoiceById(organizationId, id);
   if (!invoice) notFound();
 
   const [lineItems, paymentList, history, branding] = await Promise.all([
-    getInvoiceLineItems(id),
-    getInvoicePayments(id),
-    getInvoiceHistory(id),
-    getFirmBranding(),
+    getInvoiceLineItems(organizationId, id),
+    getInvoicePayments(organizationId, id),
+    getInvoiceHistory(organizationId, id),
+    getFirmBranding(organizationId),
   ]);
 
   const balanceDue =

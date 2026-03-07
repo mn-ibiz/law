@@ -14,10 +14,10 @@ interface AttorneyFilters {
   limit?: number;
 }
 
-export async function getAttorneys(filters: AttorneyFilters = {}) {
+export async function getAttorneys(organizationId: string, filters: AttorneyFilters = {}) {
   const { search, status, department, title, page = 1, limit = 20 } = filters;
 
-  const conditions = [];
+  const conditions = [eq(attorneys.organizationId, organizationId)];
   if (status === "active") conditions.push(eq(attorneys.isActive, true));
   if (status === "inactive") conditions.push(eq(attorneys.isActive, false));
   if (department) conditions.push(eq(attorneys.department, department));
@@ -30,7 +30,7 @@ export async function getAttorneys(filters: AttorneyFilters = {}) {
         ilike(users.name, `%${escaped}%`),
         ilike(attorneys.barNumber, `%${escaped}%`),
         ilike(attorneys.lskNumber, `%${escaped}%`)
-      )
+      )!
     );
   }
 
@@ -70,7 +70,7 @@ export async function getAttorneys(filters: AttorneyFilters = {}) {
   };
 }
 
-export const getAttorneyById = cache(async (id: string) => {
+export const getAttorneyById = cache(async (organizationId: string, id: string) => {
   const result = await db
     .select({
       id: attorneys.id,
@@ -95,21 +95,21 @@ export const getAttorneyById = cache(async (id: string) => {
     })
     .from(attorneys)
     .innerJoin(users, eq(attorneys.userId, users.id))
-    .where(eq(attorneys.id, id))
+    .where(and(eq(attorneys.organizationId, organizationId), eq(attorneys.id, id)))
     .limit(1);
 
   return result[0] ?? null;
 });
 
-export async function getAttorneyLicenses(attorneyId: string) {
+export async function getAttorneyLicenses(organizationId: string, attorneyId: string) {
   return db
     .select()
     .from(attorneyLicenses)
-    .where(eq(attorneyLicenses.attorneyId, attorneyId))
+    .where(and(eq(attorneyLicenses.organizationId, organizationId), eq(attorneyLicenses.attorneyId, attorneyId)))
     .orderBy(desc(attorneyLicenses.issueDate));
 }
 
-export async function getAttorneyPracticeAreas(attorneyId: string) {
+export async function getAttorneyPracticeAreas(organizationId: string, attorneyId: string) {
   return db
     .select({
       id: attorneyPracticeAreas.id,
@@ -118,31 +118,31 @@ export async function getAttorneyPracticeAreas(attorneyId: string) {
     })
     .from(attorneyPracticeAreas)
     .innerJoin(practiceAreas, eq(attorneyPracticeAreas.practiceAreaId, practiceAreas.id))
-    .where(eq(attorneyPracticeAreas.attorneyId, attorneyId));
+    .where(and(eq(attorneyPracticeAreas.organizationId, organizationId), eq(attorneyPracticeAreas.attorneyId, attorneyId)));
 }
 
-export async function getAvailableUsers() {
+export async function getAvailableUsers(organizationId: string) {
   // Users with attorney role that don't already have an attorney profile
   const result = await db
     .select({ id: users.id, name: users.name, email: users.email })
     .from(users)
     .leftJoin(attorneys, eq(users.id, attorneys.userId))
-    .where(and(eq(users.role, "attorney"), sql`${attorneys.id} IS NULL`));
+    .where(and(eq(users.organizationId, organizationId), eq(users.role, "attorney"), sql`${attorneys.id} IS NULL`));
   return result;
 }
 
-export async function getAttorneyIndemnity(attorneyId: string) {
+export async function getAttorneyIndemnity(organizationId: string, attorneyId: string) {
   return db
     .select()
     .from(professionalIndemnity)
-    .where(eq(professionalIndemnity.attorneyId, attorneyId))
+    .where(and(eq(professionalIndemnity.organizationId, organizationId), eq(professionalIndemnity.attorneyId, attorneyId)))
     .orderBy(desc(professionalIndemnity.expiryDate));
 }
 
-export async function getAttorneyLskMemberships(attorneyId: string) {
+export async function getAttorneyLskMemberships(organizationId: string, attorneyId: string) {
   return db
     .select()
     .from(lskMembership)
-    .where(eq(lskMembership.attorneyId, attorneyId))
+    .where(and(eq(lskMembership.organizationId, organizationId), eq(lskMembership.attorneyId, attorneyId)))
     .orderBy(desc(lskMembership.year));
 }

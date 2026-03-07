@@ -3,16 +3,29 @@
 import { signIn } from "@/lib/auth/auth";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { organizations } from "@/lib/db/schema/organizations";
+import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { loginSchema, registerSchema, forgotPasswordSchema } from "@/lib/validators/auth";
 import { AuthError } from "next-auth";
+import { headers } from "next/headers";
 import { rateLimit } from "@/lib/utils/rate-limit";
 import { safeAction } from "@/lib/utils/safe-action";
 import { sendEmail } from "@/lib/email/send-email";
 import { passwordResetEmailHtml } from "@/lib/email/templates/password-reset";
 import { env } from "@/lib/env";
+
+function extractSlugFromHost(host: string): string {
+  const hostname = host.split(":")[0];
+  if (hostname === "localhost" || hostname === "127.0.0.1") return "";
+  const parts = hostname.split(".");
+  if (parts.length >= 3) {
+    const subdomain = parts[0];
+    if (subdomain !== "www" && subdomain !== "app") return subdomain;
+  }
+  return "";
+}
 
 export async function loginAction(formData: {
   email: string;
@@ -31,10 +44,16 @@ export async function loginAction(formData: {
       return { error: "Too many login attempts. Please try again later." };
     }
 
+    // Resolve organization from subdomain for scoped login
+    const headersList = await headers();
+    const host = headersList.get("host") ?? "";
+    const slug = extractSlugFromHost(host);
+
     try {
       await signIn("credentials", {
         email: validated.data.email,
         password: validated.data.password,
+        organizationSlug: slug || undefined,
         redirect: false,
       });
 
@@ -80,6 +99,22 @@ export async function registerAction(formData: {
       return { error: "Too many attempts. Please try again later." };
     }
 
+    // Resolve organization from subdomain
+    const headersList = await headers();
+    const host = headersList.get("host") ?? "";
+    const slug = extractSlugFromHost(host);
+    if (!slug) {
+      return { error: "Unable to determine organization. Please access from your organization's domain." };
+    }
+    const [org] = await db
+      .select({ id: organizations.id })
+      .from(organizations)
+      .where(eq(organizations.slug, slug))
+      .limit(1);
+    if (!org) {
+      return { error: "Organization not found." };
+    }
+
     // Hash password
     const hashedPassword = await bcrypt.hash(validated.data.password, 10);
 
@@ -90,6 +125,7 @@ export async function registerAction(formData: {
         email: validated.data.email,
         password: hashedPassword,
         phone: validated.data.phone || null,
+        organizationId: org.id,
         role: "client",
         isActive: false,
       });
@@ -124,11 +160,34 @@ export async function forgotPasswordAction(formData: { email: string }) {
       };
     }
 
-    const [user] = await db
-      .select({ id: users.id, name: users.name })
-      .from(users)
-      .where(eq(users.email, validated.data.email))
-      .limit(1);
+    // Scope password reset to organization from subdomain
+    const headersList2 = await headers();
+    const host2 = headersList2.get("host") ?? "";
+    const resetSlug = extractSlugFromHost(host2);
+
+    let resetOrg: { id: string } | undefined;
+    if (resetSlug) {
+      const [org] = await db
+        .select({ id: organizations.id })
+        .from(organizations)
+        .where(eq(organizations.slug, resetSlug))
+        .limit(1);
+      resetOrg = org;
+    }
+
+    const userResults = resetOrg
+      ? await db
+          .select({ id: users.id, name: users.name })
+          .from(users)
+          .where(sql`${users.email} = ${validated.data.email} AND ${users.organizationId} = ${resetOrg.id} AND ${users.deletedAt} IS NULL`)
+          .limit(1)
+      : await db
+          .select({ id: users.id, name: users.name })
+          .from(users)
+          .where(eq(users.email, validated.data.email))
+          .limit(1);
+
+    const [user] = userResults;
 
     if (user) {
       // Generate a cryptographically strong reset token

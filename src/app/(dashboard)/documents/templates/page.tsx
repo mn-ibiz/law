@@ -1,4 +1,4 @@
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getDocumentTemplates } from "@/lib/queries/documents";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,8 +11,8 @@ export const metadata: Metadata = {
 };
 
 export default async function DocumentTemplatesPage() {
-  await requireAdminOrAttorney();
-  const templates = await getDocumentTemplates();
+  const { organizationId } = await requireOrg();
+  const templates = await getDocumentTemplates(organizationId);
 
   return (
     <div className="space-y-6">

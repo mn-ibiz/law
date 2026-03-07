@@ -20,7 +20,7 @@ export async function getCourtStations(courtId: string) {
     .orderBy(asc(courtStations.name));
 }
 
-export async function getCourtFilings(caseId: string) {
+export async function getCourtFilings(organizationId: string, caseId: string) {
   return db
     .select({
       id: courtFilings.id,
@@ -36,11 +36,11 @@ export async function getCourtFilings(caseId: string) {
     .from(courtFilings)
     .leftJoin(courts, eq(courtFilings.courtId, courts.id))
     .innerJoin(users, eq(courtFilings.filedBy, users.id))
-    .where(eq(courtFilings.caseId, caseId))
+    .where(and(eq(courtFilings.organizationId, organizationId), eq(courtFilings.caseId, caseId)))
     .orderBy(desc(courtFilings.createdAt));
 }
 
-export async function getAllCourtFilings() {
+export async function getAllCourtFilings(organizationId: string) {
   return db
     .select({
       id: courtFilings.id,
@@ -61,11 +61,12 @@ export async function getAllCourtFilings() {
     .leftJoin(courts, eq(courtFilings.courtId, courts.id))
     .innerJoin(cases, eq(courtFilings.caseId, cases.id))
     .innerJoin(users, eq(courtFilings.filedBy, users.id))
+    .where(eq(courtFilings.organizationId, organizationId))
     .orderBy(desc(courtFilings.createdAt))
     .limit(500);
 }
 
-export async function getAllServiceOfDocuments() {
+export async function getAllServiceOfDocuments(organizationId: string) {
   return db
     .select({
       id: serviceOfDocuments.id,
@@ -83,6 +84,7 @@ export async function getAllServiceOfDocuments() {
     .from(serviceOfDocuments)
     .innerJoin(cases, eq(serviceOfDocuments.caseId, cases.id))
     .leftJoin(users, eq(serviceOfDocuments.servedBy, users.id))
+    .where(eq(serviceOfDocuments.organizationId, organizationId))
     .orderBy(desc(serviceOfDocuments.createdAt))
     .limit(500);
 }
@@ -98,8 +100,8 @@ export async function getCourtHierarchy(includeInactive = false) {
   }));
 }
 
-export async function getCauseLists(filters: { courtId?: string; dateFrom?: string; dateTo?: string } = {}) {
-  const conditions = [];
+export async function getCauseLists(organizationId: string, filters: { courtId?: string; dateFrom?: string; dateTo?: string } = {}) {
+  const conditions = [eq(causeLists.organizationId, organizationId)];
   if (filters.courtId) conditions.push(eq(causeLists.courtId, filters.courtId));
   if (filters.dateFrom) conditions.push(sql`${causeLists.date} >= ${filters.dateFrom}`);
   if (filters.dateTo) conditions.push(sql`${causeLists.date} <= ${filters.dateTo}`);
@@ -121,15 +123,15 @@ export async function getCauseLists(filters: { courtId?: string; dateFrom?: stri
     .orderBy(desc(causeLists.date));
 }
 
-export async function getCauseListEntries(causeListId: string) {
+export async function getCauseListEntries(organizationId: string, causeListId: string) {
   return db
     .select()
     .from(causeListEntries)
-    .where(eq(causeListEntries.causeListId, causeListId))
+    .where(and(eq(causeListEntries.organizationId, organizationId), eq(causeListEntries.causeListId, causeListId)))
     .orderBy(causeListEntries.order);
 }
 
-export async function getUpcomingCauseLists(limit = 5) {
+export async function getUpcomingCauseLists(organizationId: string, limit = 5) {
   return db
     .select({
       id: causeLists.id,
@@ -140,13 +142,13 @@ export async function getUpcomingCauseLists(limit = 5) {
     })
     .from(causeLists)
     .leftJoin(courts, eq(causeLists.courtId, courts.id))
-    .where(sql`${causeLists.date} >= NOW()`)
+    .where(and(eq(causeLists.organizationId, organizationId), sql`${causeLists.date} >= NOW()`))
     .orderBy(causeLists.date)
     .limit(limit);
 }
 
-export async function getCourtRules(courtId?: string) {
-  const conditions = [];
+export async function getCourtRules(organizationId: string, courtId?: string) {
+  const conditions = [eq(courtRules.organizationId, organizationId)];
   if (courtId) conditions.push(eq(courtRules.courtId, courtId));
 
   return db

@@ -1,4 +1,4 @@
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getCases } from "@/lib/queries/cases";
 import { TimeEntryForm } from "@/components/forms/time-entry-form";
 import { ExpenseForm } from "@/components/forms/expense-form";
@@ -15,9 +15,9 @@ export default async function NewTimeExpensePage({
 }: {
   searchParams: Promise<{ type?: string }>;
 }) {
-  await requireAdminOrAttorney();
+  const { organizationId } = await requireOrg();
   const params = await searchParams;
-  const { data: caseList } = await getCases({});
+  const { data: caseList } = await getCases(organizationId, {});
 
   const cases = caseList.map((c) => ({
     id: c.id,

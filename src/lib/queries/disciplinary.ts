@@ -3,20 +3,21 @@ import { disciplinaryRecords, attorneys } from "@/lib/db/schema/attorneys";
 import { users } from "@/lib/db/schema/auth";
 import { eq, and, sql, desc } from "drizzle-orm";
 
-export async function getAttorneyDisciplinaryRecords(attorneyId: string) {
+export async function getAttorneyDisciplinaryRecords(organizationId: string, attorneyId: string) {
   return db
     .select()
     .from(disciplinaryRecords)
-    .where(eq(disciplinaryRecords.attorneyId, attorneyId))
+    .where(and(eq(disciplinaryRecords.organizationId, organizationId), eq(disciplinaryRecords.attorneyId, attorneyId)))
     .orderBy(desc(disciplinaryRecords.date));
 }
 
-export async function getActiveDisciplinaryProceedings(attorneyId: string) {
+export async function getActiveDisciplinaryProceedings(organizationId: string, attorneyId: string) {
   const result = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(disciplinaryRecords)
     .where(
       and(
+        eq(disciplinaryRecords.organizationId, organizationId),
         eq(disciplinaryRecords.attorneyId, attorneyId),
         eq(disciplinaryRecords.status, "pending")
       )
@@ -24,7 +25,7 @@ export async function getActiveDisciplinaryProceedings(attorneyId: string) {
   return result[0]?.count ?? 0;
 }
 
-export async function getAllActiveDisciplinaryProceedings() {
+export async function getAllActiveDisciplinaryProceedings(organizationId: string) {
   return db
     .select({
       id: disciplinaryRecords.id,
@@ -36,6 +37,6 @@ export async function getAllActiveDisciplinaryProceedings() {
     .from(disciplinaryRecords)
     .innerJoin(attorneys, eq(disciplinaryRecords.attorneyId, attorneys.id))
     .innerJoin(users, eq(attorneys.userId, users.id))
-    .where(eq(disciplinaryRecords.status, "pending"))
+    .where(and(eq(disciplinaryRecords.organizationId, organizationId), eq(disciplinaryRecords.status, "pending")))
     .orderBy(desc(disciplinaryRecords.date));
 }

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getAttorneys } from "@/lib/queries/attorneys";
 import { AttorneyDataTable } from "@/components/attorneys/attorney-data-table";
 import { Button } from "@/components/ui/button";
@@ -13,8 +13,8 @@ export const metadata: Metadata = {
 };
 
 export default async function AttorneysPage() {
-  const session = await requireAdminOrAttorney();
-  const { data } = await getAttorneys({ limit: 500 });
+  const { organizationId, session } = await requireOrg();
+  const { data } = await getAttorneys(organizationId, { limit: 500 });
   const isAdmin = session.user?.role === "admin";
 
   const activeCount = data.filter((a) => a.isActive).length;

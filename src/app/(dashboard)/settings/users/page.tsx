@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getUsers } from "@/lib/queries/settings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RoleBadge, ActiveBadge } from "@/components/shared/status-badges";
@@ -15,8 +15,8 @@ export const metadata: Metadata = {
 };
 
 export default async function UsersPage() {
-  const session = await requireAdmin();
-  const userList = await getUsers();
+  const { session, organizationId } = await requireOrg();
+  const userList = await getUsers(organizationId);
   const currentUserId = session.user.id;
 
   return (

@@ -5,6 +5,7 @@ import { getATClient } from "./africastalking";
 import { env } from "@/lib/env";
 
 interface SendSMSOptions {
+  organizationId: string;
   to: string;
   message: string;
   userId?: string;
@@ -12,6 +13,7 @@ interface SendSMSOptions {
 }
 
 export async function sendSMS({
+  organizationId,
   to,
   message,
   userId,
@@ -21,6 +23,7 @@ export async function sendSMS({
   const [logEntry] = await db
     .insert(smsLog)
     .values({
+      organizationId,
       recipientPhone: to,
       message,
       status: "pending",

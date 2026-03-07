@@ -53,7 +53,7 @@ function withDefaultDateRange(range: DateRange): {
 /**
  * 1. Revenue Report — Monthly revenue (payments received), grouped by month.
  */
-export async function getRevenueReport(range: DateRange = {}) {
+export async function getRevenueReport(organizationId: string, range: DateRange = {}) {
   const { startDate, endDate } = withDefaultDateRange(range);
 
   return db
@@ -65,6 +65,7 @@ export async function getRevenueReport(range: DateRange = {}) {
     .from(payments)
     .where(
       and(
+        eq(payments.organizationId, organizationId),
         gte(payments.paymentDate, startDate),
         lte(payments.paymentDate, endDate),
       ),
@@ -77,7 +78,7 @@ export async function getRevenueReport(range: DateRange = {}) {
  * 2. Accounts Receivable Aging Report — AR aging buckets with invoice details.
  *    Considers invoices that are not fully paid and not cancelled/written_off/draft.
  */
-export async function getAccountsReceivableAgingReport() {
+export async function getAccountsReceivableAgingReport(organizationId: string) {
   return db
     .select({
       invoiceId: invoices.id,
@@ -102,6 +103,7 @@ export async function getAccountsReceivableAgingReport() {
     .innerJoin(clients, eq(invoices.clientId, clients.id))
     .where(
       and(
+        eq(invoices.organizationId, organizationId),
         sql`${invoices.totalAmount}::numeric > ${invoices.paidAmount}::numeric`,
         sql`${invoices.status} not in ('draft', 'cancelled', 'written_off')`,
       ),
@@ -112,7 +114,7 @@ export async function getAccountsReceivableAgingReport() {
 /**
  * 3. Trust Account Summary Report — All trust accounts with balances, type, client.
  */
-export async function getTrustAccountSummaryReport() {
+export async function getTrustAccountSummaryReport(organizationId: string) {
   return db
     .select({
       accountId: trustAccounts.id,
@@ -127,13 +129,14 @@ export async function getTrustAccountSummaryReport() {
     })
     .from(trustAccounts)
     .leftJoin(clients, eq(trustAccounts.clientId, clients.id))
+    .where(eq(trustAccounts.organizationId, organizationId))
     .orderBy(sql`${trustAccounts.accountName} asc`);
 }
 
 /**
  * 4. Trust Transaction Report — Deposits/withdrawals by account with details.
  */
-export async function getTrustTransactionReport(range: DateRange = {}) {
+export async function getTrustTransactionReport(organizationId: string, range: DateRange = {}) {
   const { startDate, endDate } = withDefaultDateRange(range);
 
   return db
@@ -156,6 +159,7 @@ export async function getTrustTransactionReport(range: DateRange = {}) {
     .leftJoin(cases, eq(trustTransactions.caseId, cases.id))
     .where(
       and(
+        eq(trustTransactions.organizationId, organizationId),
         gte(trustTransactions.createdAt, startDate),
         lte(trustTransactions.createdAt, endDate),
       ),
@@ -166,7 +170,7 @@ export async function getTrustTransactionReport(range: DateRange = {}) {
 /**
  * 5. WIP (Work In Progress) Report — Unbilled time entries and expenses by case.
  */
-export async function getWIPReport() {
+export async function getWIPReport(organizationId: string) {
   const unbilledTime = db
     .select({
       caseId: timeEntries.caseId,
@@ -183,6 +187,7 @@ export async function getWIPReport() {
     .innerJoin(clients, eq(cases.clientId, clients.id))
     .where(
       and(
+        eq(timeEntries.organizationId, organizationId),
         eq(timeEntries.isBilled, false),
         isNotNull(timeEntries.caseId),
       ),
@@ -212,6 +217,7 @@ export async function getWIPReport() {
     .innerJoin(clients, eq(cases.clientId, clients.id))
     .where(
       and(
+        eq(expenses.organizationId, organizationId),
         eq(expenses.isBilled, false),
         isNotNull(expenses.caseId),
       ),
@@ -286,7 +292,7 @@ export async function getWIPReport() {
 /**
  * 6. Collection Report — Total billed vs collected by month with collection rate.
  */
-export async function getCollectionReport(range: DateRange = {}) {
+export async function getCollectionReport(organizationId: string, range: DateRange = {}) {
   const { startDate, endDate } = withDefaultDateRange(range);
 
   const billedByMonth = db
@@ -297,6 +303,7 @@ export async function getCollectionReport(range: DateRange = {}) {
     .from(invoices)
     .where(
       and(
+        eq(invoices.organizationId, organizationId),
         gte(invoices.createdAt, startDate),
         lte(invoices.createdAt, endDate),
         sql`${invoices.status} not in ('draft', 'cancelled')`,
@@ -312,6 +319,7 @@ export async function getCollectionReport(range: DateRange = {}) {
     .from(payments)
     .where(
       and(
+        eq(payments.organizationId, organizationId),
         gte(payments.paymentDate, startDate),
         lte(payments.paymentDate, endDate),
       ),
@@ -352,7 +360,7 @@ export async function getCollectionReport(range: DateRange = {}) {
 /**
  * 7. Expense Summary Report — Expenses grouped by category with totals.
  */
-export async function getExpenseSummaryReport(range: DateRange = {}) {
+export async function getExpenseSummaryReport(organizationId: string, range: DateRange = {}) {
   const { startDate, endDate } = withDefaultDateRange(range);
 
   return db
@@ -366,6 +374,7 @@ export async function getExpenseSummaryReport(range: DateRange = {}) {
     .from(expenses)
     .where(
       and(
+        eq(expenses.organizationId, organizationId),
         gte(expenses.date, startDate),
         lte(expenses.date, endDate),
       ),
@@ -381,7 +390,7 @@ export async function getExpenseSummaryReport(range: DateRange = {}) {
 /**
  * 8. Caseload Report — Cases grouped by status with count.
  */
-export async function getCaseloadReport(range: DateRange = {}) {
+export async function getCaseloadReport(organizationId: string, range: DateRange = {}) {
   const { startDate, endDate } = withDefaultDateRange(range);
 
   return db
@@ -392,6 +401,7 @@ export async function getCaseloadReport(range: DateRange = {}) {
     .from(cases)
     .where(
       and(
+        eq(cases.organizationId, organizationId),
         gte(cases.createdAt, startDate),
         lte(cases.createdAt, endDate),
       ),
@@ -402,7 +412,7 @@ export async function getCaseloadReport(range: DateRange = {}) {
 /**
  * 9. Case Type Report — Cases grouped by caseType with count.
  */
-export async function getCaseTypeReport(range: DateRange = {}) {
+export async function getCaseTypeReport(organizationId: string, range: DateRange = {}) {
   const { startDate, endDate } = withDefaultDateRange(range);
 
   return db
@@ -415,6 +425,7 @@ export async function getCaseTypeReport(range: DateRange = {}) {
     .from(cases)
     .where(
       and(
+        eq(cases.organizationId, organizationId),
         gte(cases.createdAt, startDate),
         lte(cases.createdAt, endDate),
       ),
@@ -427,7 +438,7 @@ export async function getCaseTypeReport(range: DateRange = {}) {
  * 10. Attorney Productivity Report — Per attorney: hours, billable hours,
  *     utilization rate, and total amount billed.
  */
-export async function getAttorneyProductivityReport(range: DateRange = {}) {
+export async function getAttorneyProductivityReport(organizationId: string, range: DateRange = {}) {
   const { startDate, endDate } = withDefaultDateRange(range);
 
   return db
@@ -461,7 +472,7 @@ export async function getAttorneyProductivityReport(range: DateRange = {}) {
         lte(timeEntries.date, endDate),
       ),
     )
-    .where(eq(attorneys.isActive, true))
+    .where(and(eq(attorneys.organizationId, organizationId), eq(attorneys.isActive, true)))
     .groupBy(attorneys.id, users.name, attorneys.barNumber, attorneys.department)
     .orderBy(sql`coalesce(sum(${timeEntries.hours}::numeric), 0) desc`);
 }
@@ -470,7 +481,7 @@ export async function getAttorneyProductivityReport(range: DateRange = {}) {
  * 11. Matter Profitability Report — Per case: invoiced, paid, time cost,
  *     expenses, and profit margin.
  */
-export async function getMatterProfitabilityReport(range: DateRange = {}) {
+export async function getMatterProfitabilityReport(organizationId: string, range: DateRange = {}) {
   const { startDate, endDate } = withDefaultDateRange(range);
 
   // Get invoiced/paid per case
@@ -483,6 +494,7 @@ export async function getMatterProfitabilityReport(range: DateRange = {}) {
     .from(invoices)
     .where(
       and(
+        eq(invoices.organizationId, organizationId),
         isNotNull(invoices.caseId),
         gte(invoices.createdAt, startDate),
         lte(invoices.createdAt, endDate),
@@ -502,6 +514,7 @@ export async function getMatterProfitabilityReport(range: DateRange = {}) {
     .from(timeEntries)
     .where(
       and(
+        eq(timeEntries.organizationId, organizationId),
         isNotNull(timeEntries.caseId),
         gte(timeEntries.date, startDate),
         lte(timeEntries.date, endDate),
@@ -519,6 +532,7 @@ export async function getMatterProfitabilityReport(range: DateRange = {}) {
     .from(expenses)
     .where(
       and(
+        eq(expenses.organizationId, organizationId),
         isNotNull(expenses.caseId),
         gte(expenses.date, startDate),
         lte(expenses.date, endDate),
@@ -559,6 +573,7 @@ export async function getMatterProfitabilityReport(range: DateRange = {}) {
     .leftJoin(expenseData, eq(cases.id, expenseData.caseId))
     .where(
       and(
+        eq(cases.organizationId, organizationId),
         gte(cases.createdAt, startDate),
         lte(cases.createdAt, endDate),
       ),
@@ -571,7 +586,7 @@ export async function getMatterProfitabilityReport(range: DateRange = {}) {
 /**
  * 12. Client Report — Client distribution by status and type.
  */
-export async function getClientReport(range: DateRange = {}) {
+export async function getClientReport(organizationId: string, range: DateRange = {}) {
   const { startDate, endDate } = withDefaultDateRange(range);
 
   return db
@@ -583,6 +598,7 @@ export async function getClientReport(range: DateRange = {}) {
     .from(clients)
     .where(
       and(
+        eq(clients.organizationId, organizationId),
         gte(clients.createdAt, startDate),
         lte(clients.createdAt, endDate),
       ),
@@ -593,7 +609,7 @@ export async function getClientReport(range: DateRange = {}) {
 /**
  * 13. Billing Report — Invoice status breakdown with totals.
  */
-export async function getBillingReport(range: DateRange = {}) {
+export async function getBillingReport(organizationId: string, range: DateRange = {}) {
   const { startDate, endDate } = withDefaultDateRange(range);
 
   return db
@@ -606,6 +622,7 @@ export async function getBillingReport(range: DateRange = {}) {
     .from(invoices)
     .where(
       and(
+        eq(invoices.organizationId, organizationId),
         gte(invoices.createdAt, startDate),
         lte(invoices.createdAt, endDate),
       ),
@@ -616,7 +633,7 @@ export async function getBillingReport(range: DateRange = {}) {
 /**
  * 14. Productivity Report — Monthly hours breakdown (total vs billable).
  */
-export async function getProductivityReport(range: DateRange = {}) {
+export async function getProductivityReport(organizationId: string, range: DateRange = {}) {
   const { startDate, endDate } = withDefaultDateRange(range);
 
   return db
@@ -628,6 +645,7 @@ export async function getProductivityReport(range: DateRange = {}) {
     .from(timeEntries)
     .where(
       and(
+        eq(timeEntries.organizationId, organizationId),
         gte(timeEntries.date, startDate),
         lte(timeEntries.date, endDate),
       ),
@@ -644,7 +662,7 @@ export async function getProductivityReport(range: DateRange = {}) {
  * 15. Deadline Compliance Report — Deadlines: total, completed on time,
  *     overdue, and breakdown by priority.
  */
-export async function getDeadlineComplianceReport(range: DateRange = {}) {
+export async function getDeadlineComplianceReport(organizationId: string, range: DateRange = {}) {
   const { startDate, endDate } = withDefaultDateRange(range);
 
   const byPriority = db
@@ -670,6 +688,7 @@ export async function getDeadlineComplianceReport(range: DateRange = {}) {
     .from(deadlines)
     .where(
       and(
+        eq(deadlines.organizationId, organizationId),
         gte(deadlines.dueDate, startDate),
         lte(deadlines.dueDate, endDate),
       ),
@@ -698,6 +717,7 @@ export async function getDeadlineComplianceReport(range: DateRange = {}) {
     .from(deadlines)
     .where(
       and(
+        eq(deadlines.organizationId, organizationId),
         gte(deadlines.dueDate, startDate),
         lte(deadlines.dueDate, endDate),
       ),
@@ -726,7 +746,7 @@ export async function getDeadlineComplianceReport(range: DateRange = {}) {
  * 16. PEP (Politically Exposed Persons) Report — All PEP-flagged clients
  *     with their active case count.
  */
-export async function getPEPReport() {
+export async function getPEPReport(organizationId: string) {
   return db
     .select({
       clientId: clients.id,
@@ -742,7 +762,7 @@ export async function getPEPReport() {
     })
     .from(clients)
     .leftJoin(cases, eq(cases.clientId, clients.id))
-    .where(eq(clients.isPep, true))
+    .where(and(eq(clients.organizationId, organizationId), eq(clients.isPep, true)))
     .groupBy(
       clients.id,
       clients.companyName,

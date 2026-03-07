@@ -4,7 +4,7 @@ import { timeEntries } from "@/lib/db/schema/time-expenses";
 import { sql, and, gte, lte, ne, eq } from "drizzle-orm";
 
 /** Utilization: billable hours / available hours (assuming 8h/day, 22 days/month) */
-export async function getUtilizationRate(startDate: Date, endDate: Date) {
+export async function getUtilizationRate(organizationId: string, startDate: Date, endDate: Date) {
   const result = await db
     .select({
       totalBillableHours: sql<number>`coalesce(sum(case when ${timeEntries.isBillable} then ${timeEntries.hours}::numeric else 0 end), 0)::float`,
@@ -12,7 +12,7 @@ export async function getUtilizationRate(startDate: Date, endDate: Date) {
       attorneyCount: sql<number>`count(distinct ${timeEntries.userId})::int`,
     })
     .from(timeEntries)
-    .where(and(gte(timeEntries.date, startDate), lte(timeEntries.date, endDate)));
+    .where(and(eq(timeEntries.organizationId, organizationId), gte(timeEntries.date, startDate), lte(timeEntries.date, endDate)));
 
   const { totalBillableHours, totalHours, attorneyCount } = result[0] ?? {
     totalBillableHours: 0,
@@ -34,20 +34,20 @@ export async function getUtilizationRate(startDate: Date, endDate: Date) {
 }
 
 /** Realization: total invoiced / total billable time value */
-export async function getRealizationRate(startDate: Date, endDate: Date) {
+export async function getRealizationRate(organizationId: string, startDate: Date, endDate: Date) {
   const [timeResult, invoiceResult] = await Promise.all([
     db
       .select({
         totalValue: sql<number>`coalesce(sum(case when ${timeEntries.isBillable} then ${timeEntries.amount}::numeric else 0 end), 0)::float`,
       })
       .from(timeEntries)
-      .where(and(gte(timeEntries.date, startDate), lte(timeEntries.date, endDate))),
+      .where(and(eq(timeEntries.organizationId, organizationId), gte(timeEntries.date, startDate), lte(timeEntries.date, endDate))),
     db
       .select({
         totalInvoiced: sql<number>`coalesce(sum(${invoices.totalAmount}::numeric), 0)::float`,
       })
       .from(invoices)
-      .where(and(gte(invoices.createdAt, startDate), lte(invoices.createdAt, endDate))),
+      .where(and(eq(invoices.organizationId, organizationId), gte(invoices.createdAt, startDate), lte(invoices.createdAt, endDate))),
   ]);
 
   const totalValue = timeResult[0]?.totalValue ?? 0;
@@ -61,7 +61,7 @@ export async function getRealizationRate(startDate: Date, endDate: Date) {
 }
 
 /** Collection: total collected / total invoiced */
-export async function getCollectionRate(startDate: Date, endDate: Date) {
+export async function getCollectionRate(organizationId: string, startDate: Date, endDate: Date) {
   const [invoiceResult, paymentResult] = await Promise.all([
     db
       .select({
@@ -70,6 +70,7 @@ export async function getCollectionRate(startDate: Date, endDate: Date) {
       .from(invoices)
       .where(
         and(
+          eq(invoices.organizationId, organizationId),
           gte(invoices.createdAt, startDate),
           lte(invoices.createdAt, endDate),
           ne(invoices.status, "cancelled")
@@ -80,7 +81,7 @@ export async function getCollectionRate(startDate: Date, endDate: Date) {
         totalCollected: sql<number>`coalesce(sum(${payments.amount}::numeric), 0)::float`,
       })
       .from(payments)
-      .where(and(gte(payments.paymentDate, startDate), lte(payments.paymentDate, endDate))),
+      .where(and(eq(payments.organizationId, organizationId), gte(payments.paymentDate, startDate), lte(payments.paymentDate, endDate))),
   ]);
 
   const totalInvoiced = invoiceResult[0]?.totalInvoiced ?? 0;
@@ -94,7 +95,7 @@ export async function getCollectionRate(startDate: Date, endDate: Date) {
 }
 
 /** AR Aging: outstanding invoices grouped by age buckets */
-export async function getARAgingBuckets() {
+export async function getARAgingBuckets(organizationId: string) {
   const result = await db
     .select({
       bucket: sql<string>`CASE
@@ -110,6 +111,7 @@ export async function getARAgingBuckets() {
     .from(invoices)
     .where(
       and(
+        eq(invoices.organizationId, organizationId),
         ne(invoices.status, "paid"),
         ne(invoices.status, "cancelled"),
         ne(invoices.status, "draft")
@@ -135,7 +137,7 @@ export async function getARAgingBuckets() {
 }
 
 /** Attorney time tracked today/this week */
-export async function getAttorneyTimeStats(userId: string) {
+export async function getAttorneyTimeStats(organizationId: string, userId: string) {
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const dayOfWeek = now.getDay();
@@ -151,21 +153,21 @@ export async function getAttorneyTimeStats(userId: string) {
         billable: sql<number>`coalesce(sum(case when ${timeEntries.isBillable} then ${timeEntries.hours}::numeric else 0 end), 0)::float`,
       })
       .from(timeEntries)
-      .where(and(eq(timeEntries.userId, userId), gte(timeEntries.date, todayStart))),
+      .where(and(eq(timeEntries.organizationId, organizationId), eq(timeEntries.userId, userId), gte(timeEntries.date, todayStart))),
     db
       .select({
         hours: sql<number>`coalesce(sum(${timeEntries.hours}::numeric), 0)::float`,
         billable: sql<number>`coalesce(sum(case when ${timeEntries.isBillable} then ${timeEntries.hours}::numeric else 0 end), 0)::float`,
       })
       .from(timeEntries)
-      .where(and(eq(timeEntries.userId, userId), gte(timeEntries.date, weekStart))),
+      .where(and(eq(timeEntries.organizationId, organizationId), eq(timeEntries.userId, userId), gte(timeEntries.date, weekStart))),
     db
       .select({
         hours: sql<number>`coalesce(sum(${timeEntries.hours}::numeric), 0)::float`,
         billable: sql<number>`coalesce(sum(case when ${timeEntries.isBillable} then ${timeEntries.hours}::numeric else 0 end), 0)::float`,
       })
       .from(timeEntries)
-      .where(and(eq(timeEntries.userId, userId), gte(timeEntries.date, monthStart))),
+      .where(and(eq(timeEntries.organizationId, organizationId), eq(timeEntries.userId, userId), gte(timeEntries.date, monthStart))),
   ]);
 
   return {

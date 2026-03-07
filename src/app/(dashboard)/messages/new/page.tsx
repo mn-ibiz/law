@@ -1,4 +1,4 @@
-import { requireAuth } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getUsers } from "@/lib/queries/settings";
 import { getCases } from "@/lib/queries/cases";
 import { MessageForm } from "@/components/forms/message-form";
@@ -10,10 +10,10 @@ export const metadata: Metadata = {
 };
 
 export default async function NewMessagePage() {
-  await requireAuth();
+  const { organizationId } = await requireOrg();
   const [userList, caseResult] = await Promise.all([
-    getUsers(),
-    getCases({ limit: 200 }),
+    getUsers(organizationId),
+    getCases(organizationId, { limit: 200 }),
   ]);
 
   const users = userList.map((u) => ({

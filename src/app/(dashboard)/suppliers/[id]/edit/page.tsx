@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { requireAdmin } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getSupplierById } from "@/lib/queries/suppliers";
 import { SupplierForm } from "@/components/suppliers/supplier-form";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { organizationId } = await requireOrg();
   const { id } = await params;
-  const supplier = await getSupplierById(id);
+  const supplier = await getSupplierById(organizationId, id);
   return {
     title: supplier ? `Edit ${supplier.name}` : "Edit Supplier",
     description: supplier ? `Edit supplier ${supplier.name}` : "Edit supplier details",
@@ -15,9 +16,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 }
 
 export default async function EditSupplierPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireAdmin();
+  const { organizationId } = await requireOrg();
   const { id } = await params;
-  const supplier = await getSupplierById(id);
+  const supplier = await getSupplierById(organizationId, id);
   if (!supplier) notFound();
 
   return (

@@ -2,14 +2,33 @@
 
 import { db } from "@/lib/db";
 import { clients } from "@/lib/db/schema/clients";
+import { organizations } from "@/lib/db/schema/organizations";
 import { publicIntakeSchema } from "@/lib/validators/intake";
+import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { rateLimit } from "@/lib/utils/rate-limit";
 import { safeAction } from "@/lib/utils/safe-action";
 
-export async function submitIntake(data: unknown) {
+export async function submitIntake(organizationSlug: string, data: unknown) {
   return safeAction(async () => {
+    // Resolve organization from slug (public form — no auth required)
+    if (!organizationSlug) {
+      return { error: "Organization is required." };
+    }
+
+    const [org] = await db
+      .select({ id: organizations.id })
+      .from(organizations)
+      .where(eq(organizations.slug, organizationSlug))
+      .limit(1);
+
+    if (!org) {
+      return { error: "Organization not found." };
+    }
+
+    const organizationId = org.id;
+
     // Rate limit: max 5 submissions per hour per IP
     const headersList = await headers();
     const ip = headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
@@ -28,6 +47,7 @@ export async function submitIntake(data: unknown) {
     await db
       .insert(clients)
       .values({
+        organizationId,
         type: "individual",
         status: "prospective",
         firstName,

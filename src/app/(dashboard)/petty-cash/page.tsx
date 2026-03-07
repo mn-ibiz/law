@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getPettyCashTransactions } from "@/lib/queries/trust";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TransactionTypeBadge } from "@/components/shared/status-badges";
@@ -18,8 +18,8 @@ export const metadata: Metadata = {
 };
 
 export default async function PettyCashPage() {
-  await requireAdmin();
-  const transactions = await getPettyCashTransactions();
+  const { organizationId } = await requireOrg();
+  const transactions = await getPettyCashTransactions(organizationId);
 
   return (
     <div className="space-y-6">

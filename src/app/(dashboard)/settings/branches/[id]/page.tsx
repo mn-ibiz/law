@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { requireAdmin } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getBranchWithUsers } from "@/lib/queries/settings";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { Badge } from "@/components/ui/badge";
@@ -33,8 +33,9 @@ export async function generateMetadata({
 }: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
+  const { organizationId } = await requireOrg();
   const { id } = await params;
-  const branch = await getBranchWithUsers(id);
+  const branch = await getBranchWithUsers(organizationId, id);
   return {
     title: branch ? branch.name : "Branch Details",
     description: branch
@@ -48,9 +49,9 @@ export default async function BranchDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireAdmin();
+  const { organizationId } = await requireOrg();
   const { id } = await params;
-  const branch = await getBranchWithUsers(id);
+  const branch = await getBranchWithUsers(organizationId, id);
   if (!branch) notFound();
 
   const location = [branch.address, branch.city, branch.county]

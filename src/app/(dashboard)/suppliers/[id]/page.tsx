@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { requireAdmin } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getSupplierById, getSupplierInvoices } from "@/lib/queries/suppliers";
 import { notFound } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,8 +23,9 @@ import { SupplierInvoiceActions } from "@/components/suppliers/supplier-invoice-
 import { SupplierInvoiceDialog } from "@/components/suppliers/supplier-invoice-dialog";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { organizationId } = await requireOrg();
   const { id } = await params;
-  const supplier = await getSupplierById(id);
+  const supplier = await getSupplierById(organizationId, id);
   return {
     title: supplier ? supplier.name : "Supplier Details",
     description: supplier ? `Supplier profile for ${supplier.name}` : "Supplier details",
@@ -36,11 +37,11 @@ export default async function SupplierDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireAdmin();
+  const { organizationId } = await requireOrg();
   const { id } = await params;
   const [supplier, invoices] = await Promise.all([
-    getSupplierById(id),
-    getSupplierInvoices(id),
+    getSupplierById(organizationId, id),
+    getSupplierInvoices(organizationId, id),
   ]);
 
   if (!supplier) notFound();

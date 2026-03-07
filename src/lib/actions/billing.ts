@@ -3,11 +3,11 @@
 import { db } from "@/lib/db";
 import { invoices, invoiceLineItems, payments, quotes, receipts, creditNotes } from "@/lib/db/schema/billing";
 import { clients } from "@/lib/db/schema/clients";
-import { auth } from "@/lib/auth/auth";
+import { getTenantContext } from "@/lib/auth/get-session";
 import { createAuditLog } from "@/lib/utils/audit";
 import { createInvoiceSchema, updateInvoiceSchema, recordPaymentSchema, createQuoteSchema, createQuoteWithLineItemsSchema, createReceiptSchema, createCreditNoteSchema } from "@/lib/validators/billing";
 import { generateInvoiceNumber } from "@/lib/queries/billing";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { safeAction } from "@/lib/utils/safe-action";
 import { validateId } from "@/lib/utils/validate-id";
@@ -19,8 +19,8 @@ import { dispatchWorkflowEvent } from "@/lib/workflows/engine";
 
 export async function createInvoice(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -41,14 +41,15 @@ export async function createInvoice(data: unknown) {
 
     // Retry on unique constraint violation (concurrent number generation race)
     const result = await withUniqueRetry(async () => {
-      const invoiceNumber = await generateInvoiceNumber();
+      const invoiceNumber = await generateInvoiceNumber(organizationId);
       return await db
         .insert(invoices)
         .values({
+          organizationId,
           invoiceNumber,
           caseId: validated.data.caseId,
           clientId: validated.data.clientId,
-          createdBy: session.user.id,
+          createdBy: userId,
           subtotal: subtotal.toFixed(2),
           vatRate: String(vatRate),
           vatAmount: vatAmount.toFixed(2),
@@ -60,6 +61,7 @@ export async function createInvoice(data: unknown) {
     });
 
     const lineItemValues = computedLineItems.map((item) => ({
+      organizationId,
       invoiceId: result[0].id,
       description: item.description,
       quantity: String(item.quantity),
@@ -70,7 +72,8 @@ export async function createInvoice(data: unknown) {
     await db.insert(invoiceLineItems).values(lineItemValues);
 
     await createAuditLog(
-      session.user.id,
+      organizationId,
+      userId,
       "create",
       "invoice",
       result[0].id,
@@ -79,9 +82,10 @@ export async function createInvoice(data: unknown) {
 
     // Fire workflow event for invoice creation (fire-and-forget)
     dispatchWorkflowEvent("invoice_created", {
+      organizationId,
       entityId: result[0].id,
       entityType: "invoice",
-      userId: session.user.id,
+      userId,
       data: { clientId: validated.data.clientId },
     }).catch(console.error);
 
@@ -92,8 +96,8 @@ export async function createInvoice(data: unknown) {
 
 export async function updateInvoice(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -129,7 +133,7 @@ export async function updateInvoice(data: unknown) {
         notes: validated.data.notes,
         updatedAt: new Date(),
       })
-      .where(sql`${invoices.id} = ${invoiceId} AND ${invoices.status} = 'draft'`)
+      .where(sql`${invoices.id} = ${invoiceId} AND ${invoices.status} = 'draft' AND ${invoices.organizationId} = ${organizationId}`)
       .returning({ id: invoices.id });
 
     if (result.length === 0) {
@@ -137,9 +141,10 @@ export async function updateInvoice(data: unknown) {
     }
 
     // Delete existing line items and insert new ones
-    await db.delete(invoiceLineItems).where(eq(invoiceLineItems.invoiceId, invoiceId));
+    await db.delete(invoiceLineItems).where(and(eq(invoiceLineItems.invoiceId, invoiceId), eq(invoiceLineItems.organizationId, organizationId)));
 
     const lineItemValues = computedLineItems.map((item) => ({
+      organizationId,
       invoiceId,
       description: item.description,
       quantity: String(item.quantity),
@@ -150,7 +155,8 @@ export async function updateInvoice(data: unknown) {
     await db.insert(invoiceLineItems).values(lineItemValues);
 
     await createAuditLog(
-      session.user.id,
+      organizationId,
+      userId,
       "update",
       "invoice",
       invoiceId,
@@ -173,8 +179,8 @@ interface SendInvoiceEmailOptions {
 
 export async function sendInvoice(id: string, emailOptions?: SendInvoiceEmailOptions) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -184,7 +190,7 @@ export async function sendInvoice(id: string, emailOptions?: SendInvoiceEmailOpt
     const result = await db
       .update(invoices)
       .set({ status: "sent", sentAt: new Date(), updatedAt: new Date() })
-      .where(sql`${invoices.id} = ${id} AND ${invoices.status} = 'draft'`)
+      .where(sql`${invoices.id} = ${id} AND ${invoices.status} = 'draft' AND ${invoices.organizationId} = ${organizationId}`)
       .returning({
         id: invoices.id,
         invoiceNumber: invoices.invoiceNumber,
@@ -220,7 +226,7 @@ export async function sendInvoice(id: string, emailOptions?: SendInvoiceEmailOpt
         lastName: clients.lastName,
       })
         .from(clients)
-        .where(eq(clients.id, invoice.clientId))
+        .where(and(eq(clients.id, invoice.clientId), eq(clients.organizationId, organizationId)))
         .limit(1)
         .then(([client]) => {
           if (!client?.email) return;
@@ -245,7 +251,7 @@ export async function sendInvoice(id: string, emailOptions?: SendInvoiceEmailOpt
         .catch((err) => console.error("Invoice email failed:", err));
     }
 
-    await createAuditLog(session.user.id, "update", "invoice", id, { action: "sent" });
+    await createAuditLog(organizationId, userId, "update", "invoice", id, { action: "sent" });
 
     revalidatePath("/billing");
     revalidatePath(`/billing/${id}`);
@@ -255,8 +261,8 @@ export async function sendInvoice(id: string, emailOptions?: SendInvoiceEmailOpt
 
 export async function recordPayment(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -278,7 +284,7 @@ export async function recordPayment(data: unknown) {
         updatedAt: new Date(),
       })
       .where(
-        sql`${invoices.id} = ${invoiceId} AND ${invoices.status} IN ('sent', 'partially_paid', 'overdue') AND (${invoices.totalAmount}::numeric - ${invoices.paidAmount}::numeric) >= ${paymentAmount}::numeric`
+        sql`${invoices.id} = ${invoiceId} AND ${invoices.organizationId} = ${organizationId} AND ${invoices.status} IN ('sent', 'partially_paid', 'overdue') AND (${invoices.totalAmount}::numeric - ${invoices.paidAmount}::numeric) >= ${paymentAmount}::numeric`
       )
       .returning({ id: invoices.id });
 
@@ -289,17 +295,18 @@ export async function recordPayment(data: unknown) {
     const result = await db
       .insert(payments)
       .values({
+        organizationId,
         invoiceId,
         amount: paymentAmount,
         method: validated.data.paymentMethod,
         reference: validated.data.referenceNumber,
         mpesaTransactionId: validated.data.mpesaCode,
-        receivedBy: session.user.id,
+        receivedBy: userId,
         notes: validated.data.notes,
       })
       .returning();
 
-    await createAuditLog(session.user.id, "create", "payment", result[0].id, {
+    await createAuditLog(organizationId, userId, "create", "payment", result[0].id, {
       invoiceId,
       amount: validated.data.amount,
       method: validated.data.paymentMethod,
@@ -307,9 +314,10 @@ export async function recordPayment(data: unknown) {
 
     // Fire workflow event for payment received (fire-and-forget)
     dispatchWorkflowEvent("payment_received", {
+      organizationId,
       entityId: result[0].id,
       entityType: "payment",
-      userId: session.user.id,
+      userId,
       data: { invoiceId, amount: validated.data.amount },
     }).catch(console.error);
 
@@ -320,8 +328,8 @@ export async function recordPayment(data: unknown) {
 
 export async function cancelInvoice(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
@@ -331,14 +339,14 @@ export async function cancelInvoice(id: string) {
     const result = await db
       .update(invoices)
       .set({ status: "cancelled", updatedAt: new Date() })
-      .where(sql`${invoices.id} = ${id} AND ${invoices.status} NOT IN ('paid', 'cancelled')`)
+      .where(sql`${invoices.id} = ${id} AND ${invoices.organizationId} = ${organizationId} AND ${invoices.status} NOT IN ('paid', 'cancelled')`)
       .returning({ id: invoices.id });
 
     if (result.length === 0) {
       return { error: "Invoice not found, already paid, or already cancelled" };
     }
 
-    await createAuditLog(session.user.id, "update", "invoice", id, { action: "cancel" });
+    await createAuditLog(organizationId, userId, "update", "invoice", id, { action: "cancel" });
 
     revalidatePath("/billing");
     return { success: true };
@@ -347,8 +355,8 @@ export async function cancelInvoice(id: string) {
 
 export async function deleteInvoice(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -357,14 +365,14 @@ export async function deleteInvoice(id: string) {
     // Only allow deletion of draft invoices
     const result = await db
       .delete(invoices)
-      .where(sql`${invoices.id} = ${id} AND ${invoices.status} = 'draft'`)
+      .where(sql`${invoices.id} = ${id} AND ${invoices.organizationId} = ${organizationId} AND ${invoices.status} = 'draft'`)
       .returning({ id: invoices.id });
 
     if (result.length === 0) {
       return { error: "Invoice not found or not in draft status" };
     }
 
-    await createAuditLog(session.user.id, "delete", "invoice", id, {});
+    await createAuditLog(organizationId, userId, "delete", "invoice", id, {});
     revalidatePath("/billing");
     return { success: true };
   });
@@ -373,8 +381,8 @@ export async function deleteInvoice(id: string) {
 // --- Quotes ---
 export async function createQuote(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -388,7 +396,7 @@ export async function createQuote(data: unknown) {
       const [qtResult] = await db
         .select({ maxNum: sql<string>`MAX(${quotes.quoteNumber})` })
         .from(quotes)
-        .where(sql`${quotes.quoteNumber} LIKE ${qtPrefix + '%'}`);
+        .where(sql`${quotes.quoteNumber} LIKE ${qtPrefix + '%'} AND ${quotes.organizationId} = ${organizationId}`);
       let qtNext = 1;
       if (qtResult?.maxNum) {
         const parts = qtResult.maxNum.split("-");
@@ -400,10 +408,11 @@ export async function createQuote(data: unknown) {
       return await db
         .insert(quotes)
         .values({
+          organizationId,
           quoteNumber,
           clientId: validated.data.clientId,
           caseId: validated.data.caseId || undefined,
-          createdBy: session.user.id,
+          createdBy: userId,
           subtotal: String(validated.data.amount),
           vatAmount: "0",
           totalAmount: String(validated.data.amount),
@@ -420,8 +429,8 @@ export async function createQuote(data: unknown) {
 
 export async function createQuoteWithLineItems(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -445,7 +454,7 @@ export async function createQuoteWithLineItems(data: unknown) {
       const [qtResult] = await db
         .select({ maxNum: sql<string>`MAX(${quotes.quoteNumber})` })
         .from(quotes)
-        .where(sql`${quotes.quoteNumber} LIKE ${qtPrefix + '%'}`);
+        .where(sql`${quotes.quoteNumber} LIKE ${qtPrefix + '%'} AND ${quotes.organizationId} = ${organizationId}`);
       let qtNext = 1;
       if (qtResult?.maxNum) {
         const parts = qtResult.maxNum.split("-");
@@ -457,10 +466,11 @@ export async function createQuoteWithLineItems(data: unknown) {
       return await db
         .insert(quotes)
         .values({
+          organizationId,
           quoteNumber,
           clientId: validated.data.clientId,
           caseId: validated.data.caseId || undefined,
-          createdBy: session.user.id,
+          createdBy: userId,
           subtotal: subtotal.toFixed(2),
           vatAmount: vatAmount.toFixed(2),
           totalAmount: totalAmount.toFixed(2),
@@ -471,7 +481,8 @@ export async function createQuoteWithLineItems(data: unknown) {
     });
 
     await createAuditLog(
-      session.user.id,
+      organizationId,
+      userId,
       "create",
       "quote",
       result[0].id,
@@ -494,8 +505,8 @@ const quoteTransitions: Record<string, string[]> = {
 
 export async function updateQuoteStatus(id: string, status: "draft" | "sent" | "accepted" | "rejected" | "expired") {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -512,7 +523,7 @@ export async function updateQuoteStatus(id: string, status: "draft" | "sent" | "
     const result = await db
       .update(quotes)
       .set({ status, updatedAt: new Date() })
-      .where(sql`${quotes.id} = ${id} AND ${quotes.status} = ANY(${validFromStatuses})`)
+      .where(sql`${quotes.id} = ${id} AND ${quotes.organizationId} = ${organizationId} AND ${quotes.status} = ANY(${validFromStatuses})`)
       .returning({ id: quotes.id });
 
     if (result.length === 0) {
@@ -527,8 +538,8 @@ export async function updateQuoteStatus(id: string, status: "draft" | "sent" | "
 // --- Receipts ---
 export async function createReceipt(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -542,7 +553,7 @@ export async function createReceipt(data: unknown) {
       const [rctResult] = await db
         .select({ maxNum: sql<string>`MAX(${receipts.receiptNumber})` })
         .from(receipts)
-        .where(sql`${receipts.receiptNumber} LIKE ${rctPrefix + '%'}`);
+        .where(sql`${receipts.receiptNumber} LIKE ${rctPrefix + '%'} AND ${receipts.organizationId} = ${organizationId}`);
       let rctNext = 1;
       if (rctResult?.maxNum) {
         const parts = rctResult.maxNum.split("-");
@@ -554,6 +565,7 @@ export async function createReceipt(data: unknown) {
       return await db
         .insert(receipts)
         .values({
+          organizationId,
           receiptNumber,
           paymentId: validated.data.paymentId,
           issuedTo: validated.data.issuedTo,
@@ -570,8 +582,8 @@ export async function createReceipt(data: unknown) {
 // --- Credit Notes ---
 export async function createCreditNote(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
@@ -585,7 +597,7 @@ export async function createCreditNote(data: unknown) {
       const [cnResult] = await db
         .select({ maxNum: sql<string>`MAX(${creditNotes.creditNoteNumber})` })
         .from(creditNotes)
-        .where(sql`${creditNotes.creditNoteNumber} LIKE ${cnPrefix + '%'}`);
+        .where(sql`${creditNotes.creditNoteNumber} LIKE ${cnPrefix + '%'} AND ${creditNotes.organizationId} = ${organizationId}`);
       let cnNext = 1;
       if (cnResult?.maxNum) {
         const parts = cnResult.maxNum.split("-");
@@ -597,11 +609,12 @@ export async function createCreditNote(data: unknown) {
       return await db
         .insert(creditNotes)
         .values({
+          organizationId,
           creditNoteNumber,
           invoiceId: validated.data.invoiceId,
           amount: String(validated.data.amount),
           reason: validated.data.reason,
-          createdBy: session.user.id,
+          createdBy: userId,
         })
         .returning();
     });

@@ -1,4 +1,4 @@
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getInvoices } from "@/lib/queries/billing";
 import { Card, CardContent } from "@/components/ui/card";
 import { InvoiceDataTable } from "@/components/billing/invoice-data-table";
@@ -14,8 +14,8 @@ export const metadata: Metadata = {
 };
 
 export default async function BillingPage() {
-  const session = await requireAdminOrAttorney();
-  const invoiceList = await getInvoices();
+  const { organizationId, session } = await requireOrg();
+  const invoiceList = await getInvoices(organizationId);
   const userRole = session.user.role;
 
   const totalOutstanding = invoiceList

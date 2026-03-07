@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getTrustAccounts, getClientsForSelect, getCasesForSelect } from "@/lib/queries/trust";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatKES } from "@/lib/utils/format";
@@ -13,11 +13,11 @@ export const metadata: Metadata = {
 };
 
 export default async function TrustAccountsPage() {
-  await requireAdmin();
+  const { organizationId } = await requireOrg();
   const [accounts, clients, cases] = await Promise.all([
-    getTrustAccounts(),
-    getClientsForSelect(),
-    getCasesForSelect(),
+    getTrustAccounts(organizationId),
+    getClientsForSelect(organizationId),
+    getCasesForSelect(organizationId),
   ]);
 
   const totalBalance = accounts.reduce((sum, a) => sum + Number(a.balance), 0);

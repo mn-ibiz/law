@@ -1,4 +1,4 @@
-import { requireAuth } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getMessageById, getMessageThread } from "@/lib/queries/messaging";
 import { markMessageRead } from "@/lib/actions/messaging";
 import { ReplyForm } from "@/components/messages/reply-form";
@@ -23,7 +23,7 @@ export default async function MessageDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const session = await requireAuth();
+  const { session, organizationId } = await requireOrg();
   const userId = session.user.id as string;
   const { id } = await params;
 
@@ -31,7 +31,7 @@ export default async function MessageDetailPage({
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!uuidRegex.test(id)) notFound();
 
-  const message = await getMessageById(id);
+  const message = await getMessageById(organizationId, id);
   if (!message) notFound();
 
   // Only the sender or recipient can view the message
@@ -45,7 +45,7 @@ export default async function MessageDetailPage({
   }
 
   // Get conversation thread between these two users
-  const thread = await getMessageThread(message.senderId, message.recipientId);
+  const thread = await getMessageThread(organizationId, message.senderId, message.recipientId);
 
   // Determine the "other" person for the reply
   const replyToId =

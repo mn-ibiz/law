@@ -3,9 +3,9 @@
 import { db } from "@/lib/db";
 import { clients, conflictChecks } from "@/lib/db/schema/clients";
 import { cases, caseParties } from "@/lib/db/schema/cases";
-import { auth } from "@/lib/auth/auth";
+import { getTenantContext } from "@/lib/auth/get-session";
 import { createAuditLog } from "@/lib/utils/audit";
-import { ilike, or, eq } from "drizzle-orm";
+import { ilike, or, eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { safeAction } from "@/lib/utils/safe-action";
 
@@ -20,13 +20,12 @@ export interface ConflictResult {
 
 export async function searchConflicts(query: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user) return [];
+    const { organizationId, role } = await getTenantContext();
 
     if (!query || query.length < 2) return [];
 
     // Only attorneys and admins can run conflict searches
-    if (session.user.role === "client") return [];
+    if (role === "client") return [];
 
     // Escape LIKE-special characters to prevent pattern injection
     const escaped = query.replace(/[%_\\]/g, "\\$&");
@@ -43,10 +42,13 @@ export async function searchConflicts(query: string) {
       })
       .from(clients)
       .where(
-        or(
-          ilike(clients.firstName, pattern),
-          ilike(clients.lastName, pattern),
-          ilike(clients.companyName, pattern)
+        and(
+          eq(clients.organizationId, organizationId),
+          or(
+            ilike(clients.firstName, pattern),
+            ilike(clients.lastName, pattern),
+            ilike(clients.companyName, pattern)
+          )
         )
       )
       .limit(10);
@@ -73,9 +75,12 @@ export async function searchConflicts(query: string) {
       })
       .from(cases)
       .where(
-        or(
-          ilike(cases.opposingParty, pattern),
-          ilike(cases.opposingCounsel, pattern)
+        and(
+          eq(cases.organizationId, organizationId),
+          or(
+            ilike(cases.opposingParty, pattern),
+            ilike(cases.opposingCounsel, pattern)
+          )
         )
       )
       .limit(10);
@@ -112,7 +117,7 @@ export async function searchConflicts(query: string) {
         role: caseParties.role,
       })
       .from(caseParties)
-      .where(ilike(caseParties.name, pattern))
+      .where(and(eq(caseParties.organizationId, organizationId), ilike(caseParties.name, pattern)))
       .limit(10);
 
     for (const p of partyMatches) {
@@ -143,8 +148,9 @@ export interface ConflictCheckResult {
 /**
  * Internal helper: run a conflict check against existing clients and cases.
  * Does NOT require auth — caller is responsible for authorization.
+ * organizationId must be provided by the caller for tenant scoping.
  */
-export async function runConflictCheck(query: string): Promise<ConflictCheckResult> {
+export async function runConflictCheck(query: string, organizationId: string): Promise<ConflictCheckResult> {
   if (!query || query.length < 2) return { hasConflict: false, matches: [] };
 
   // Escape LIKE-special characters to prevent pattern injection
@@ -162,10 +168,13 @@ export async function runConflictCheck(query: string): Promise<ConflictCheckResu
     })
     .from(clients)
     .where(
-      or(
-        ilike(clients.firstName, pattern),
-        ilike(clients.lastName, pattern),
-        ilike(clients.companyName, pattern)
+      and(
+        eq(clients.organizationId, organizationId),
+        or(
+          ilike(clients.firstName, pattern),
+          ilike(clients.lastName, pattern),
+          ilike(clients.companyName, pattern)
+        )
       )
     )
     .limit(20);
@@ -191,9 +200,12 @@ export async function runConflictCheck(query: string): Promise<ConflictCheckResu
     })
     .from(cases)
     .where(
-      or(
-        ilike(cases.opposingParty, pattern),
-        ilike(cases.opposingCounsel, pattern)
+      and(
+        eq(cases.organizationId, organizationId),
+        or(
+          ilike(cases.opposingParty, pattern),
+          ilike(cases.opposingCounsel, pattern)
+        )
       )
     )
     .limit(20);
@@ -224,7 +236,7 @@ export async function runConflictCheck(query: string): Promise<ConflictCheckResu
       role: caseParties.role,
     })
     .from(caseParties)
-    .where(ilike(caseParties.name, pattern))
+    .where(and(eq(caseParties.organizationId, organizationId), ilike(caseParties.name, pattern)))
     .limit(20);
 
   for (const p of partyMatches) {
@@ -245,33 +257,34 @@ export async function resolveConflict(
   resolutionNotes?: string
 ) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user) return { error: "Unauthorized" };
-    if (!["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
-    // Verify client exists before creating conflict check record
+    // Verify client exists within this organization
     const [client] = await db
       .select({ id: clients.id })
       .from(clients)
-      .where(eq(clients.id, clientId))
+      .where(and(eq(clients.id, clientId), eq(clients.organizationId, organizationId)))
       .limit(1);
     if (!client) return { error: "Client not found" };
 
     const record = await db
       .insert(conflictChecks)
       .values({
+        organizationId,
         clientId,
         searchQuery,
         result,
         resolutionNotes,
-        checkedBy: session.user.id,
+        checkedBy: userId,
       })
       .returning();
 
     await createAuditLog(
-      session.user.id,
+      organizationId,
+      userId,
       "create",
       "conflict_check",
       record[0].id,

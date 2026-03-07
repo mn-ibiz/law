@@ -1,4 +1,4 @@
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getQuotes } from "@/lib/queries/billing";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { QuoteStatusBadge } from "@/components/shared/status-badges";
@@ -20,8 +20,8 @@ export const metadata: Metadata = {
 };
 
 export default async function QuotesPage() {
-  const session = await requireAdminOrAttorney();
-  const quoteList = await getQuotes();
+  const { organizationId, session } = await requireOrg();
+  const quoteList = await getQuotes(organizationId);
   const userRole = session.user.role;
 
   return (

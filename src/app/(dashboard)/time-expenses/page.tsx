@@ -1,4 +1,4 @@
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getTimeEntries, getExpenses } from "@/lib/queries/time-expenses";
 import { Card, CardContent } from "@/components/ui/card";
 import { TimeEntryDataTable } from "@/components/time-expenses/time-entry-data-table";
@@ -20,11 +20,11 @@ export default async function TimeExpensesPage({
 }: {
   searchParams: Promise<{ tab?: string }>;
 }) {
-  await requireAdminOrAttorney();
+  const { organizationId } = await requireOrg();
   const params = await searchParams;
   const [entries, expenseList] = await Promise.all([
-    getTimeEntries(),
-    getExpenses(),
+    getTimeEntries(organizationId),
+    getExpenses(organizationId),
   ]);
 
   const totalHours = entries.reduce((sum, e) => sum + Number(e.hours), 0);

@@ -1,12 +1,12 @@
 "use server";
 
 import bcrypt from "bcryptjs";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
-import { requireAuth } from "@/lib/auth/get-session";
+import { getTenantContext } from "@/lib/auth/get-session";
 import { safeAction } from "@/lib/utils/safe-action";
 
 const changePasswordSchema = z
@@ -28,7 +28,7 @@ const changePasswordSchema = z
 
 export async function changePassword(data: unknown) {
   return safeAction(async () => {
-    const session = await requireAuth();
+    const { organizationId, userId } = await getTenantContext();
 
     const validated = changePasswordSchema.safeParse(data);
     if (!validated.success) {
@@ -40,7 +40,7 @@ export async function changePassword(data: unknown) {
     const [user] = await db
       .select({ password: users.password })
       .from(users)
-      .where(eq(users.id, session.user.id))
+      .where(and(eq(users.id, userId), eq(users.organizationId, organizationId)))
       .limit(1);
 
     if (!user) {
@@ -57,7 +57,7 @@ export async function changePassword(data: unknown) {
     await db
       .update(users)
       .set({ password: hashedPassword, updatedAt: new Date() })
-      .where(eq(users.id, session.user.id));
+      .where(and(eq(users.id, userId), eq(users.organizationId, organizationId)));
 
     return { success: true };
   });
@@ -71,7 +71,7 @@ const updateProfileSchema = z.object({
 
 export async function updateProfile(data: unknown) {
   return safeAction(async () => {
-    const session = await requireAuth();
+    const { organizationId, userId } = await getTenantContext();
 
     const validated = updateProfileSchema.safeParse(data);
     if (!validated.success) {
@@ -86,7 +86,7 @@ export async function updateProfile(data: unknown) {
         avatar: validated.data.avatar || null,
         updatedAt: new Date(),
       })
-      .where(eq(users.id, session.user.id));
+      .where(and(eq(users.id, userId), eq(users.organizationId, organizationId)));
 
     revalidatePath("/profile");
     return { success: true };

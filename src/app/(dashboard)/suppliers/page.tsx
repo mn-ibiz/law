@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getSuppliers } from "@/lib/queries/suppliers";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,8 +13,8 @@ export const metadata: Metadata = {
 };
 
 export default async function SuppliersPage() {
-  await requireAdmin();
-  const supplierList = await getSuppliers();
+  const { organizationId } = await requireOrg();
+  const supplierList = await getSuppliers(organizationId);
 
   const activeCount = supplierList.filter((s) => s.isActive).length;
 

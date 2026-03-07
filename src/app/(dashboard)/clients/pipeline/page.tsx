@@ -1,4 +1,4 @@
-import { requireRole } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getClientsByPipelineStage } from "@/lib/queries/clients";
 import { ClientPipeline } from "@/components/clients/client-pipeline";
 import { Kanban } from "lucide-react";
@@ -10,8 +10,8 @@ export const metadata: Metadata = {
 };
 
 export default async function ClientPipelinePage() {
-  await requireRole("admin", "attorney");
-  const groupedClients = await getClientsByPipelineStage();
+  const { organizationId } = await requireOrg();
+  const groupedClients = await getClientsByPipelineStage(organizationId);
 
   return (
     <div className="space-y-6">

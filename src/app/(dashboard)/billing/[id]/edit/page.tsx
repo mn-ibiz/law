@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { requireAdminOrAttorney } from "@/lib/auth/get-session";
+import { requireOrg } from "@/lib/auth/get-session";
 import { getInvoiceById, getInvoiceLineItems } from "@/lib/queries/billing";
 import { getCases } from "@/lib/queries/cases";
 import { getClients } from "@/lib/queries/clients";
@@ -13,17 +13,17 @@ export const metadata: Metadata = {
 };
 
 export default async function EditInvoicePage({ params }: { params: Promise<{ id: string }> }) {
-  await requireAdminOrAttorney();
+  const { organizationId } = await requireOrg();
   const { id } = await params;
-  const invoice = await getInvoiceById(id);
+  const invoice = await getInvoiceById(organizationId, id);
 
   if (!invoice) notFound();
   if (invoice.status !== "draft") redirect(`/billing/${id}`);
 
   const [lineItems, caseResult, clientResult] = await Promise.all([
-    getInvoiceLineItems(id),
-    getCases({ limit: 200 }),
-    getClients({ limit: 200 }),
+    getInvoiceLineItems(organizationId, id),
+    getCases(organizationId, { limit: 200 }),
+    getClients(organizationId, { limit: 200 }),
   ]);
 
   const cases = caseResult.data.map((c) => ({

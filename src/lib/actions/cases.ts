@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { cases, caseAssignments, caseNotes, caseTimeline, caseParties, pipelineStages, caseStageHistory } from "@/lib/db/schema/cases";
 import { clients, conflictChecks } from "@/lib/db/schema/clients";
 import { trustAccounts } from "@/lib/db/schema/billing";
-import { auth } from "@/lib/auth/auth";
+import { getTenantContext } from "@/lib/auth/get-session";
 import { createAuditLog } from "@/lib/utils/audit";
 import { createCaseSchema, updateCaseSchema, createCaseNoteSchema, addCasePartySchema, assignCaseSchema } from "@/lib/validators/case";
 import { pipelineStageSchema } from "@/lib/validators/pipeline";
@@ -17,13 +17,14 @@ import { safeAction } from "@/lib/utils/safe-action";
 import { withUniqueRetry } from "@/lib/utils/with-retry";
 import { dispatchWorkflowEvent } from "@/lib/workflows/engine";
 
-async function isAssignedToCase(userId: string, caseId: string): Promise<boolean> {
+async function isAssignedToCase(userId: string, caseId: string, organizationId: string): Promise<boolean> {
   const [assignment] = await db
     .select({ id: caseAssignments.id })
     .from(caseAssignments)
     .where(and(
       eq(caseAssignments.caseId, caseId),
       eq(caseAssignments.userId, userId),
+      eq(caseAssignments.organizationId, organizationId),
       sql`${caseAssignments.unassignedAt} IS NULL`
     ))
     .limit(1);
@@ -32,8 +33,8 @@ async function isAssignedToCase(userId: string, caseId: string): Promise<boolean
 
 export async function createCase(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -49,16 +50,16 @@ export async function createCase(data: unknown) {
     const [client] = await db
       .select({ id: clients.id, firstName: clients.firstName, lastName: clients.lastName })
       .from(clients)
-      .where(eq(clients.id, rest.clientId))
+      .where(and(eq(clients.id, rest.clientId), eq(clients.organizationId, organizationId)))
       .limit(1);
     if (!client) return { error: "Client not found" };
 
     const clientName = `${client.firstName} ${client.lastName}`;
-    const conflictResult = await runConflictCheck(clientName);
+    const conflictResult = await runConflictCheck(clientName, organizationId);
 
     // Also check opposing party if provided
     if (rest.opposingParty) {
-      const opposingResult = await runConflictCheck(rest.opposingParty);
+      const opposingResult = await runConflictCheck(rest.opposingParty, organizationId);
       for (const m of opposingResult.matches) {
         // Avoid duplicate matches
         const isDuplicate = conflictResult.matches.some(
@@ -74,6 +75,7 @@ export async function createCase(data: unknown) {
     // Store conflict check result regardless
     const severity = conflictResult.hasConflict ? "potential" as const : "clear" as const;
     await db.insert(conflictChecks).values({
+      organizationId,
       clientId: client.id,
       searchQuery: rest.opposingParty
         ? `${clientName}; ${rest.opposingParty}`
@@ -82,7 +84,7 @@ export async function createCase(data: unknown) {
       matchDetails: conflictResult.matches.length > 0
         ? JSON.stringify(conflictResult.matches)
         : null,
-      checkedBy: session.user.id,
+      checkedBy: userId,
     });
 
     // If conflicts found and not acknowledged, return error with conflict details
@@ -95,11 +97,12 @@ export async function createCase(data: unknown) {
 
     // Retry on unique constraint violation (concurrent number generation race)
     const result = await withUniqueRetry(async () => {
-      const caseNumber = await generateCaseNumber();
+      const caseNumber = await generateCaseNumber(organizationId);
       return await db
         .insert(cases)
         .values({
           ...rest,
+          organizationId,
           caseNumber,
           hourlyRate: hourlyRate ? String(hourlyRate) : undefined,
           flatFeeAmount: flatFeeAmount ? String(flatFeeAmount) : undefined,
@@ -112,8 +115,9 @@ export async function createCase(data: unknown) {
     });
 
     await db.insert(caseTimeline).values({
+      organizationId,
       caseId: result[0].id,
-      userId: session.user.id,
+      userId,
       eventType: "case_created",
       title: "Case created",
       description: `Case ${result[0].caseNumber} was created`,
@@ -121,7 +125,8 @@ export async function createCase(data: unknown) {
     });
 
     await createAuditLog(
-      session.user.id,
+      organizationId,
+      userId,
       "create",
       "case",
       result[0].id,
@@ -135,13 +140,13 @@ export async function createCase(data: unknown) {
 
 export async function updateCase(id: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
-    if (session.user.role === "attorney") {
-      const assigned = await isAssignedToCase(session.user.id, id);
+    if (role === "attorney") {
+      const assigned = await isAssignedToCase(userId, id, organizationId);
       if (!assigned) return { error: "You are not assigned to this case" };
     }
 
@@ -174,13 +179,14 @@ export async function updateCase(id: string, data: unknown) {
         dateFiled: dateFiled ? new Date(dateFiled) : undefined,
         updatedAt: new Date(),
       })
-      .where(eq(cases.id, id))
+      .where(and(eq(cases.id, id), eq(cases.organizationId, organizationId)))
       .returning();
 
     if (validated.data.status) {
       await db.insert(caseTimeline).values({
+        organizationId,
         caseId: id,
-        userId: session.user.id,
+        userId,
         eventType: "status_change",
         title: `Status changed to ${validated.data.status}`,
         isAutoGenerated: true,
@@ -188,15 +194,17 @@ export async function updateCase(id: string, data: unknown) {
 
       // Fire workflow event for status change (fire-and-forget)
       dispatchWorkflowEvent("case_status_change", {
+        organizationId,
         entityId: id,
         entityType: "case",
-        userId: session.user.id,
+        userId,
         data: { status: validated.data.status },
       }).catch(console.error);
     }
 
     await createAuditLog(
-      session.user.id,
+      organizationId,
+      userId,
       "update",
       "case",
       id,
@@ -211,13 +219,13 @@ export async function updateCase(id: string, data: unknown) {
 
 export async function addCaseNote(caseId: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
-    if (session.user.role === "attorney") {
-      const assigned = await isAssignedToCase(session.user.id, caseId);
+    if (role === "attorney") {
+      const assigned = await isAssignedToCase(userId, caseId, organizationId);
       if (!assigned) return { error: "You are not assigned to this case" };
     }
 
@@ -229,8 +237,9 @@ export async function addCaseNote(caseId: string, data: unknown) {
     const result = await db
       .insert(caseNotes)
       .values({
+        organizationId,
         caseId,
-        authorId: session.user.id,
+        authorId: userId,
         content: validated.data.content,
         isPrivate: validated.data.isPrivate,
       })
@@ -243,13 +252,13 @@ export async function addCaseNote(caseId: string, data: unknown) {
 
 export async function addCaseParty(caseId: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
-    if (session.user.role === "attorney") {
-      const assigned = await isAssignedToCase(session.user.id, caseId);
+    if (role === "attorney") {
+      const assigned = await isAssignedToCase(userId, caseId, organizationId);
       if (!assigned) return { error: "You are not assigned to this case" };
     }
 
@@ -261,6 +270,7 @@ export async function addCaseParty(caseId: string, data: unknown) {
     const result = await db
       .insert(caseParties)
       .values({
+        organizationId,
         caseId,
         ...validated.data,
       })
@@ -273,8 +283,8 @@ export async function addCaseParty(caseId: string, data: unknown) {
 
 export async function assignCase(caseId: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -286,6 +296,7 @@ export async function assignCase(caseId: string, data: unknown) {
     const result = await db
       .insert(caseAssignments)
       .values({
+        organizationId,
         caseId,
         userId: validated.data.userId,
         role: validated.data.role,
@@ -293,8 +304,9 @@ export async function assignCase(caseId: string, data: unknown) {
       .returning();
 
     await db.insert(caseTimeline).values({
+      organizationId,
       caseId,
-      userId: session.user.id,
+      userId,
       eventType: "assignment",
       title: `Attorney assigned (${validated.data.role})`,
       isAutoGenerated: true,
@@ -307,8 +319,8 @@ export async function assignCase(caseId: string, data: unknown) {
 
 export async function unassignCase(assignmentId: string, caseId: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -316,14 +328,14 @@ export async function unassignCase(assignmentId: string, caseId: string) {
     const [assignment] = await db
       .select({ id: caseAssignments.id })
       .from(caseAssignments)
-      .where(and(eq(caseAssignments.id, assignmentId), eq(caseAssignments.caseId, caseId)))
+      .where(and(eq(caseAssignments.id, assignmentId), eq(caseAssignments.caseId, caseId), eq(caseAssignments.organizationId, organizationId)))
       .limit(1);
     if (!assignment) return { error: "Assignment not found" };
 
     await db
       .update(caseAssignments)
       .set({ unassignedAt: new Date() })
-      .where(eq(caseAssignments.id, assignmentId));
+      .where(and(eq(caseAssignments.id, assignmentId), eq(caseAssignments.organizationId, organizationId)));
 
     revalidatePath(`/cases/${caseId}`);
     return { success: true };
@@ -332,8 +344,8 @@ export async function unassignCase(assignmentId: string, caseId: string) {
 
 export async function updateCasePipelineStage(caseId: string, stageId: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -346,7 +358,7 @@ export async function updateCasePipelineStage(caseId: string, stageId: string) {
     const [currentCase] = await db
       .select({ pipelineStageId: cases.pipelineStageId })
       .from(cases)
-      .where(eq(cases.id, caseId))
+      .where(and(eq(cases.id, caseId), eq(cases.organizationId, organizationId)))
       .limit(1);
     if (!currentCase) return { error: "Case not found" };
 
@@ -362,6 +374,7 @@ export async function updateCasePipelineStage(caseId: string, stageId: string) {
           and(
             eq(caseStageHistory.caseId, caseId),
             eq(caseStageHistory.stageId, fromStageId),
+            eq(caseStageHistory.organizationId, organizationId),
             sql`${caseStageHistory.exitedAt} IS NULL`
           )
         );
@@ -369,29 +382,31 @@ export async function updateCasePipelineStage(caseId: string, stageId: string) {
 
     // Insert new history record
     await db.insert(caseStageHistory).values({
+      organizationId,
       caseId,
       stageId,
       enteredAt: now,
-      movedBy: session.user.id,
+      movedBy: userId,
     });
 
     // Update case
     await db
       .update(cases)
       .set({ pipelineStageId: stageId, stageEnteredAt: now, updatedAt: now })
-      .where(eq(cases.id, caseId));
+      .where(and(eq(cases.id, caseId), eq(cases.organizationId, organizationId)));
 
     // Timeline entry
     await db.insert(caseTimeline).values({
+      organizationId,
       caseId,
-      userId: session.user.id,
+      userId,
       eventType: "pipeline_stage_change",
       title: "Pipeline stage changed",
       isAutoGenerated: true,
     });
 
     // Execute automations (fire-and-forget, errors logged not thrown)
-    executeStageAutomations(caseId, stageId, fromStageId, session.user.id).catch(() => {});
+    executeStageAutomations(caseId, stageId, fromStageId, userId, organizationId).catch(() => {});
 
     revalidatePath("/cases");
     revalidatePath("/cases/pipeline");
@@ -401,8 +416,8 @@ export async function updateCasePipelineStage(caseId: string, stageId: string) {
 
 export async function updateCaseNote(noteId: string, caseId: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -417,7 +432,7 @@ export async function updateCaseNote(noteId: string, caseId: string, data: unkno
         content: validated.data.content,
         isPrivate: validated.data.isPrivate,
       })
-      .where(and(eq(caseNotes.id, noteId), eq(caseNotes.caseId, caseId)));
+      .where(and(eq(caseNotes.id, noteId), eq(caseNotes.caseId, caseId), eq(caseNotes.organizationId, organizationId)));
 
     revalidatePath(`/cases/${caseId}`);
     return { success: true };
@@ -426,12 +441,12 @@ export async function updateCaseNote(noteId: string, caseId: string, data: unkno
 
 export async function deleteCaseNote(noteId: string, caseId: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
-    await db.delete(caseNotes).where(and(eq(caseNotes.id, noteId), eq(caseNotes.caseId, caseId)));
+    await db.delete(caseNotes).where(and(eq(caseNotes.id, noteId), eq(caseNotes.caseId, caseId), eq(caseNotes.organizationId, organizationId)));
 
     revalidatePath(`/cases/${caseId}`);
     return { success: true };
@@ -440,8 +455,8 @@ export async function deleteCaseNote(noteId: string, caseId: string) {
 
 export async function updateCaseParty(partyId: string, caseId: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -453,7 +468,7 @@ export async function updateCaseParty(partyId: string, caseId: string, data: unk
     await db
       .update(caseParties)
       .set(validated.data)
-      .where(and(eq(caseParties.id, partyId), eq(caseParties.caseId, caseId)));
+      .where(and(eq(caseParties.id, partyId), eq(caseParties.caseId, caseId), eq(caseParties.organizationId, organizationId)));
 
     revalidatePath(`/cases/${caseId}`);
     return { success: true };
@@ -462,12 +477,12 @@ export async function updateCaseParty(partyId: string, caseId: string, data: unk
 
 export async function deleteCaseParty(partyId: string, caseId: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
-    await db.delete(caseParties).where(and(eq(caseParties.id, partyId), eq(caseParties.caseId, caseId)));
+    await db.delete(caseParties).where(and(eq(caseParties.id, partyId), eq(caseParties.caseId, caseId), eq(caseParties.organizationId, organizationId)));
 
     revalidatePath(`/cases/${caseId}`);
     return { success: true };
@@ -476,8 +491,8 @@ export async function deleteCaseParty(partyId: string, caseId: string) {
 
 export async function archiveCase(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+    const { organizationId, userId, role } = await getTenantContext();
+    if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
     }
 
@@ -486,8 +501,8 @@ export async function archiveCase(id: string) {
       return { error: "Invalid ID" };
     }
 
-    if (session.user.role === "attorney") {
-      const assigned = await isAssignedToCase(session.user.id, id);
+    if (role === "attorney") {
+      const assigned = await isAssignedToCase(userId, id, organizationId);
       if (!assigned) return { error: "You are not assigned to this case" };
     }
 
@@ -496,7 +511,7 @@ export async function archiveCase(id: string) {
     const [caseRecord] = await db
       .select({ clientId: cases.clientId })
       .from(cases)
-      .where(eq(cases.id, id))
+      .where(and(eq(cases.id, id), eq(cases.organizationId, organizationId)))
       .limit(1);
 
     if (!caseRecord) {
@@ -509,6 +524,7 @@ export async function archiveCase(id: string) {
       .where(
         and(
           eq(trustAccounts.clientId, caseRecord.clientId),
+          eq(trustAccounts.organizationId, organizationId),
           sql`CAST(${trustAccounts.balance} AS numeric) <> 0`
         )
       )
@@ -521,7 +537,7 @@ export async function archiveCase(id: string) {
     const result = await db
       .update(cases)
       .set({ status: "closed", updatedAt: new Date() })
-      .where(eq(cases.id, id))
+      .where(and(eq(cases.id, id), eq(cases.organizationId, organizationId)))
       .returning({ id: cases.id });
 
     if (result.length === 0) {
@@ -529,14 +545,15 @@ export async function archiveCase(id: string) {
     }
 
     await db.insert(caseTimeline).values({
+      organizationId,
       caseId: id,
-      userId: session.user.id,
+      userId,
       eventType: "status_change",
       title: "Case archived (closed)",
       isAutoGenerated: true,
     });
 
-    await createAuditLog(session.user.id, "update", "case", id, { action: "archive" });
+    await createAuditLog(organizationId, userId, "update", "case", id, { action: "archive" });
 
     revalidatePath("/cases");
     revalidatePath(`/cases/${id}`);
@@ -548,8 +565,8 @@ export async function archiveCase(id: string) {
 
 export async function createPipelineStage(data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
@@ -558,7 +575,7 @@ export async function createPipelineStage(data: unknown) {
       return { error: validated.error.issues[0].message };
     }
 
-    const result = await db.insert(pipelineStages).values(validated.data).returning();
+    const result = await db.insert(pipelineStages).values({ ...validated.data, organizationId }).returning();
 
     revalidatePath("/cases/pipeline");
     revalidatePath("/settings");
@@ -568,8 +585,8 @@ export async function createPipelineStage(data: unknown) {
 
 export async function updatePipelineStage(id: string, data: unknown) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
@@ -578,7 +595,7 @@ export async function updatePipelineStage(id: string, data: unknown) {
       return { error: validated.error.issues[0].message };
     }
 
-    await db.update(pipelineStages).set(validated.data).where(eq(pipelineStages.id, id));
+    await db.update(pipelineStages).set(validated.data).where(and(eq(pipelineStages.id, id), eq(pipelineStages.organizationId, organizationId)));
 
     revalidatePath("/cases/pipeline");
     revalidatePath("/settings");
@@ -588,12 +605,12 @@ export async function updatePipelineStage(id: string, data: unknown) {
 
 export async function deletePipelineStage(id: string) {
   return safeAction(async () => {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    const { organizationId, role } = await getTenantContext();
+    if (role !== "admin") {
       return { error: "Unauthorized" };
     }
 
-    await db.delete(pipelineStages).where(eq(pipelineStages.id, id));
+    await db.delete(pipelineStages).where(and(eq(pipelineStages.id, id), eq(pipelineStages.organizationId, organizationId)));
 
     revalidatePath("/cases/pipeline");
     revalidatePath("/settings");

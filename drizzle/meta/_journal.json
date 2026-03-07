@@ -43,6 +43,13 @@
       "when": 1772798981713,
       "tag": "0005_known_living_tribunal",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1772918336205,
+      "tag": "0006_dapper_zombie",
+      "breakpoints": true
     }
   ]
 }
