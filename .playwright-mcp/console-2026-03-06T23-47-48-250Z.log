@@ -1,0 +1,35 @@
+[    3536ms] [ERROR] %o
+
+%s Error: Failed query: select "invoices"."id", "invoices"."invoice_number", "invoices"."status", "invoices"."subtotal", "invoices"."vat_rate", "invoices"."vat_amount", "invoices"."total_amount", "invoices"."paid_amount", "invoices"."currency", "invoices"."due_date", "invoices"."sent_at", "invoices"."paid_at", "invoices"."notes", "invoices"."created_at", "invoices"."updated_at", "invoices"."client_id", "invoices"."case_id", "clients"."first_name" || ' ' || "clients"."last_name", "clients"."email", "clients"."phone", "clients"."physical_address", "clients"."city", "clients"."po_box", "clients"."county", "cases"."case_number", "cases"."title", "users"."name" from "invoices" inner join "clients" on "invoices"."client_id" = "clients"."id" left join "cases" on "invoices"."case_id" = "cases"."id" inner join "users" on "invoices"."created_by" = "users"."id" where "invoices"."id" = $1 limit $2
+params: 9,1
+    at fn (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-server-dom-turbopack_2365553e._.js:1915:24)
+    at fn (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-server-dom-turbopack_2365553e._.js:1915:24)
+    at fn (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-server-dom-turbopack_2365553e._.js:1915:24)
+    at fn (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-server-dom-turbopack_2365553e._.js:1915:24)
+    at resolveErrorDev (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-server-dom-turbopack_2365553e._.js:1894:148)
+    at processFullStringRow (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-server-dom-turbopack_2365553e._.js:2402:29)
+    at processFullBinaryRow (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-server-dom-turbopack_2365553e._.js:2361:9)
+    at processBinaryChunk (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-server-dom-turbopack_2365553e._.js:2470:221)
+    at progress (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-server-dom-turbopack_2365553e._.js:2640:13) The above error occurred in the <InvoiceDetailPage> component. It was handled by the <ErrorBoundaryHandler> error boundary. @ http://localhost:3000/_next/static/chunks/f0217_next_dist_client_372d5315._.js:1342
+[    3544ms] [ERROR] Dashboard error: Error: Failed query: select "invoices"."id", "invoices"."invoice_number", "invoices"."status", "invoices"."subtotal", "invoices"."vat_rate", "invoices"."vat_amount", "invoices"."total_amount", "invoices"."paid_amount", "invoices"."currency", "invoices"."due_date", "invoices"."sent_at", "invoices"."paid_at", "invoices"."notes", "invoices"."created_at", "invoices"."updated_at", "invoices"."client_id", "invoices"."case_id", "clients"."first_name" || ' ' || "clients"."last_name", "clients"."email", "clients"."phone", "clients"."physical_address", "clients"."city", "clients"."po_box", "clients"."county", "cases"."case_number", "cases"."title", "users"."name" from "invoices" inner join "clients" on "invoices"."client_id" = "clients"."id" left join "cases" on "invoices"."case_id" = "cases"."id" inner join "users" on "invoices"."created_by" = "users"."id" where "invoices"."id" = $1 limit $2
+params: 9,1
+    at fn (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-server-dom-turbopack_2365553e._.js:1915:24)
+    at fn (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-server-dom-turbopack_2365553e._.js:1915:24)
+    at fn (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-server-dom-turbopack_2365553e._.js:1915:24)
+    at fn (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-server-dom-turbopack_2365553e._.js:1915:24)
+    at resolveErrorDev (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-server-dom-turbopack_2365553e._.js:1894:148)
+    at processFullStringRow (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-server-dom-turbopack_2365553e._.js:2402:29)
+    at processFullBinaryRow (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-server-dom-turbopack_2365553e._.js:2361:9)
+    at processBinaryChunk (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-server-dom-turbopack_2365553e._.js:2470:221)
+    at progress (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-server-dom-turbopack_2365553e._.js:2640:13) @ http://localhost:3000/_next/static/chunks/f0217_next_dist_5e999522._.js:3127
+[    3545ms] [ERROR] Dashboard error: Error: Failed query: select "invoices"."id", "invoices"."invoice_number", "invoices"."status", "invoices"."subtotal", "invoices"."vat_rate", "invoices"."vat_amount", "invoices"."total_amount", "invoices"."paid_amount", "invoices"."currency", "invoices"."due_date", "invoices"."sent_at", "invoices"."paid_at", "invoices"."notes", "invoices"."created_at", "invoices"."updated_at", "invoices"."client_id", "invoices"."case_id", "clients"."first_name" || ' ' || "clients"."last_name", "clients"."email", "clients"."phone", "clients"."physical_address", "clients"."city", "clients"."po_box", "clients"."county", "cases"."case_number", "cases"."title", "users"."name" from "invoices" inner join "clients" on "invoices"."client_id" = "clients"."id" left join "cases" on "invoices"."case_id" = "cases"."id" inner join "users" on "invoices"."created_by" = "users"."id" where "invoices"."id" = $1 limit $2
+params: 9,1
+    at fn (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-server-dom-turbopack_2365553e._.js:1915:24)
+    at fn (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-server-dom-turbopack_2365553e._.js:1915:24)
+    at fn (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-server-dom-turbopack_2365553e._.js:1915:24)
+    at fn (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-server-dom-turbopack_2365553e._.js:1915:24)
+    at resolveErrorDev (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-server-dom-turbopack_2365553e._.js:1894:148)
+    at processFullStringRow (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-server-dom-turbopack_2365553e._.js:2402:29)
+    at processFullBinaryRow (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-server-dom-turbopack_2365553e._.js:2361:9)
+    at processBinaryChunk (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-server-dom-turbopack_2365553e._.js:2470:221)
+    at progress (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-server-dom-turbopack_2365553e._.js:2640:13) @ http://localhost:3000/_next/static/chunks/f0217_next_dist_5e999522._.js:3127

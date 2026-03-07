@@ -1,0 +1,81 @@
+[   12020ms] [WARNING] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. @ http://localhost:3000/_next/static/chunks/f0217_next_dist_5e999522._.js:2297
+[   12022ms] [WARNING] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. @ http://localhost:3000/_next/static/chunks/f0217_next_dist_5e999522._.js:2297
+[   12046ms] [ERROR] %o
+
+%s Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    at SelectItem (http://localhost:3000/_next/static/chunks/f0217_54154e45._.js:12989:15)
+    at Object.react_stack_bottom_frame (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:14826:24)
+    at renderWithHooks (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:4651:24)
+    at updateForwardRef (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:5939:21)
+    at beginWork (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:6783:24)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:965:74)
+    at performUnitOfWork (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:9562:97)
+    at workLoopSync (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:9456:40)
+    at renderRootSync (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:9440:13)
+    at performWorkOnRoot (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:9105:47)
+    at performSyncWorkOnRoot (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:10238:9)
+    at flushSyncWorkAcrossRoots_impl (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:10154:316)
+    at processRootScheduleInMicrotask (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:10175:106)
+    at http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:10249:158 The above error occurred in the <SelectItem> component. It was handled by the <ErrorBoundaryHandler> error boundary. @ http://localhost:3000/_next/static/chunks/f0217_next_dist_client_372d5315._.js:1342
+[   12050ms] [ERROR] Dashboard error: Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    at SelectItem (http://localhost:3000/_next/static/chunks/f0217_54154e45._.js:12989:15)
+    at Object.react_stack_bottom_frame (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:14826:24)
+    at renderWithHooks (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:4651:24)
+    at updateForwardRef (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:5939:21)
+    at beginWork (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:6783:24)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:965:74)
+    at performUnitOfWork (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:9562:97)
+    at workLoopSync (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:9456:40)
+    at renderRootSync (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:9440:13)
+    at performWorkOnRoot (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:9105:47)
+    at performSyncWorkOnRoot (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:10238:9)
+    at flushSyncWorkAcrossRoots_impl (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:10154:316)
+    at processRootScheduleInMicrotask (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:10175:106)
+    at http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:10249:158 @ http://localhost:3000/_next/static/chunks/f0217_next_dist_5e999522._.js:3127
+[   12050ms] [ERROR] Dashboard error: Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    at SelectItem (http://localhost:3000/_next/static/chunks/f0217_54154e45._.js:12989:15)
+    at Object.react_stack_bottom_frame (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:14826:24)
+    at renderWithHooks (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:4651:24)
+    at updateForwardRef (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:5939:21)
+    at beginWork (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:6783:24)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:965:74)
+    at performUnitOfWork (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:9562:97)
+    at workLoopSync (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:9456:40)
+    at renderRootSync (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:9440:13)
+    at performWorkOnRoot (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:9105:47)
+    at performSyncWorkOnRoot (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:10238:9)
+    at flushSyncWorkAcrossRoots_impl (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:10154:316)
+    at processRootScheduleInMicrotask (http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:10175:106)
+    at http://localhost:3000/_next/static/chunks/f0217_next_dist_compiled_react-dom_6be8f2b7._.js:10249:158 @ http://localhost:3000/_next/static/chunks/f0217_next_dist_5e999522._.js:3127
+[   21852ms] [WARNING] [Fast Refresh] performing full reload
+
+Fast Refresh will perform a full reload when you edit a file that's imported by modules outside of the React rendering tree.
+You might have a file which exports a React component but also exports a value that is imported by a non-React component file.
+Consider migrating the non-React component export to a separate file and importing it into both files.
+
+It is also possible the parent component of the component you edited is a class component, which disables Fast Refresh.
+Fast Refresh requires at least one parent function component in your React tree. @ http://localhost:3000/_next/static/chunks/f0217_next_dist_5e999522._.js:2297
+[   26820ms] [WARNING] [Fast Refresh] performing full reload
+
+Fast Refresh will perform a full reload when you edit a file that's imported by modules outside of the React rendering tree.
+You might have a file which exports a React component but also exports a value that is imported by a non-React component file.
+Consider migrating the non-React component export to a separate file and importing it into both files.
+
+It is also possible the parent component of the component you edited is a class component, which disables Fast Refresh.
+Fast Refresh requires at least one parent function component in your React tree. @ http://localhost:3000/_next/static/chunks/f0217_next_dist_5e999522._.js:2297
+[   41065ms] [WARNING] [Fast Refresh] performing full reload
+
+Fast Refresh will perform a full reload when you edit a file that's imported by modules outside of the React rendering tree.
+You might have a file which exports a React component but also exports a value that is imported by a non-React component file.
+Consider migrating the non-React component export to a separate file and importing it into both files.
+
+It is also possible the parent component of the component you edited is a class component, which disables Fast Refresh.
+Fast Refresh requires at least one parent function component in your React tree. @ http://localhost:3000/_next/static/chunks/f0217_next_dist_5e999522._.js:2297
+[   45042ms] [WARNING] [Fast Refresh] performing full reload
+
+Fast Refresh will perform a full reload when you edit a file that's imported by modules outside of the React rendering tree.
+You might have a file which exports a React component but also exports a value that is imported by a non-React component file.
+Consider migrating the non-React component export to a separate file and importing it into both files.
+
+It is also possible the parent component of the component you edited is a class component, which disables Fast Refresh.
+Fast Refresh requires at least one parent function component in your React tree. @ http://localhost:3000/_next/static/chunks/f0217_next_dist_5e999522._.js:2297

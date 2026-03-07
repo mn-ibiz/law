@@ -1,0 +1,275 @@
+[    1102ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <div className="flex h-scr...">
+      ...
+        <SelectCollectionProvider scope={undefined}>
+          <SelectCollectionProviderProvider scope={undefined} itemMap={Map} collectionRef={{current:null}}>
+            <SelectProvider scope={undefined} onNativeOptionAdd={function Select.useCallback} ...>
+              <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger data-slot="select-tri..." data-size="default" className={"border-i..."}>
+                  <PopperAnchor asChild={true} __scopePopper={{Popper:[...]}}>
+                    <Primitive.div asChild={true} ref={function}>
+                      <Primitive.div.Slot ref={function}>
+                        <Primitive.div.SlotClone ref={function}>
+                          <Primitive.button type="button" role="combobox" aria-controls="radix-_R_9..." ...>
+                            <button
+                              type="button"
+                              role="combobox"
++                             aria-controls="radix-_R_9itmlb_"
+-                             aria-controls="radix-_R_16itmlb_"
+                              aria-expanded={false}
+                              aria-required={undefined}
+                              aria-autocomplete="none"
+                              dir="ltr"
+                              data-state="closed"
+                              disabled={false}
+                              data-disabled={undefined}
+                              data-placeholder={undefined}
+                              data-slot="select-trigger"
+                              data-size="default"
+                              className={"border-input data-[placeholder]:text-muted-foreground [&_svg:not([class*='t..."}
+                              onClick={function handleEvent}
+                              onPointerDown={function handleEvent}
+                              onKeyDown={function handleEvent}
+                              ref={function}
+                            >
+              ...
+        ...
+      <div className="flex flex-...">
+        <Header role="admin" permissions={{...}} actions={<Suspense>}>
+          <header className="sticky top...">
+            <MobileNav>
+            <SearchTrigger>
+            ...
+              <DropdownMenuTrigger data-slot="dropdown-m..." asChild={true}>
+                <MenuAnchor asChild={true} __scopeMenu={{Menu:[...], ...}}>
+                  <PopperAnchor __scopePopper={{Menu:[...], ...}} asChild={true} ref={null}>
+                    <Primitive.div asChild={true} ref={function}>
+                      <Primitive.div.Slot ref={function}>
+                        <Primitive.div.SlotClone ref={function}>
+                          <Primitive.button type="button" id="radix-_R_9..." aria-haspopup="menu" aria-expanded={false} ...>
+                            <Primitive.button.Slot type="button" id="radix-_R_9..." aria-haspopup="menu" ...>
+                              <Primitive.button.SlotClone type="button" id="radix-_R_9..." aria-haspopup="menu" ...>
+                                <Button variant="ghost" className="relative h..." type="button" id="radix-_R_9..." ...>
+                                  <button
+                                    data-slot="dropdown-menu-trigger"
+                                    data-variant="ghost"
+                                    data-size="default"
+                                    className={"inline-flex items-center justify-center gap-2 whitespace-nowrap text-..."}
+                                    type="button"
++                                   id="radix-_R_9mitmlb_"
+-                                   id="radix-_R_16qitmlb_"
+                                    aria-haspopup="menu"
+                                    aria-expanded={false}
+                                    aria-controls={undefined}
+                                    data-state="closed"
+                                    data-disabled={undefined}
+                                    disabled={false}
+                                    onPointerDown={function handleEvent}
+                                    onKeyDown={function handleEvent}
+                                    ref={function}
+                                  >
+            <CommandSearch>
+              <CommandDialog open={false} onOpenChange={function bound dispatchSetState}>
+                <Dialog open={false} onOpenChange={function bound dispatchSetState}>
+                  <Dialog data-slot="dialog" open={false} onOpenChange={function bound dispatchSetState}>
+                    <DialogProvider scope={undefined} triggerRef={{current:null}} contentRef={{current:null}} ...>
+                      <DialogHeader className="sr-only">
+                        <div data-slot="dialog-header" className="flex flex-...">
+                          <DialogTitle>
+                            <DialogTitle data-slot="dialog-title" className="text-lg le...">
+                              <Primitive.h2 id="radix-_R_2..." data-slot="dialog-title" className="text-lg le..." ...>
+                                <h2
++                                 id="radix-_R_26itmlbH1_"
+-                                 id="radix-_R_8qitmlbH1_"
+                                  data-slot="dialog-title"
+                                  className="text-lg leading-none font-semibold"
+                                  ref={null}
+                                >
++                                 Command Palette
+                          <DialogDescription>
+                            <DialogDescription data-slot="dialog-des..." className="text-muted...">
+                              <Primitive.p id="radix-_R_2..." data-slot="dialog-des..." className="text-muted..." ...>
+                                <p
++                                 id="radix-_R_26itmlbH2_"
+-                                 id="radix-_R_8qitmlbH2_"
+                                  data-slot="dialog-description"
+                                  className="text-muted-foreground text-sm"
+                                  ref={null}
+                                >
++                                 Search for a command to run...
+                      ...
+        ...
+ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[    1250ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <InnerLayoutRouter url="/time-expe..." tree={[...]} params={{}} cacheNode={{rsc:<Fragment>, ...}} segmentPath={[...]} ...>
+      <SegmentViewNode type="page" pagePath="/Desktop/L...">
+        <SegmentTrieNode>
+        <TimeExpensesPage>
+          <div className="space-y-6">
+            <div>
+            <Tabs defaultValue="time">
+              <Tabs data-slot="tabs" data-orientation="horizontal" orientation="horizontal" className="group/tabs..." ...>
+                <TabsProvider scope={undefined} baseId="radix-_R_k..." value="time" ...>
+                  <Primitive.div dir="ltr" data-orientation="horizontal" data-slot="tabs" className="group/tabs..." ...>
+                    <div dir="ltr" data-orientation="horizontal" data-slot="tabs" className="group/tabs..." ref={null}>
+                      ...
+                        <div role="tablist" aria-orientation="horizontal" data-slot="tabs-list" data-variant="default" ...>
+                          ...
+                            <Primitive.span.Slot tabIndex={-1} data-orientation="horizontal" ...>
+                              <Primitive.span.SlotClone tabIndex={-1} data-orientation="horizontal" ...>
+                                <Primitive.button type="button" role="tab" aria-selected={true} ...>
+                                  <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={true}
++                                   aria-controls="radix-_R_klritqitmlb_-content-time"
+-                                   aria-controls="radix-_R_2inebnaitmlb_-content-time"
+                                    data-state="active"
+                                    data-disabled={undefined}
+                                    disabled={false}
++                                   id="radix-_R_klritqitmlb_-trigger-time"
+-                                   id="radix-_R_2inebnaitmlb_-trigger-time"
+                                    data-slot="tabs-trigger"
+                                    className={"focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ou..."}
+                                    onMouseDown={function}
+                                    onKeyDown={function}
+                                    onFocus={function}
+                                    tabIndex={-1}
+                                    data-orientation="horizontal"
+                                    data-radix-collection-item=""
+                                    ref={function}
+                                  >
++                                   Time Entries
+                          ...
+                            <Primitive.span.Slot tabIndex={-1} data-orientation="horizontal" ...>
+                              <Primitive.span.SlotClone tabIndex={-1} data-orientation="horizontal" ...>
+                                <Primitive.button type="button" role="tab" aria-selected={false} ...>
+                                  <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={false}
++                                   aria-controls="radix-_R_klritqitmlb_-content-expenses"
+-                                   aria-controls="radix-_R_2inebnaitmlb_-content-expenses"
+                                    data-state="inactive"
+                                    data-disabled={undefined}
+                                    disabled={false}
++                                   id="radix-_R_klritqitmlb_-trigger-expenses"
+-                                   id="radix-_R_2inebnaitmlb_-trigger-expenses"
+                                    data-slot="tabs-trigger"
+                                    className={"focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ou..."}
+                                    onMouseDown={function}
+                                    onKeyDown={function}
+                                    onFocus={function}
+                                    tabIndex={-1}
+                                    data-orientation="horizontal"
+                                    data-radix-collection-item=""
+                                    ref={function}
+                                  >
++                                   Expenses
+                      <TabsContent value="time">
+                        <TabsContent data-slot="tabs-content" className="flex-1 out..." value="time">
+                          <Presence present={true}>
+                            <Primitive.div data-state="active" data-orientation="horizontal" role="tabpanel" ...>
+                              <div
+                                data-state="active"
+                                data-orientation="horizontal"
+                                role="tabpanel"
++                               aria-labelledby="radix-_R_klritqitmlb_-trigger-time"
+-                               aria-labelledby="radix-_R_2inebnaitmlb_-trigger-time"
+                                hidden={false}
++                               id="radix-_R_klritqitmlb_-content-time"
+-                               id="radix-_R_2inebnaitmlb_-content-time"
+                                tabIndex={0}
+                                data-slot="tabs-content"
+                                className="flex-1 outline-none"
+                                style={{animationDuration:"0s"}}
+                                ref={function}
+                              >
+                      <TabsContent value="expenses">
+                        <TabsContent data-slot="tabs-content" className="flex-1 out..." value="expenses">
+                          <Presence present={false}>
+                            <Primitive.div data-state="inactive" data-orientation="horizontal" role="tabpanel" ...>
+                              <div
+                                data-state="inactive"
+                                data-orientation="horizontal"
+                                role="tabpanel"
++                               aria-labelledby="radix-_R_klritqitmlb_-trigger-expenses"
+-                               aria-labelledby="radix-_R_2inebnaitmlb_-trigger-expenses"
+                                hidden={true}
++                               id="radix-_R_klritqitmlb_-content-expenses"
+-                               id="radix-_R_2inebnaitmlb_-content-expenses"
+                                tabIndex={0}
+                                data-slot="tabs-content"
+                                className="flex-1 outline-none"
+                                style={{animationDuration:undefined}}
+                                ref={function}
+                              >
+      ...
+ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[    1257ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <Popper __scopePopper={{Popper:[...]}}>
+      <PopperProvider scope={{Popper:[...]}} anchor={null} onAnchorChange={function bound dispatchSetState}>
+        <PopoverProvider scope={undefined} contentId="radix-_R_5..." triggerRef={{current:null}} open={false} ...>
+          <PopoverTrigger asChild={true}>
+            <PopoverTrigger data-slot="popover-tr..." asChild={true}>
+              <PopperAnchor asChild={true} __scopePopper={{Popper:[...]}}>
+                <Primitive.div asChild={true} ref={function}>
+                  <Primitive.div.Slot ref={function}>
+                    <Primitive.div.SlotClone ref={function}>
+                      <Primitive.button type="button" aria-haspopup="dialog" aria-expanded={false} ...>
+                        <Primitive.button.Slot type="button" aria-haspopup="dialog" aria-expanded={false} ...>
+                          <Primitive.button.SlotClone type="button" aria-haspopup="dialog" aria-expanded={false} ...>
+                            <Button variant="ghost" size="icon" className="relative h..." aria-label="Notifications" ...>
+                              <button
+                                data-slot="popover-trigger"
+                                data-variant="ghost"
+                                data-size="icon"
+                                className={"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-m..."}
+                                aria-label="Notifications"
+                                type="button"
+                                aria-haspopup="dialog"
+                                aria-expanded={false}
++                               aria-controls="radix-_R_5mitmlb_"
+-                               aria-controls="radix-_R_mqitmlb_"
+                                data-state="closed"
+                                onClick={function handleEvent}
+                                ref={function}
+                              >
+          ...
+ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127

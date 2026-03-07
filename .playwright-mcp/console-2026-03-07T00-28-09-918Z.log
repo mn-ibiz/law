@@ -1,0 +1,612 @@
+[  129856ms] [WARNING] [Fast Refresh] performing full reload
+
+Fast Refresh will perform a full reload when you edit a file that's imported by modules outside of the React rendering tree.
+You might have a file which exports a React component but also exports a value that is imported by a non-React component file.
+Consider migrating the non-React component export to a separate file and importing it into both files.
+
+It is also possible the parent component of the component you edited is a class component, which disables Fast Refresh.
+Fast Refresh requires at least one parent function component in your React tree. @ http://localhost:3000/_next/static/chunks/f0217_next_dist_5e999522._.js:2297
+[  226198ms] [WARNING] [Fast Refresh] performing full reload
+
+Fast Refresh will perform a full reload when you edit a file that's imported by modules outside of the React rendering tree.
+You might have a file which exports a React component but also exports a value that is imported by a non-React component file.
+Consider migrating the non-React component export to a separate file and importing it into both files.
+
+It is also possible the parent component of the component you edited is a class component, which disables Fast Refresh.
+Fast Refresh requires at least one parent function component in your React tree. @ http://localhost:3000/_next/static/chunks/f0217_next_dist_5e999522._.js:2297
+[  231886ms] [WARNING] [Fast Refresh] performing full reload
+
+Fast Refresh will perform a full reload when you edit a file that's imported by modules outside of the React rendering tree.
+You might have a file which exports a React component but also exports a value that is imported by a non-React component file.
+Consider migrating the non-React component export to a separate file and importing it into both files.
+
+It is also possible the parent component of the component you edited is a class component, which disables Fast Refresh.
+Fast Refresh requires at least one parent function component in your React tree. @ http://localhost:3000/_next/static/chunks/f0217_next_dist_5e999522._.js:2297
+[  236180ms] [WARNING] [Fast Refresh] performing full reload
+
+Fast Refresh will perform a full reload when you edit a file that's imported by modules outside of the React rendering tree.
+You might have a file which exports a React component but also exports a value that is imported by a non-React component file.
+Consider migrating the non-React component export to a separate file and importing it into both files.
+
+It is also possible the parent component of the component you edited is a class component, which disables Fast Refresh.
+Fast Refresh requires at least one parent function component in your React tree. @ http://localhost:3000/_next/static/chunks/f0217_next_dist_5e999522._.js:2297
+[  237095ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <div className="flex h-scr...">
+      ...
+        <SelectCollectionProvider scope={undefined}>
+          <SelectCollectionProviderProvider scope={undefined} itemMap={Map} collectionRef={{current:null}}>
+            <SelectProvider scope={undefined} onNativeOptionAdd={function Select.useCallback} ...>
+              <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger data-slot="select-tri..." data-size="default" className={"border-i..."}>
+                  <PopperAnchor asChild={true} __scopePopper={{Popper:[...]}}>
+                    <Primitive.div asChild={true} ref={function}>
+                      <Primitive.div.Slot ref={function}>
+                        <Primitive.div.SlotClone ref={function}>
+                          <Primitive.button type="button" role="combobox" aria-controls="radix-_R_9..." ...>
+                            <button
+                              type="button"
+                              role="combobox"
++                             aria-controls="radix-_R_9itmlb_"
+-                             aria-controls="radix-_R_16itmlb_"
+                              aria-expanded={false}
+                              aria-required={undefined}
+                              aria-autocomplete="none"
+                              dir="ltr"
+                              data-state="closed"
+                              disabled={false}
+                              data-disabled={undefined}
+                              data-placeholder={undefined}
+                              data-slot="select-trigger"
+                              data-size="default"
+                              className={"border-input data-[placeholder]:text-muted-foreground [&_svg:not([class*='t..."}
+                              onClick={function handleEvent}
+                              onPointerDown={function handleEvent}
+                              onKeyDown={function handleEvent}
+                              ref={function}
+                            >
+              ...
+        ...
+      <div className="flex flex-...">
+        <Header role="admin" permissions={{...}} actions={<Suspense>}>
+          <header className="sticky top...">
+            <MobileNav>
+            <SearchTrigger>
+            ...
+              <DropdownMenuTrigger data-slot="dropdown-m..." asChild={true}>
+                <MenuAnchor asChild={true} __scopeMenu={{Menu:[...], ...}}>
+                  <PopperAnchor __scopePopper={{Menu:[...], ...}} asChild={true} ref={null}>
+                    <Primitive.div asChild={true} ref={function}>
+                      <Primitive.div.Slot ref={function}>
+                        <Primitive.div.SlotClone ref={function}>
+                          <Primitive.button type="button" id="radix-_R_9..." aria-haspopup="menu" aria-expanded={false} ...>
+                            <Primitive.button.Slot type="button" id="radix-_R_9..." aria-haspopup="menu" ...>
+                              <Primitive.button.SlotClone type="button" id="radix-_R_9..." aria-haspopup="menu" ...>
+                                <Button variant="ghost" className="relative h..." type="button" id="radix-_R_9..." ...>
+                                  <button
+                                    data-slot="dropdown-menu-trigger"
+                                    data-variant="ghost"
+                                    data-size="default"
+                                    className={"inline-flex items-center justify-center gap-2 whitespace-nowrap text-..."}
+                                    type="button"
++                                   id="radix-_R_9mitmlb_"
+-                                   id="radix-_R_16qitmlb_"
+                                    aria-haspopup="menu"
+                                    aria-expanded={false}
+                                    aria-controls={undefined}
+                                    data-state="closed"
+                                    data-disabled={undefined}
+                                    disabled={false}
+                                    onPointerDown={function handleEvent}
+                                    onKeyDown={function handleEvent}
+                                    ref={function}
+                                  >
+            <CommandSearch>
+              <CommandDialog open={false} onOpenChange={function bound dispatchSetState}>
+                <Dialog open={false} onOpenChange={function bound dispatchSetState}>
+                  <Dialog data-slot="dialog" open={false} onOpenChange={function bound dispatchSetState}>
+                    <DialogProvider scope={undefined} triggerRef={{current:null}} contentRef={{current:null}} ...>
+                      <DialogHeader className="sr-only">
+                        <div data-slot="dialog-header" className="flex flex-...">
+                          <DialogTitle>
+                            <DialogTitle data-slot="dialog-title" className="text-lg le...">
+                              <Primitive.h2 id="radix-_R_2..." data-slot="dialog-title" className="text-lg le..." ...>
+                                <h2
++                                 id="radix-_R_26itmlbH1_"
+-                                 id="radix-_R_8qitmlbH1_"
+                                  data-slot="dialog-title"
+                                  className="text-lg leading-none font-semibold"
+                                  ref={null}
+                                >
++                                 Command Palette
+                          <DialogDescription>
+                            <DialogDescription data-slot="dialog-des..." className="text-muted...">
+                              <Primitive.p id="radix-_R_2..." data-slot="dialog-des..." className="text-muted..." ...>
+                                <p
++                                 id="radix-_R_26itmlbH2_"
+-                                 id="radix-_R_8qitmlbH2_"
+                                  data-slot="dialog-description"
+                                  className="text-muted-foreground text-sm"
+                                  ref={null}
+                                >
++                                 Search for a command to run...
+                      ...
+        ...
+ @ http://localhost:3000/_next/static/chunks/f0217_next_dist_5e999522._.js:3127
+[  237295ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <Popper __scopePopper={{Popper:[...]}}>
+      <PopperProvider scope={{Popper:[...]}} anchor={null} onAnchorChange={function bound dispatchSetState}>
+        <PopoverProvider scope={undefined} contentId="radix-_R_5..." triggerRef={{current:null}} open={false} ...>
+          <PopoverTrigger asChild={true}>
+            <PopoverTrigger data-slot="popover-tr..." asChild={true}>
+              <PopperAnchor asChild={true} __scopePopper={{Popper:[...]}}>
+                <Primitive.div asChild={true} ref={function}>
+                  <Primitive.div.Slot ref={function}>
+                    <Primitive.div.SlotClone ref={function}>
+                      <Primitive.button type="button" aria-haspopup="dialog" aria-expanded={false} ...>
+                        <Primitive.button.Slot type="button" aria-haspopup="dialog" aria-expanded={false} ...>
+                          <Primitive.button.SlotClone type="button" aria-haspopup="dialog" aria-expanded={false} ...>
+                            <Button variant="ghost" size="icon" className="relative h..." aria-label="Notifications" ...>
+                              <button
+                                data-slot="popover-trigger"
+                                data-variant="ghost"
+                                data-size="icon"
+                                className={"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-m..."}
+                                aria-label="Notifications"
+                                type="button"
+                                aria-haspopup="dialog"
+                                aria-expanded={false}
++                               aria-controls="radix-_R_5mitmlb_"
+-                               aria-controls="radix-_R_mqitmlb_"
+                                data-state="closed"
+                                onClick={function handleEvent}
+                                ref={function}
+                              >
+          ...
+ @ http://localhost:3000/_next/static/chunks/f0217_next_dist_5e999522._.js:3127
+[  237314ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <SegmentViewNode type="page" pagePath="/Desktop/P...">
+      <SegmentTrieNode>
+      <CaseDetailPage>
+        <div className="space-y-6">
+          <nav>
+          <div>
+          <div>
+          ...
+            <Tabs data-slot="tabs" data-orientation="horizontal" orientation="horizontal" className="group/tabs..." ...>
+              <TabsProvider scope={undefined} baseId="radix-_R_2..." value="details" ...>
+                <Primitive.div dir="ltr" data-orientation="horizontal" data-slot="tabs" className="group/tabs..." ...>
+                  <div dir="ltr" data-orientation="horizontal" data-slot="tabs" className="group/tabs..." ref={null}>
+                    ...
+                      <div role="tablist" aria-orientation="horizontal" data-slot="tabs-list" data-variant="default" ...>
+                        ...
+                          <Primitive.span tabIndex={-1} data-orientation="horizontal" asChild={true} ref={function} ...>
+                            <Primitive.span.Slot tabIndex={-1} data-orientation="horizontal" ...>
+                              <Primitive.span.SlotClone tabIndex={-1} data-orientation="horizontal" ...>
+                                <Primitive.button type="button" role="tab" aria-selected={true} ...>
+                                  <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={true}
++                                   aria-controls="radix-_R_29bn5ritqitmlb_-content-details"
+-                                   aria-controls="radix-_R_95esnebnaitmlb_-content-details"
+                                    data-state="active"
+                                    data-disabled={undefined}
+                                    disabled={false}
++                                   id="radix-_R_29bn5ritqitmlb_-trigger-details"
+-                                   id="radix-_R_95esnebnaitmlb_-trigger-details"
+                                    data-slot="tabs-trigger"
+                                    className={"focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ou..."}
+                                    onMouseDown={function}
+                                    onKeyDown={function}
+                                    onFocus={function}
+                                    tabIndex={-1}
+                                    data-orientation="horizontal"
+                                    data-radix-collection-item=""
+                                    ref={function}
+                                  >
+                        ...
+                          <Primitive.span tabIndex={-1} data-orientation="horizontal" asChild={true} ref={function} ...>
+                            <Primitive.span.Slot tabIndex={-1} data-orientation="horizontal" ...>
+                              <Primitive.span.SlotClone tabIndex={-1} data-orientation="horizontal" ...>
+                                <Primitive.button type="button" role="tab" aria-selected={false} ...>
+                                  <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={false}
++                                   aria-controls="radix-_R_29bn5ritqitmlb_-content-financial"
+-                                   aria-controls="radix-_R_95esnebnaitmlb_-content-financial"
+                                    data-state="inactive"
+                                    data-disabled={undefined}
+                                    disabled={false}
++                                   id="radix-_R_29bn5ritqitmlb_-trigger-financial"
+-                                   id="radix-_R_95esnebnaitmlb_-trigger-financial"
+                                    data-slot="tabs-trigger"
+                                    className={"focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ou..."}
+                                    onMouseDown={function}
+                                    onKeyDown={function}
+                                    onFocus={function}
+                                    tabIndex={-1}
+                                    data-orientation="horizontal"
+                                    data-radix-collection-item=""
+                                    ref={function}
+                                  >
+                        ...
+                          <Primitive.span tabIndex={-1} data-orientation="horizontal" asChild={true} ref={function} ...>
+                            <Primitive.span.Slot tabIndex={-1} data-orientation="horizontal" ...>
+                              <Primitive.span.SlotClone tabIndex={-1} data-orientation="horizontal" ...>
+                                <Primitive.button type="button" role="tab" aria-selected={false} ...>
+                                  <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={false}
++                                   aria-controls="radix-_R_29bn5ritqitmlb_-content-tasks-deadlines"
+-                                   aria-controls="radix-_R_95esnebnaitmlb_-content-tasks-deadlines"
+                                    data-state="inactive"
+                                    data-disabled={undefined}
+                                    disabled={false}
++                                   id="radix-_R_29bn5ritqitmlb_-trigger-tasks-deadlines"
+-                                   id="radix-_R_95esnebnaitmlb_-trigger-tasks-deadlines"
+                                    data-slot="tabs-trigger"
+                                    className={"focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ou..."}
+                                    onMouseDown={function}
+                                    onKeyDown={function}
+                                    onFocus={function}
+                                    tabIndex={-1}
+                                    data-orientation="horizontal"
+                                    data-radix-collection-item=""
+                                    ref={function}
+                                  >
+                        ...
+                          <Primitive.span tabIndex={-1} data-orientation="horizontal" asChild={true} ref={function} ...>
+                            <Primitive.span.Slot tabIndex={-1} data-orientation="horizontal" ...>
+                              <Primitive.span.SlotClone tabIndex={-1} data-orientation="horizontal" ...>
+                                <Primitive.button type="button" role="tab" aria-selected={false} ...>
+                                  <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={false}
++                                   aria-controls="radix-_R_29bn5ritqitmlb_-content-documents"
+-                                   aria-controls="radix-_R_95esnebnaitmlb_-content-documents"
+                                    data-state="inactive"
+                                    data-disabled={undefined}
+                                    disabled={false}
++                                   id="radix-_R_29bn5ritqitmlb_-trigger-documents"
+-                                   id="radix-_R_95esnebnaitmlb_-trigger-documents"
+                                    data-slot="tabs-trigger"
+                                    className={"focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ou..."}
+                                    onMouseDown={function}
+                                    onKeyDown={function}
+                                    onFocus={function}
+                                    tabIndex={-1}
+                                    data-orientation="horizontal"
+                                    data-radix-collection-item=""
+                                    ref={function}
+                                  >
+                        ...
+                          <Primitive.span tabIndex={-1} data-orientation="horizontal" asChild={true} ref={function} ...>
+                            <Primitive.span.Slot tabIndex={-1} data-orientation="horizontal" ...>
+                              <Primitive.span.SlotClone tabIndex={-1} data-orientation="horizontal" ...>
+                                <Primitive.button type="button" role="tab" aria-selected={false} ...>
+                                  <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={false}
++                                   aria-controls="radix-_R_29bn5ritqitmlb_-content-assignments"
+-                                   aria-controls="radix-_R_95esnebnaitmlb_-content-assignments"
+                                    data-state="inactive"
+                                    data-disabled={undefined}
+                                    disabled={false}
++                                   id="radix-_R_29bn5ritqitmlb_-trigger-assignments"
+-                                   id="radix-_R_95esnebnaitmlb_-trigger-assignments"
+                                    data-slot="tabs-trigger"
+                                    className={"focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ou..."}
+                                    onMouseDown={function}
+                                    onKeyDown={function}
+                                    onFocus={function}
+                                    tabIndex={-1}
+                                    data-orientation="horizontal"
+                                    data-radix-collection-item=""
+                                    ref={function}
+                                  >
+                        ...
+                          <Primitive.span tabIndex={-1} data-orientation="horizontal" asChild={true} ref={function} ...>
+                            <Primitive.span.Slot tabIndex={-1} data-orientation="horizontal" ...>
+                              <Primitive.span.SlotClone tabIndex={-1} data-orientation="horizontal" ...>
+                                <Primitive.button type="button" role="tab" aria-selected={false} ...>
+                                  <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={false}
++                                   aria-controls="radix-_R_29bn5ritqitmlb_-content-parties"
+-                                   aria-controls="radix-_R_95esnebnaitmlb_-content-parties"
+                                    data-state="inactive"
+                                    data-disabled={undefined}
+                                    disabled={false}
++                                   id="radix-_R_29bn5ritqitmlb_-trigger-parties"
+-                                   id="radix-_R_95esnebnaitmlb_-trigger-parties"
+                                    data-slot="tabs-trigger"
+                                    className={"focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ou..."}
+                                    onMouseDown={function}
+                                    onKeyDown={function}
+                                    onFocus={function}
+                                    tabIndex={-1}
+                                    data-orientation="horizontal"
+                                    data-radix-collection-item=""
+                                    ref={function}
+                                  >
+                        ...
+                          <Primitive.span tabIndex={-1} data-orientation="horizontal" asChild={true} ref={function} ...>
+                            <Primitive.span.Slot tabIndex={-1} data-orientation="horizontal" ...>
+                              <Primitive.span.SlotClone tabIndex={-1} data-orientation="horizontal" ...>
+                                <Primitive.button type="button" role="tab" aria-selected={false} ...>
+                                  <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={false}
++                                   aria-controls="radix-_R_29bn5ritqitmlb_-content-notes"
+-                                   aria-controls="radix-_R_95esnebnaitmlb_-content-notes"
+                                    data-state="inactive"
+                                    data-disabled={undefined}
+                                    disabled={false}
++                                   id="radix-_R_29bn5ritqitmlb_-trigger-notes"
+-                                   id="radix-_R_95esnebnaitmlb_-trigger-notes"
+                                    data-slot="tabs-trigger"
+                                    className={"focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ou..."}
+                                    onMouseDown={function}
+                                    onKeyDown={function}
+                                    onFocus={function}
+                                    tabIndex={-1}
+                                    data-orientation="horizontal"
+                                    data-radix-collection-item=""
+                                    ref={function}
+                                  >
+                        ...
+                          <Primitive.span tabIndex={-1} data-orientation="horizontal" asChild={true} ref={function} ...>
+                            <Primitive.span.Slot tabIndex={-1} data-orientation="horizontal" ...>
+                              <Primitive.span.SlotClone tabIndex={-1} data-orientation="horizontal" ...>
+                                <Primitive.button type="button" role="tab" aria-selected={false} ...>
+                                  <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={false}
++                                   aria-controls="radix-_R_29bn5ritqitmlb_-content-timeline"
+-                                   aria-controls="radix-_R_95esnebnaitmlb_-content-timeline"
+                                    data-state="inactive"
+                                    data-disabled={undefined}
+                                    disabled={false}
++                                   id="radix-_R_29bn5ritqitmlb_-trigger-timeline"
+-                                   id="radix-_R_95esnebnaitmlb_-trigger-timeline"
+                                    data-slot="tabs-trigger"
+                                    className={"focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ou..."}
+                                    onMouseDown={function}
+                                    onKeyDown={function}
+                                    onFocus={function}
+                                    tabIndex={-1}
+                                    data-orientation="horizontal"
+                                    data-radix-collection-item=""
+                                    ref={function}
+                                  >
+                    <div className="mt-4 grid ...">
+                      <div className="min-w-0">
+                        <TabsContent value="details" className="mt-0">
+                          <TabsContent data-slot="tabs-content" className="flex-1 out..." value="details">
+                            <Presence present={true}>
+                              <Primitive.div data-state="active" data-orientation="horizontal" role="tabpanel" ...>
+                                <div
+                                  data-state="active"
+                                  data-orientation="horizontal"
+                                  role="tabpanel"
++                                 aria-labelledby="radix-_R_29bn5ritqitmlb_-trigger-details"
+-                                 aria-labelledby="radix-_R_95esnebnaitmlb_-trigger-details"
+                                  hidden={false}
++                                 id="radix-_R_29bn5ritqitmlb_-content-details"
+-                                 id="radix-_R_95esnebnaitmlb_-content-details"
+                                  tabIndex={0}
+                                  data-slot="tabs-content"
+                                  className="flex-1 outline-none mt-0"
+                                  style={{animationDuration:"0s"}}
+                                  ref={function}
+                                >
+                        <TabsContent value="financial" className="mt-0 space...">
+                          <TabsContent data-slot="tabs-content" className="flex-1 out..." value="financial">
+                            <Presence present={false}>
+                              <Primitive.div data-state="inactive" data-orientation="horizontal" role="tabpanel" ...>
+                                <div
+                                  data-state="inactive"
+                                  data-orientation="horizontal"
+                                  role="tabpanel"
++                                 aria-labelledby="radix-_R_29bn5ritqitmlb_-trigger-financial"
+-                                 aria-labelledby="radix-_R_95esnebnaitmlb_-trigger-financial"
+                                  hidden={true}
++                                 id="radix-_R_29bn5ritqitmlb_-content-financial"
+-                                 id="radix-_R_95esnebnaitmlb_-content-financial"
+                                  tabIndex={0}
+                                  data-slot="tabs-content"
+                                  className="flex-1 outline-none mt-0 space-y-6"
+                                  style={{animationDuration:undefined}}
+                                  ref={function}
+                                >
+                        <TabsContent value="tasks-dead..." className="mt-0 space...">
+                          <TabsContent data-slot="tabs-content" className="flex-1 out..." value="tasks-dead...">
+                            <Presence present={false}>
+                              <Primitive.div data-state="inactive" data-orientation="horizontal" role="tabpanel" ...>
+                                <div
+                                  data-state="inactive"
+                                  data-orientation="horizontal"
+                                  role="tabpanel"
++                                 aria-labelledby="radix-_R_29bn5ritqitmlb_-trigger-tasks-deadlines"
+-                                 aria-labelledby="radix-_R_95esnebnaitmlb_-trigger-tasks-deadlines"
+                                  hidden={true}
++                                 id="radix-_R_29bn5ritqitmlb_-content-tasks-deadlines"
+-                                 id="radix-_R_95esnebnaitmlb_-content-tasks-deadlines"
+                                  tabIndex={0}
+                                  data-slot="tabs-content"
+                                  className="flex-1 outline-none mt-0 space-y-6"
+                                  style={{animationDuration:undefined}}
+                                  ref={function}
+                                >
+                        <TabsContent value="documents" className="mt-0">
+                          <TabsContent data-slot="tabs-content" className="flex-1 out..." value="documents">
+                            <Presence present={false}>
+                              <Primitive.div data-state="inactive" data-orientation="horizontal" role="tabpanel" ...>
+                                <div
+                                  data-state="inactive"
+                                  data-orientation="horizontal"
+                                  role="tabpanel"
++                                 aria-labelledby="radix-_R_29bn5ritqitmlb_-trigger-documents"
+-                                 aria-labelledby="radix-_R_95esnebnaitmlb_-trigger-documents"
+                                  hidden={true}
++                                 id="radix-_R_29bn5ritqitmlb_-content-documents"
+-                                 id="radix-_R_95esnebnaitmlb_-content-documents"
+                                  tabIndex={0}
+                                  data-slot="tabs-content"
+                                  className="flex-1 outline-none mt-0"
+                                  style={{animationDuration:undefined}}
+                                  ref={function}
+                                >
+                        <TabsContent value="assignments" className="mt-0">
+                          <TabsContent data-slot="tabs-content" className="flex-1 out..." value="assignments">
+                            <Presence present={false}>
+                              <Primitive.div data-state="inactive" data-orientation="horizontal" role="tabpanel" ...>
+                                <div
+                                  data-state="inactive"
+                                  data-orientation="horizontal"
+                                  role="tabpanel"
++                                 aria-labelledby="radix-_R_29bn5ritqitmlb_-trigger-assignments"
+-                                 aria-labelledby="radix-_R_95esnebnaitmlb_-trigger-assignments"
+                                  hidden={true}
++                                 id="radix-_R_29bn5ritqitmlb_-content-assignments"
+-                                 id="radix-_R_95esnebnaitmlb_-content-assignments"
+                                  tabIndex={0}
+                                  data-slot="tabs-content"
+                                  className="flex-1 outline-none mt-0"
+                                  style={{animationDuration:undefined}}
+                                  ref={function}
+                                >
+                        <TabsContent value="parties" className="mt-0">
+                          <TabsContent data-slot="tabs-content" className="flex-1 out..." value="parties">
+                            <Presence present={false}>
+                              <Primitive.div data-state="inactive" data-orientation="horizontal" role="tabpanel" ...>
+                                <div
+                                  data-state="inactive"
+                                  data-orientation="horizontal"
+                                  role="tabpanel"
++                                 aria-labelledby="radix-_R_29bn5ritqitmlb_-trigger-parties"
+-                                 aria-labelledby="radix-_R_95esnebnaitmlb_-trigger-parties"
+                                  hidden={true}
++                                 id="radix-_R_29bn5ritqitmlb_-content-parties"
+-                                 id="radix-_R_95esnebnaitmlb_-content-parties"
+                                  tabIndex={0}
+                                  data-slot="tabs-content"
+                                  className="flex-1 outline-none mt-0"
+                                  style={{animationDuration:undefined}}
+                                  ref={function}
+                                >
+                        <TabsContent value="notes" className="mt-0">
+                          <TabsContent data-slot="tabs-content" className="flex-1 out..." value="notes">
+                            <Presence present={false}>
+                              <Primitive.div data-state="inactive" data-orientation="horizontal" role="tabpanel" ...>
+                                <div
+                                  data-state="inactive"
+                                  data-orientation="horizontal"
+                                  role="tabpanel"
++                                 aria-labelledby="radix-_R_29bn5ritqitmlb_-trigger-notes"
+-                                 aria-labelledby="radix-_R_95esnebnaitmlb_-trigger-notes"
+                                  hidden={true}
++                                 id="radix-_R_29bn5ritqitmlb_-content-notes"
+-                                 id="radix-_R_95esnebnaitmlb_-content-notes"
+                                  tabIndex={0}
+                                  data-slot="tabs-content"
+                                  className="flex-1 outline-none mt-0"
+                                  style={{animationDuration:undefined}}
+                                  ref={function}
+                                >
+                        <TabsContent value="timeline" className="mt-0">
+                          <TabsContent data-slot="tabs-content" className="flex-1 out..." value="timeline">
+                            <Presence present={false}>
+                              <Primitive.div data-state="inactive" data-orientation="horizontal" role="tabpanel" ...>
+                                <div
+                                  data-state="inactive"
+                                  data-orientation="horizontal"
+                                  role="tabpanel"
++                                 aria-labelledby="radix-_R_29bn5ritqitmlb_-trigger-timeline"
+-                                 aria-labelledby="radix-_R_95esnebnaitmlb_-trigger-timeline"
+                                  hidden={true}
++                                 id="radix-_R_29bn5ritqitmlb_-content-timeline"
+-                                 id="radix-_R_95esnebnaitmlb_-content-timeline"
+                                  tabIndex={0}
+                                  data-slot="tabs-content"
+                                  className="flex-1 outline-none mt-0"
+                                  style={{animationDuration:undefined}}
+                                  ref={function}
+                                >
+                      ...
+ @ http://localhost:3000/_next/static/chunks/f0217_next_dist_5e999522._.js:3127
+[  273623ms] [WARNING] [Fast Refresh] performing full reload
+
+Fast Refresh will perform a full reload when you edit a file that's imported by modules outside of the React rendering tree.
+You might have a file which exports a React component but also exports a value that is imported by a non-React component file.
+Consider migrating the non-React component export to a separate file and importing it into both files.
+
+It is also possible the parent component of the component you edited is a class component, which disables Fast Refresh.
+Fast Refresh requires at least one parent function component in your React tree. @ http://localhost:3000/_next/static/chunks/f0217_next_dist_5e999522._.js:2297
+[  285108ms] [WARNING] [Fast Refresh] performing full reload
+
+Fast Refresh will perform a full reload when you edit a file that's imported by modules outside of the React rendering tree.
+You might have a file which exports a React component but also exports a value that is imported by a non-React component file.
+Consider migrating the non-React component export to a separate file and importing it into both files.
+
+It is also possible the parent component of the component you edited is a class component, which disables Fast Refresh.
+Fast Refresh requires at least one parent function component in your React tree. @ http://localhost:3000/_next/static/chunks/f0217_next_dist_5e999522._.js:2297
+[  295553ms] [WARNING] [Fast Refresh] performing full reload
+
+Fast Refresh will perform a full reload when you edit a file that's imported by modules outside of the React rendering tree.
+You might have a file which exports a React component but also exports a value that is imported by a non-React component file.
+Consider migrating the non-React component export to a separate file and importing it into both files.
+
+It is also possible the parent component of the component you edited is a class component, which disables Fast Refresh.
+Fast Refresh requires at least one parent function component in your React tree. @ http://localhost:3000/_next/static/chunks/f0217_next_dist_5e999522._.js:2297
+[  308970ms] [WARNING] [Fast Refresh] performing full reload
+
+Fast Refresh will perform a full reload when you edit a file that's imported by modules outside of the React rendering tree.
+You might have a file which exports a React component but also exports a value that is imported by a non-React component file.
+Consider migrating the non-React component export to a separate file and importing it into both files.
+
+It is also possible the parent component of the component you edited is a class component, which disables Fast Refresh.
+Fast Refresh requires at least one parent function component in your React tree. @ http://localhost:3000/_next/static/chunks/f0217_next_dist_5e999522._.js:2297

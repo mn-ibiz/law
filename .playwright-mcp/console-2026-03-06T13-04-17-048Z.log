@@ -1,0 +1,1147 @@
+[    2328ms] [ERROR] %c%s%c Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.%s background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+  <... title=... description=... icon={{$$typeof: ..., render: ...}} iconColor=... columns=... data=... filename=... dateRange=... summary=... emptyMessage=...>
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[    2328ms] [ERROR] %c%s%c Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.%s background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+  <... title=... description=... icon={{$$typeof: ..., render: ...}} iconColor=... columns=... data=... filename=... summary=... emptyMessage=...>
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[    2334ms] [ERROR] %c%s%c Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.%s background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+  <... title=... description=... icon={{$$typeof: ..., render: ...}} iconColor=... columns=... data=... filename=... dateRange=... summary=...>
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[    2334ms] [ERROR] %c%s%c Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.%s background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+  <... title=... description=... icon={{$$typeof: ..., render: ...}} iconColor=... columns=... data=... filename=... summary=... emptyMessage=...>
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[    2334ms] [ERROR] %c%s%c Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.%s background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+  <... title=... description=... icon={{$$typeof: ..., render: ...}} iconColor=... columns=... data=... filename=... dateRange=... summary=...>
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[    2334ms] [ERROR] %c%s%c Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.%s background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+  <... title=... description=... icon={{$$typeof: ..., render: ...}} iconColor=... columns=... data=... filename=... summary=... emptyMessage=...>
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[    2334ms] [ERROR] %c%s%c Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.%s background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+  <... title=... description=... icon={{$$typeof: ..., render: ...}} iconColor=... columns=... data=... filename=... summary=... emptyMessage=...>
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[    2334ms] [ERROR] %c%s%c Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.%s background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+  <... title=... description=... icon={{$$typeof: ..., render: ...}} iconColor=... columns=... data=... filename=... dateRange=... emptyMessage=...>
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[    2334ms] [ERROR] %c%s%c Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.%s background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+  <... title=... description=... icon={{$$typeof: ..., render: ...}} iconColor=... columns=... data=... filename=... dateRange=... summary=...>
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[    2386ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <div className="flex h-scr...">
+      ...
+        <SelectCollectionProvider scope={undefined}>
+          <SelectCollectionProviderProvider scope={undefined} itemMap={Map} collectionRef={{current:null}}>
+            <SelectProvider scope={undefined} onNativeOptionAdd={function Select.useCallback} ...>
+              <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger data-slot="select-tri..." data-size="default" className={"border-i..."}>
+                  <PopperAnchor asChild={true} __scopePopper={{Popper:[...]}}>
+                    <Primitive.div asChild={true} ref={function}>
+                      <Primitive.div.Slot ref={function}>
+                        <Primitive.div.SlotClone ref={function}>
+                          <Primitive.button type="button" role="combobox" aria-controls="radix-_R_9..." ...>
+                            <button
+                              type="button"
+                              role="combobox"
++                             aria-controls="radix-_R_9itmlb_"
+-                             aria-controls="radix-_R_16itmlb_"
+                              aria-expanded={false}
+                              aria-required={undefined}
+                              aria-autocomplete="none"
+                              dir="ltr"
+                              data-state="closed"
+                              disabled={false}
+                              data-disabled={undefined}
+                              data-placeholder={undefined}
+                              data-slot="select-trigger"
+                              data-size="default"
+                              className={"border-input data-[placeholder]:text-muted-foreground [&_svg:not([class*='t..."}
+                              onClick={function handleEvent}
+                              onPointerDown={function handleEvent}
+                              onKeyDown={function handleEvent}
+                              ref={function}
+                            >
+              ...
+        ...
+      <div className="flex flex-...">
+        <Header role="admin" permissions={{...}} actions={<Suspense>}>
+          <header className="sticky top...">
+            <MobileNav>
+            <SearchTrigger>
+            ...
+              <DropdownMenuTrigger data-slot="dropdown-m..." asChild={true}>
+                <MenuAnchor asChild={true} __scopeMenu={{Menu:[...], ...}}>
+                  <PopperAnchor __scopePopper={{Menu:[...], ...}} asChild={true} ref={null}>
+                    <Primitive.div asChild={true} ref={function}>
+                      <Primitive.div.Slot ref={function}>
+                        <Primitive.div.SlotClone ref={function}>
+                          <Primitive.button type="button" id="radix-_R_9..." aria-haspopup="menu" aria-expanded={false} ...>
+                            <Primitive.button.Slot type="button" id="radix-_R_9..." aria-haspopup="menu" ...>
+                              <Primitive.button.SlotClone type="button" id="radix-_R_9..." aria-haspopup="menu" ...>
+                                <Button variant="ghost" className="relative h..." type="button" id="radix-_R_9..." ...>
+                                  <button
+                                    data-slot="dropdown-menu-trigger"
+                                    data-variant="ghost"
+                                    data-size="default"
+                                    className={"inline-flex items-center justify-center gap-2 whitespace-nowrap text-..."}
+                                    type="button"
++                                   id="radix-_R_9mitmlb_"
+-                                   id="radix-_R_16qitmlb_"
+                                    aria-haspopup="menu"
+                                    aria-expanded={false}
+                                    aria-controls={undefined}
+                                    data-state="closed"
+                                    data-disabled={undefined}
+                                    disabled={false}
+                                    onPointerDown={function handleEvent}
+                                    onKeyDown={function handleEvent}
+                                    ref={function}
+                                  >
+            <CommandSearch>
+              <CommandDialog open={false} onOpenChange={function bound dispatchSetState}>
+                <Dialog open={false} onOpenChange={function bound dispatchSetState}>
+                  <Dialog data-slot="dialog" open={false} onOpenChange={function bound dispatchSetState}>
+                    <DialogProvider scope={undefined} triggerRef={{current:null}} contentRef={{current:null}} ...>
+                      <DialogHeader className="sr-only">
+                        <div data-slot="dialog-header" className="flex flex-...">
+                          <DialogTitle>
+                            <DialogTitle data-slot="dialog-title" className="text-lg le...">
+                              <Primitive.h2 id="radix-_R_2..." data-slot="dialog-title" className="text-lg le..." ...>
+                                <h2
++                                 id="radix-_R_26itmlbH1_"
+-                                 id="radix-_R_8qitmlbH1_"
+                                  data-slot="dialog-title"
+                                  className="text-lg leading-none font-semibold"
+                                  ref={null}
+                                >
++                                 Command Palette
+                          <DialogDescription>
+                            <DialogDescription data-slot="dialog-des..." className="text-muted...">
+                              <Primitive.p id="radix-_R_2..." data-slot="dialog-des..." className="text-muted..." ...>
+                                <p
++                                 id="radix-_R_26itmlbH2_"
+-                                 id="radix-_R_8qitmlbH2_"
+                                  data-slot="dialog-description"
+                                  className="text-muted-foreground text-sm"
+                                  ref={null}
+                                >
++                                 Search for a command to run...
+                      ...
+        ...
+ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[    4250ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <Popper __scopePopper={{Popper:[...]}}>
+      <PopperProvider scope={{Popper:[...]}} anchor={null} onAnchorChange={function bound dispatchSetState}>
+        <PopoverProvider scope={undefined} contentId="radix-_R_5..." triggerRef={{current:null}} open={false} ...>
+          <PopoverTrigger asChild={true}>
+            <PopoverTrigger data-slot="popover-tr..." asChild={true}>
+              <PopperAnchor asChild={true} __scopePopper={{Popper:[...]}}>
+                <Primitive.div asChild={true} ref={function}>
+                  <Primitive.div.Slot ref={function}>
+                    <Primitive.div.SlotClone ref={function}>
+                      <Primitive.button type="button" aria-haspopup="dialog" aria-expanded={false} ...>
+                        <Primitive.button.Slot type="button" aria-haspopup="dialog" aria-expanded={false} ...>
+                          <Primitive.button.SlotClone type="button" aria-haspopup="dialog" aria-expanded={false} ...>
+                            <Button variant="ghost" size="icon" className="relative h..." aria-label="Notifications" ...>
+                              <button
+                                data-slot="popover-trigger"
+                                data-variant="ghost"
+                                data-size="icon"
+                                className={"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-m..."}
+                                aria-label="Notifications"
+                                type="button"
+                                aria-haspopup="dialog"
+                                aria-expanded={false}
++                               aria-controls="radix-_R_5mitmlb_"
+-                               aria-controls="radix-_R_mqitmlb_"
+                                data-state="closed"
+                                onClick={function handleEvent}
+                                ref={function}
+                              >
+          ...
+ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[    4256ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <InnerLayoutRouter url="/reports" tree={[...]} params={{}} cacheNode={{rsc:<Fragment>, ...}} segmentPath={[...]} ...>
+      <SegmentViewNode type="page" pagePath="/Desktop/L...">
+        <SegmentTrieNode>
+        <ReportsPage>
+          <div className="space-y-6">
+            <div>
+            <Suspense>
+            <Tabs defaultValue="financial" className="w-full">
+              <Tabs data-slot="tabs" data-orientation="horizontal" orientation="horizontal" className="group/tabs..." ...>
+                <TabsProvider scope={undefined} baseId="radix-_R_s..." value="financial" ...>
+                  <Primitive.div dir="ltr" data-orientation="horizontal" data-slot="tabs" className="group/tabs..." ...>
+                    <div dir="ltr" data-orientation="horizontal" data-slot="tabs" className="group/tabs..." ref={null}>
+                      ...
+                        <div role="tablist" aria-orientation="horizontal" data-slot="tabs-list" data-variant="default" ...>
+                          ...
+                            <Primitive.span.Slot tabIndex={-1} data-orientation="horizontal" ...>
+                              <Primitive.span.SlotClone tabIndex={-1} data-orientation="horizontal" ...>
+                                <Primitive.button type="button" role="tab" aria-selected={true} ...>
+                                  <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={true}
++                                   aria-controls="radix-_R_slritqitmlb_-content-financial"
+-                                   aria-controls="radix-_R_3inebnaitmlb_-content-financial"
+                                    data-state="active"
+                                    data-disabled={undefined}
+                                    disabled={false}
++                                   id="radix-_R_slritqitmlb_-trigger-financial"
+-                                   id="radix-_R_3inebnaitmlb_-trigger-financial"
+                                    data-slot="tabs-trigger"
+                                    className={"focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ou..."}
+                                    onMouseDown={function}
+                                    onKeyDown={function}
+                                    onFocus={function}
+                                    tabIndex={-1}
+                                    data-orientation="horizontal"
+                                    data-radix-collection-item=""
+                                    ref={function}
+                                  >
+                          ...
+                            <Primitive.span.Slot tabIndex={-1} data-orientation="horizontal" ...>
+                              <Primitive.span.SlotClone tabIndex={-1} data-orientation="horizontal" ...>
+                                <Primitive.button type="button" role="tab" aria-selected={false} ...>
+                                  <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={false}
++                                   aria-controls="radix-_R_slritqitmlb_-content-operational"
+-                                   aria-controls="radix-_R_3inebnaitmlb_-content-operational"
+                                    data-state="inactive"
+                                    data-disabled={undefined}
+                                    disabled={false}
++                                   id="radix-_R_slritqitmlb_-trigger-operational"
+-                                   id="radix-_R_3inebnaitmlb_-trigger-operational"
+                                    data-slot="tabs-trigger"
+                                    className={"focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ou..."}
+                                    onMouseDown={function}
+                                    onKeyDown={function}
+                                    onFocus={function}
+                                    tabIndex={-1}
+                                    data-orientation="horizontal"
+                                    data-radix-collection-item=""
+                                    ref={function}
+                                  >
+                          ...
+                            <Primitive.span.Slot tabIndex={-1} data-orientation="horizontal" ...>
+                              <Primitive.span.SlotClone tabIndex={-1} data-orientation="horizontal" ...>
+                                <Primitive.button type="button" role="tab" aria-selected={false} ...>
+                                  <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={false}
++                                   aria-controls="radix-_R_slritqitmlb_-content-compliance"
+-                                   aria-controls="radix-_R_3inebnaitmlb_-content-compliance"
+                                    data-state="inactive"
+                                    data-disabled={undefined}
+                                    disabled={false}
++                                   id="radix-_R_slritqitmlb_-trigger-compliance"
+-                                   id="radix-_R_3inebnaitmlb_-trigger-compliance"
+                                    data-slot="tabs-trigger"
+                                    className={"focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ou..."}
+                                    onMouseDown={function}
+                                    onKeyDown={function}
+                                    onFocus={function}
+                                    tabIndex={-1}
+                                    data-orientation="horizontal"
+                                    data-radix-collection-item=""
+                                    ref={function}
+                                  >
+                      <TabsContent value="financial" className="mt-6">
+                        <TabsContent data-slot="tabs-content" className="flex-1 out..." value="financial">
+                          <Presence present={true}>
+                            <Primitive.div data-state="active" data-orientation="horizontal" role="tabpanel" ...>
+                              <div
+                                data-state="active"
+                                data-orientation="horizontal"
+                                role="tabpanel"
++                               aria-labelledby="radix-_R_slritqitmlb_-trigger-financial"
+-                               aria-labelledby="radix-_R_3inebnaitmlb_-trigger-financial"
+                                hidden={false}
++                               id="radix-_R_slritqitmlb_-content-financial"
+-                               id="radix-_R_3inebnaitmlb_-content-financial"
+                                tabIndex={0}
+                                data-slot="tabs-content"
+                                className="flex-1 outline-none mt-6"
+                                style={{animationDuration:"0s"}}
+                                ref={function}
+                              >
+                      <TabsContent value="operational" className="mt-6">
+                        <TabsContent data-slot="tabs-content" className="flex-1 out..." value="operational">
+                          <Presence present={false}>
+                            <Primitive.div data-state="inactive" data-orientation="horizontal" role="tabpanel" ...>
+                              <div
+                                data-state="inactive"
+                                data-orientation="horizontal"
+                                role="tabpanel"
++                               aria-labelledby="radix-_R_slritqitmlb_-trigger-operational"
+-                               aria-labelledby="radix-_R_3inebnaitmlb_-trigger-operational"
+                                hidden={true}
++                               id="radix-_R_slritqitmlb_-content-operational"
+-                               id="radix-_R_3inebnaitmlb_-content-operational"
+                                tabIndex={0}
+                                data-slot="tabs-content"
+                                className="flex-1 outline-none mt-6"
+                                style={{animationDuration:undefined}}
+                                ref={function}
+                              >
+                      <TabsContent value="compliance" className="mt-6">
+                        <TabsContent data-slot="tabs-content" className="flex-1 out..." value="compliance">
+                          <Presence present={false}>
+                            <Primitive.div data-state="inactive" data-orientation="horizontal" role="tabpanel" ...>
+                              <div
+                                data-state="inactive"
+                                data-orientation="horizontal"
+                                role="tabpanel"
++                               aria-labelledby="radix-_R_slritqitmlb_-trigger-compliance"
+-                               aria-labelledby="radix-_R_3inebnaitmlb_-trigger-compliance"
+                                hidden={true}
++                               id="radix-_R_slritqitmlb_-content-compliance"
+-                               id="radix-_R_3inebnaitmlb_-content-compliance"
+                                tabIndex={0}
+                                data-slot="tabs-content"
+                                className="flex-1 outline-none mt-6"
+                                style={{animationDuration:undefined}}
+                                ref={function}
+                              >
+      ...
+ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[    4262ms] [ERROR] %o
+
+%s Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function TrendingUp}
+                          ^^^^^^^^^^^^^^^^^^^
+    at fn (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1915:24)
+    at resolveErrorDev (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1894:148)
+    at processFullStringRow (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2402:29)
+    at processFullBinaryRow (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2361:9)
+    at processBinaryChunk (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2470:221)
+    at progress (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2640:13) The above error occurred in the <Unknown> component. It was handled by the <ErrorBoundaryHandler> error boundary. @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_client_f1ea651d._.js:1342
+[    4263ms] [ERROR] Dashboard error: Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function TrendingUp}
+                          ^^^^^^^^^^^^^^^^^^^
+    at fn (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1915:24)
+    at resolveErrorDev (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1894:148)
+    at processFullStringRow (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2402:29)
+    at processFullBinaryRow (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2361:9)
+    at processBinaryChunk (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2470:221)
+    at progress (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2640:13) @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[    4263ms] [ERROR] Dashboard error: Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function TrendingUp}
+                          ^^^^^^^^^^^^^^^^^^^
+    at fn (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1915:24)
+    at resolveErrorDev (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1894:148)
+    at processFullStringRow (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2402:29)
+    at processFullBinaryRow (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2361:9)
+    at processBinaryChunk (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2470:221)
+    at progress (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2640:13) @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   58493ms] [WARNING] [Fast Refresh] performing full reload
+
+Fast Refresh will perform a full reload when you edit a file that's imported by modules outside of the React rendering tree.
+You might have a file which exports a React component but also exports a value that is imported by a non-React component file.
+Consider migrating the non-React component export to a separate file and importing it into both files.
+
+It is also possible the parent component of the component you edited is a class component, which disables Fast Refresh.
+Fast Refresh requires at least one parent function component in your React tree. @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:2297
+[   62306ms] [WARNING] [Fast Refresh] performing full reload
+
+Fast Refresh will perform a full reload when you edit a file that's imported by modules outside of the React rendering tree.
+You might have a file which exports a React component but also exports a value that is imported by a non-React component file.
+Consider migrating the non-React component export to a separate file and importing it into both files.
+
+It is also possible the parent component of the component you edited is a class component, which disables Fast Refresh.
+Fast Refresh requires at least one parent function component in your React tree. @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:2297
+[   62502ms] The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.
+[   63966ms] [ERROR] %c%s%c Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.%s background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+  <... title=... description=... icon={{$$typeof: ..., render: ...}} iconColor=... columns=... data=... filename=... dateRange=... summary=... emptyMessage=...>
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   63966ms] [ERROR] %c%s%c Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.%s background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+  <... title=... description=... icon={{$$typeof: ..., render: ...}} iconColor=... columns=... data=... filename=... summary=... emptyMessage=...>
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   63969ms] [ERROR] %c%s%c Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.%s background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+  <... title=... description=... icon={{$$typeof: ..., render: ...}} iconColor=... columns=... data=... filename=... dateRange=... summary=...>
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   63969ms] [ERROR] %c%s%c Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.%s background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+  <... title=... description=... icon={{$$typeof: ..., render: ...}} iconColor=... columns=... data=... filename=... summary=... emptyMessage=...>
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   63969ms] [ERROR] %c%s%c Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.%s background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+  <... title=... description=... icon={{$$typeof: ..., render: ...}} iconColor=... columns=... data=... filename=... dateRange=... summary=...>
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   63969ms] [ERROR] %c%s%c Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.%s background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+  <... title=... description=... icon={{$$typeof: ..., render: ...}} iconColor=... columns=... data=... filename=... summary=... emptyMessage=...>
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   63970ms] [ERROR] %c%s%c Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.%s background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+  <... title=... description=... icon={{$$typeof: ..., render: ...}} iconColor=... columns=... data=... filename=... summary=... emptyMessage=...>
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   63970ms] [ERROR] %c%s%c Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.%s background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+  <... title=... description=... icon={{$$typeof: ..., render: ...}} iconColor=... columns=... data=... filename=... dateRange=... emptyMessage=...>
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   63970ms] [ERROR] %c%s%c Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.%s background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+  <... title=... description=... icon={{$$typeof: ..., render: ...}} iconColor=... columns=... data=... filename=... dateRange=... summary=...>
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   64030ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <div className="flex h-scr...">
+      ...
+        <SelectCollectionProvider scope={undefined}>
+          <SelectCollectionProviderProvider scope={undefined} itemMap={Map} collectionRef={{current:null}}>
+            <SelectProvider scope={undefined} onNativeOptionAdd={function Select.useCallback} ...>
+              <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger data-slot="select-tri..." data-size="default" className={"border-i..."}>
+                  <PopperAnchor asChild={true} __scopePopper={{Popper:[...]}}>
+                    <Primitive.div asChild={true} ref={function}>
+                      <Primitive.div.Slot ref={function}>
+                        <Primitive.div.SlotClone ref={function}>
+                          <Primitive.button type="button" role="combobox" aria-controls="radix-_R_9..." ...>
+                            <button
+                              type="button"
+                              role="combobox"
++                             aria-controls="radix-_R_9itmlb_"
+-                             aria-controls="radix-_R_16itmlb_"
+                              aria-expanded={false}
+                              aria-required={undefined}
+                              aria-autocomplete="none"
+                              dir="ltr"
+                              data-state="closed"
+                              disabled={false}
+                              data-disabled={undefined}
+                              data-placeholder={undefined}
+                              data-slot="select-trigger"
+                              data-size="default"
+                              className={"border-input data-[placeholder]:text-muted-foreground [&_svg:not([class*='t..."}
+                              onClick={function handleEvent}
+                              onPointerDown={function handleEvent}
+                              onKeyDown={function handleEvent}
+                              ref={function}
+                            >
+              ...
+        ...
+      <div className="flex flex-...">
+        <Header role="admin" permissions={{...}} actions={<Suspense>}>
+          <header className="sticky top...">
+            <MobileNav>
+            <SearchTrigger>
+            ...
+              <DropdownMenuTrigger data-slot="dropdown-m..." asChild={true}>
+                <MenuAnchor asChild={true} __scopeMenu={{Menu:[...], ...}}>
+                  <PopperAnchor __scopePopper={{Menu:[...], ...}} asChild={true} ref={null}>
+                    <Primitive.div asChild={true} ref={function}>
+                      <Primitive.div.Slot ref={function}>
+                        <Primitive.div.SlotClone ref={function}>
+                          <Primitive.button type="button" id="radix-_R_9..." aria-haspopup="menu" aria-expanded={false} ...>
+                            <Primitive.button.Slot type="button" id="radix-_R_9..." aria-haspopup="menu" ...>
+                              <Primitive.button.SlotClone type="button" id="radix-_R_9..." aria-haspopup="menu" ...>
+                                <Button variant="ghost" className="relative h..." type="button" id="radix-_R_9..." ...>
+                                  <button
+                                    data-slot="dropdown-menu-trigger"
+                                    data-variant="ghost"
+                                    data-size="default"
+                                    className={"inline-flex items-center justify-center gap-2 whitespace-nowrap text-..."}
+                                    type="button"
++                                   id="radix-_R_9mitmlb_"
+-                                   id="radix-_R_16qitmlb_"
+                                    aria-haspopup="menu"
+                                    aria-expanded={false}
+                                    aria-controls={undefined}
+                                    data-state="closed"
+                                    data-disabled={undefined}
+                                    disabled={false}
+                                    onPointerDown={function handleEvent}
+                                    onKeyDown={function handleEvent}
+                                    ref={function}
+                                  >
+            <CommandSearch>
+              <CommandDialog open={false} onOpenChange={function bound dispatchSetState}>
+                <Dialog open={false} onOpenChange={function bound dispatchSetState}>
+                  <Dialog data-slot="dialog" open={false} onOpenChange={function bound dispatchSetState}>
+                    <DialogProvider scope={undefined} triggerRef={{current:null}} contentRef={{current:null}} ...>
+                      <DialogHeader className="sr-only">
+                        <div data-slot="dialog-header" className="flex flex-...">
+                          <DialogTitle>
+                            <DialogTitle data-slot="dialog-title" className="text-lg le...">
+                              <Primitive.h2 id="radix-_R_2..." data-slot="dialog-title" className="text-lg le..." ...>
+                                <h2
++                                 id="radix-_R_26itmlbH1_"
+-                                 id="radix-_R_8qitmlbH1_"
+                                  data-slot="dialog-title"
+                                  className="text-lg leading-none font-semibold"
+                                  ref={null}
+                                >
++                                 Command Palette
+                          <DialogDescription>
+                            <DialogDescription data-slot="dialog-des..." className="text-muted...">
+                              <Primitive.p id="radix-_R_2..." data-slot="dialog-des..." className="text-muted..." ...>
+                                <p
++                                 id="radix-_R_26itmlbH2_"
+-                                 id="radix-_R_8qitmlbH2_"
+                                  data-slot="dialog-description"
+                                  className="text-muted-foreground text-sm"
+                                  ref={null}
+                                >
++                                 Search for a command to run...
+                      ...
+        ...
+ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   64046ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <Popper __scopePopper={{Popper:[...]}}>
+      <PopperProvider scope={{Popper:[...]}} anchor={null} onAnchorChange={function bound dispatchSetState}>
+        <PopoverProvider scope={undefined} contentId="radix-_R_5..." triggerRef={{current:null}} open={false} ...>
+          <PopoverTrigger asChild={true}>
+            <PopoverTrigger data-slot="popover-tr..." asChild={true}>
+              <PopperAnchor asChild={true} __scopePopper={{Popper:[...]}}>
+                <Primitive.div asChild={true} ref={function}>
+                  <Primitive.div.Slot ref={function}>
+                    <Primitive.div.SlotClone ref={function}>
+                      <Primitive.button type="button" aria-haspopup="dialog" aria-expanded={false} ...>
+                        <Primitive.button.Slot type="button" aria-haspopup="dialog" aria-expanded={false} ...>
+                          <Primitive.button.SlotClone type="button" aria-haspopup="dialog" aria-expanded={false} ...>
+                            <Button variant="ghost" size="icon" className="relative h..." aria-label="Notifications" ...>
+                              <button
+                                data-slot="popover-trigger"
+                                data-variant="ghost"
+                                data-size="icon"
+                                className={"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-m..."}
+                                aria-label="Notifications"
+                                type="button"
+                                aria-haspopup="dialog"
+                                aria-expanded={false}
++                               aria-controls="radix-_R_5mitmlb_"
+-                               aria-controls="radix-_R_mqitmlb_"
+                                data-state="closed"
+                                onClick={function handleEvent}
+                                ref={function}
+                              >
+          ...
+ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   64058ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <InnerLayoutRouter url="/reports" tree={[...]} params={{}} cacheNode={{rsc:<Fragment>, ...}} segmentPath={[...]} ...>
+      <SegmentViewNode type="page" pagePath="/Desktop/L...">
+        <SegmentTrieNode>
+        <ReportsPage>
+          <div className="space-y-6">
+            <div>
+            <Suspense>
+            <Tabs defaultValue="financial" className="w-full">
+              <Tabs data-slot="tabs" data-orientation="horizontal" orientation="horizontal" className="group/tabs..." ...>
+                <TabsProvider scope={undefined} baseId="radix-_R_s..." value="financial" ...>
+                  <Primitive.div dir="ltr" data-orientation="horizontal" data-slot="tabs" className="group/tabs..." ...>
+                    <div dir="ltr" data-orientation="horizontal" data-slot="tabs" className="group/tabs..." ref={null}>
+                      ...
+                        <div role="tablist" aria-orientation="horizontal" data-slot="tabs-list" data-variant="default" ...>
+                          ...
+                            <Primitive.span.Slot tabIndex={-1} data-orientation="horizontal" ...>
+                              <Primitive.span.SlotClone tabIndex={-1} data-orientation="horizontal" ...>
+                                <Primitive.button type="button" role="tab" aria-selected={true} ...>
+                                  <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={true}
++                                   aria-controls="radix-_R_slritqitmlb_-content-financial"
+-                                   aria-controls="radix-_R_3inebnaitmlb_-content-financial"
+                                    data-state="active"
+                                    data-disabled={undefined}
+                                    disabled={false}
++                                   id="radix-_R_slritqitmlb_-trigger-financial"
+-                                   id="radix-_R_3inebnaitmlb_-trigger-financial"
+                                    data-slot="tabs-trigger"
+                                    className={"focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ou..."}
+                                    onMouseDown={function}
+                                    onKeyDown={function}
+                                    onFocus={function}
+                                    tabIndex={-1}
+                                    data-orientation="horizontal"
+                                    data-radix-collection-item=""
+                                    ref={function}
+                                  >
+                          ...
+                            <Primitive.span.Slot tabIndex={-1} data-orientation="horizontal" ...>
+                              <Primitive.span.SlotClone tabIndex={-1} data-orientation="horizontal" ...>
+                                <Primitive.button type="button" role="tab" aria-selected={false} ...>
+                                  <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={false}
++                                   aria-controls="radix-_R_slritqitmlb_-content-operational"
+-                                   aria-controls="radix-_R_3inebnaitmlb_-content-operational"
+                                    data-state="inactive"
+                                    data-disabled={undefined}
+                                    disabled={false}
++                                   id="radix-_R_slritqitmlb_-trigger-operational"
+-                                   id="radix-_R_3inebnaitmlb_-trigger-operational"
+                                    data-slot="tabs-trigger"
+                                    className={"focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ou..."}
+                                    onMouseDown={function}
+                                    onKeyDown={function}
+                                    onFocus={function}
+                                    tabIndex={-1}
+                                    data-orientation="horizontal"
+                                    data-radix-collection-item=""
+                                    ref={function}
+                                  >
+                          ...
+                            <Primitive.span.Slot tabIndex={-1} data-orientation="horizontal" ...>
+                              <Primitive.span.SlotClone tabIndex={-1} data-orientation="horizontal" ...>
+                                <Primitive.button type="button" role="tab" aria-selected={false} ...>
+                                  <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={false}
++                                   aria-controls="radix-_R_slritqitmlb_-content-compliance"
+-                                   aria-controls="radix-_R_3inebnaitmlb_-content-compliance"
+                                    data-state="inactive"
+                                    data-disabled={undefined}
+                                    disabled={false}
++                                   id="radix-_R_slritqitmlb_-trigger-compliance"
+-                                   id="radix-_R_3inebnaitmlb_-trigger-compliance"
+                                    data-slot="tabs-trigger"
+                                    className={"focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ou..."}
+                                    onMouseDown={function}
+                                    onKeyDown={function}
+                                    onFocus={function}
+                                    tabIndex={-1}
+                                    data-orientation="horizontal"
+                                    data-radix-collection-item=""
+                                    ref={function}
+                                  >
+                      <TabsContent value="financial" className="mt-6">
+                        <TabsContent data-slot="tabs-content" className="flex-1 out..." value="financial">
+                          <Presence present={true}>
+                            <Primitive.div data-state="active" data-orientation="horizontal" role="tabpanel" ...>
+                              <div
+                                data-state="active"
+                                data-orientation="horizontal"
+                                role="tabpanel"
++                               aria-labelledby="radix-_R_slritqitmlb_-trigger-financial"
+-                               aria-labelledby="radix-_R_3inebnaitmlb_-trigger-financial"
+                                hidden={false}
++                               id="radix-_R_slritqitmlb_-content-financial"
+-                               id="radix-_R_3inebnaitmlb_-content-financial"
+                                tabIndex={0}
+                                data-slot="tabs-content"
+                                className="flex-1 outline-none mt-6"
+                                style={{animationDuration:"0s"}}
+                                ref={function}
+                              >
+                      <TabsContent value="operational" className="mt-6">
+                        <TabsContent data-slot="tabs-content" className="flex-1 out..." value="operational">
+                          <Presence present={false}>
+                            <Primitive.div data-state="inactive" data-orientation="horizontal" role="tabpanel" ...>
+                              <div
+                                data-state="inactive"
+                                data-orientation="horizontal"
+                                role="tabpanel"
++                               aria-labelledby="radix-_R_slritqitmlb_-trigger-operational"
+-                               aria-labelledby="radix-_R_3inebnaitmlb_-trigger-operational"
+                                hidden={true}
++                               id="radix-_R_slritqitmlb_-content-operational"
+-                               id="radix-_R_3inebnaitmlb_-content-operational"
+                                tabIndex={0}
+                                data-slot="tabs-content"
+                                className="flex-1 outline-none mt-6"
+                                style={{animationDuration:undefined}}
+                                ref={function}
+                              >
+                      <TabsContent value="compliance" className="mt-6">
+                        <TabsContent data-slot="tabs-content" className="flex-1 out..." value="compliance">
+                          <Presence present={false}>
+                            <Primitive.div data-state="inactive" data-orientation="horizontal" role="tabpanel" ...>
+                              <div
+                                data-state="inactive"
+                                data-orientation="horizontal"
+                                role="tabpanel"
++                               aria-labelledby="radix-_R_slritqitmlb_-trigger-compliance"
+-                               aria-labelledby="radix-_R_3inebnaitmlb_-trigger-compliance"
+                                hidden={true}
++                               id="radix-_R_slritqitmlb_-content-compliance"
+-                               id="radix-_R_3inebnaitmlb_-content-compliance"
+                                tabIndex={0}
+                                data-slot="tabs-content"
+                                className="flex-1 outline-none mt-6"
+                                style={{animationDuration:undefined}}
+                                ref={function}
+                              >
+      ...
+ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   64071ms] [ERROR] %o
+
+%s Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function TrendingUp}
+                          ^^^^^^^^^^^^^^^^^^^
+    at fn (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1915:24)
+    at resolveErrorDev (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1894:148)
+    at processFullStringRow (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2402:29)
+    at processFullBinaryRow (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2361:9)
+    at processBinaryChunk (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2470:221)
+    at progress (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2640:13) The above error occurred in the <Unknown> component. It was handled by the <ErrorBoundaryHandler> error boundary. @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_client_f1ea651d._.js:1342
+[   64072ms] [ERROR] Dashboard error: Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function TrendingUp}
+                          ^^^^^^^^^^^^^^^^^^^
+    at fn (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1915:24)
+    at resolveErrorDev (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1894:148)
+    at processFullStringRow (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2402:29)
+    at processFullBinaryRow (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2361:9)
+    at processBinaryChunk (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2470:221)
+    at progress (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2640:13) @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   64072ms] [ERROR] Dashboard error: Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function TrendingUp}
+                          ^^^^^^^^^^^^^^^^^^^
+    at fn (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1915:24)
+    at resolveErrorDev (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1894:148)
+    at processFullStringRow (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2402:29)
+    at processFullBinaryRow (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2361:9)
+    at processBinaryChunk (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2470:221)
+    at progress (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2640:13) @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   65986ms] [WARNING] [Fast Refresh] performing full reload
+
+Fast Refresh will perform a full reload when you edit a file that's imported by modules outside of the React rendering tree.
+You might have a file which exports a React component but also exports a value that is imported by a non-React component file.
+Consider migrating the non-React component export to a separate file and importing it into both files.
+
+It is also possible the parent component of the component you edited is a class component, which disables Fast Refresh.
+Fast Refresh requires at least one parent function component in your React tree. @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:2297
+[   67584ms] [ERROR] %c%s%c Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.%s background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+  <... title=... description=... icon={{$$typeof: ..., render: ...}} iconColor=... columns=... data=... filename=... dateRange=... summary=... emptyMessage=...>
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   67584ms] [ERROR] %c%s%c Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.%s background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+  <... title=... description=... icon={{$$typeof: ..., render: ...}} iconColor=... columns=... data=... filename=... summary=... emptyMessage=...>
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   67598ms] [ERROR] %c%s%c Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.%s background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+  <... title=... description=... icon={{$$typeof: ..., render: ...}} iconColor=... columns=... data=... filename=... dateRange=... summary=...>
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   67598ms] [ERROR] %c%s%c Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.%s background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+  <... title=... description=... icon={{$$typeof: ..., render: ...}} iconColor=... columns=... data=... filename=... summary=... emptyMessage=...>
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   67598ms] [ERROR] %c%s%c Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.%s background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+  <... title=... description=... icon={{$$typeof: ..., render: ...}} iconColor=... columns=... data=... filename=... dateRange=... summary=...>
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   67598ms] [ERROR] %c%s%c Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.%s background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+  <... title=... description=... icon={{$$typeof: ..., render: ...}} iconColor=... columns=... data=... filename=... summary=... emptyMessage=...>
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   67598ms] [ERROR] %c%s%c Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.%s background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+  <... title=... description=... icon={{$$typeof: ..., render: ...}} iconColor=... columns=... data=... filename=... summary=... emptyMessage=...>
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   67598ms] [ERROR] %c%s%c Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.%s background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+  <... title=... description=... icon={{$$typeof: ..., render: ...}} iconColor=... columns=... data=... filename=... dateRange=... emptyMessage=...>
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   67599ms] [ERROR] %c%s%c Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.%s background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+  <... title=... description=... icon={{$$typeof: ..., render: ...}} iconColor=... columns=... data=... filename=... dateRange=... summary=...>
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   67643ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <div className="flex h-scr...">
+      ...
+        <SelectCollectionProvider scope={undefined}>
+          <SelectCollectionProviderProvider scope={undefined} itemMap={Map} collectionRef={{current:null}}>
+            <SelectProvider scope={undefined} onNativeOptionAdd={function Select.useCallback} ...>
+              <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger data-slot="select-tri..." data-size="default" className={"border-i..."}>
+                  <PopperAnchor asChild={true} __scopePopper={{Popper:[...]}}>
+                    <Primitive.div asChild={true} ref={function}>
+                      <Primitive.div.Slot ref={function}>
+                        <Primitive.div.SlotClone ref={function}>
+                          <Primitive.button type="button" role="combobox" aria-controls="radix-_R_9..." ...>
+                            <button
+                              type="button"
+                              role="combobox"
++                             aria-controls="radix-_R_9itmlb_"
+-                             aria-controls="radix-_R_16itmlb_"
+                              aria-expanded={false}
+                              aria-required={undefined}
+                              aria-autocomplete="none"
+                              dir="ltr"
+                              data-state="closed"
+                              disabled={false}
+                              data-disabled={undefined}
+                              data-placeholder={undefined}
+                              data-slot="select-trigger"
+                              data-size="default"
+                              className={"border-input data-[placeholder]:text-muted-foreground [&_svg:not([class*='t..."}
+                              onClick={function handleEvent}
+                              onPointerDown={function handleEvent}
+                              onKeyDown={function handleEvent}
+                              ref={function}
+                            >
+              ...
+        ...
+      <div className="flex flex-...">
+        <Header role="admin" permissions={{...}} actions={<Suspense>}>
+          <header className="sticky top...">
+            <MobileNav>
+            <SearchTrigger>
+            ...
+              <DropdownMenuTrigger data-slot="dropdown-m..." asChild={true}>
+                <MenuAnchor asChild={true} __scopeMenu={{Menu:[...], ...}}>
+                  <PopperAnchor __scopePopper={{Menu:[...], ...}} asChild={true} ref={null}>
+                    <Primitive.div asChild={true} ref={function}>
+                      <Primitive.div.Slot ref={function}>
+                        <Primitive.div.SlotClone ref={function}>
+                          <Primitive.button type="button" id="radix-_R_9..." aria-haspopup="menu" aria-expanded={false} ...>
+                            <Primitive.button.Slot type="button" id="radix-_R_9..." aria-haspopup="menu" ...>
+                              <Primitive.button.SlotClone type="button" id="radix-_R_9..." aria-haspopup="menu" ...>
+                                <Button variant="ghost" className="relative h..." type="button" id="radix-_R_9..." ...>
+                                  <button
+                                    data-slot="dropdown-menu-trigger"
+                                    data-variant="ghost"
+                                    data-size="default"
+                                    className={"inline-flex items-center justify-center gap-2 whitespace-nowrap text-..."}
+                                    type="button"
++                                   id="radix-_R_9mitmlb_"
+-                                   id="radix-_R_16qitmlb_"
+                                    aria-haspopup="menu"
+                                    aria-expanded={false}
+                                    aria-controls={undefined}
+                                    data-state="closed"
+                                    data-disabled={undefined}
+                                    disabled={false}
+                                    onPointerDown={function handleEvent}
+                                    onKeyDown={function handleEvent}
+                                    ref={function}
+                                  >
+            <CommandSearch>
+              <CommandDialog open={false} onOpenChange={function bound dispatchSetState}>
+                <Dialog open={false} onOpenChange={function bound dispatchSetState}>
+                  <Dialog data-slot="dialog" open={false} onOpenChange={function bound dispatchSetState}>
+                    <DialogProvider scope={undefined} triggerRef={{current:null}} contentRef={{current:null}} ...>
+                      <DialogHeader className="sr-only">
+                        <div data-slot="dialog-header" className="flex flex-...">
+                          <DialogTitle>
+                            <DialogTitle data-slot="dialog-title" className="text-lg le...">
+                              <Primitive.h2 id="radix-_R_2..." data-slot="dialog-title" className="text-lg le..." ...>
+                                <h2
++                                 id="radix-_R_26itmlbH1_"
+-                                 id="radix-_R_8qitmlbH1_"
+                                  data-slot="dialog-title"
+                                  className="text-lg leading-none font-semibold"
+                                  ref={null}
+                                >
++                                 Command Palette
+                          <DialogDescription>
+                            <DialogDescription data-slot="dialog-des..." className="text-muted...">
+                              <Primitive.p id="radix-_R_2..." data-slot="dialog-des..." className="text-muted..." ...>
+                                <p
++                                 id="radix-_R_26itmlbH2_"
+-                                 id="radix-_R_8qitmlbH2_"
+                                  data-slot="dialog-description"
+                                  className="text-muted-foreground text-sm"
+                                  ref={null}
+                                >
++                                 Search for a command to run...
+                      ...
+        ...
+ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   67658ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <InnerLayoutRouter url="/reports" tree={[...]} params={{}} cacheNode={{rsc:<Fragment>, ...}} segmentPath={[...]} ...>
+      <SegmentViewNode type="page" pagePath="/Desktop/L...">
+        <SegmentTrieNode>
+        <ReportsPage>
+          <div className="space-y-6">
+            <div>
+            <Suspense>
+            <Tabs defaultValue="financial" className="w-full">
+              <Tabs data-slot="tabs" data-orientation="horizontal" orientation="horizontal" className="group/tabs..." ...>
+                <TabsProvider scope={undefined} baseId="radix-_R_s..." value="financial" ...>
+                  <Primitive.div dir="ltr" data-orientation="horizontal" data-slot="tabs" className="group/tabs..." ...>
+                    <div dir="ltr" data-orientation="horizontal" data-slot="tabs" className="group/tabs..." ref={null}>
+                      ...
+                        <div role="tablist" aria-orientation="horizontal" data-slot="tabs-list" data-variant="default" ...>
+                          ...
+                            <Primitive.span.Slot tabIndex={-1} data-orientation="horizontal" ...>
+                              <Primitive.span.SlotClone tabIndex={-1} data-orientation="horizontal" ...>
+                                <Primitive.button type="button" role="tab" aria-selected={true} ...>
+                                  <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={true}
++                                   aria-controls="radix-_R_slritqitmlb_-content-financial"
+-                                   aria-controls="radix-_R_3inebnaitmlb_-content-financial"
+                                    data-state="active"
+                                    data-disabled={undefined}
+                                    disabled={false}
++                                   id="radix-_R_slritqitmlb_-trigger-financial"
+-                                   id="radix-_R_3inebnaitmlb_-trigger-financial"
+                                    data-slot="tabs-trigger"
+                                    className={"focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ou..."}
+                                    onMouseDown={function}
+                                    onKeyDown={function}
+                                    onFocus={function}
+                                    tabIndex={-1}
+                                    data-orientation="horizontal"
+                                    data-radix-collection-item=""
+                                    ref={function}
+                                  >
+                          ...
+                            <Primitive.span.Slot tabIndex={-1} data-orientation="horizontal" ...>
+                              <Primitive.span.SlotClone tabIndex={-1} data-orientation="horizontal" ...>
+                                <Primitive.button type="button" role="tab" aria-selected={false} ...>
+                                  <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={false}
++                                   aria-controls="radix-_R_slritqitmlb_-content-operational"
+-                                   aria-controls="radix-_R_3inebnaitmlb_-content-operational"
+                                    data-state="inactive"
+                                    data-disabled={undefined}
+                                    disabled={false}
++                                   id="radix-_R_slritqitmlb_-trigger-operational"
+-                                   id="radix-_R_3inebnaitmlb_-trigger-operational"
+                                    data-slot="tabs-trigger"
+                                    className={"focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ou..."}
+                                    onMouseDown={function}
+                                    onKeyDown={function}
+                                    onFocus={function}
+                                    tabIndex={-1}
+                                    data-orientation="horizontal"
+                                    data-radix-collection-item=""
+                                    ref={function}
+                                  >
+                          ...
+                            <Primitive.span.Slot tabIndex={-1} data-orientation="horizontal" ...>
+                              <Primitive.span.SlotClone tabIndex={-1} data-orientation="horizontal" ...>
+                                <Primitive.button type="button" role="tab" aria-selected={false} ...>
+                                  <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={false}
++                                   aria-controls="radix-_R_slritqitmlb_-content-compliance"
+-                                   aria-controls="radix-_R_3inebnaitmlb_-content-compliance"
+                                    data-state="inactive"
+                                    data-disabled={undefined}
+                                    disabled={false}
++                                   id="radix-_R_slritqitmlb_-trigger-compliance"
+-                                   id="radix-_R_3inebnaitmlb_-trigger-compliance"
+                                    data-slot="tabs-trigger"
+                                    className={"focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ou..."}
+                                    onMouseDown={function}
+                                    onKeyDown={function}
+                                    onFocus={function}
+                                    tabIndex={-1}
+                                    data-orientation="horizontal"
+                                    data-radix-collection-item=""
+                                    ref={function}
+                                  >
+                      <TabsContent value="financial" className="mt-6">
+                        <TabsContent data-slot="tabs-content" className="flex-1 out..." value="financial">
+                          <Presence present={true}>
+                            <Primitive.div data-state="active" data-orientation="horizontal" role="tabpanel" ...>
+                              <div
+                                data-state="active"
+                                data-orientation="horizontal"
+                                role="tabpanel"
++                               aria-labelledby="radix-_R_slritqitmlb_-trigger-financial"
+-                               aria-labelledby="radix-_R_3inebnaitmlb_-trigger-financial"
+                                hidden={false}
++                               id="radix-_R_slritqitmlb_-content-financial"
+-                               id="radix-_R_3inebnaitmlb_-content-financial"
+                                tabIndex={0}
+                                data-slot="tabs-content"
+                                className="flex-1 outline-none mt-6"
+                                style={{animationDuration:"0s"}}
+                                ref={function}
+                              >
+                      <TabsContent value="operational" className="mt-6">
+                        <TabsContent data-slot="tabs-content" className="flex-1 out..." value="operational">
+                          <Presence present={false}>
+                            <Primitive.div data-state="inactive" data-orientation="horizontal" role="tabpanel" ...>
+                              <div
+                                data-state="inactive"
+                                data-orientation="horizontal"
+                                role="tabpanel"
++                               aria-labelledby="radix-_R_slritqitmlb_-trigger-operational"
+-                               aria-labelledby="radix-_R_3inebnaitmlb_-trigger-operational"
+                                hidden={true}
++                               id="radix-_R_slritqitmlb_-content-operational"
+-                               id="radix-_R_3inebnaitmlb_-content-operational"
+                                tabIndex={0}
+                                data-slot="tabs-content"
+                                className="flex-1 outline-none mt-6"
+                                style={{animationDuration:undefined}}
+                                ref={function}
+                              >
+                      <TabsContent value="compliance" className="mt-6">
+                        <TabsContent data-slot="tabs-content" className="flex-1 out..." value="compliance">
+                          <Presence present={false}>
+                            <Primitive.div data-state="inactive" data-orientation="horizontal" role="tabpanel" ...>
+                              <div
+                                data-state="inactive"
+                                data-orientation="horizontal"
+                                role="tabpanel"
++                               aria-labelledby="radix-_R_slritqitmlb_-trigger-compliance"
+-                               aria-labelledby="radix-_R_3inebnaitmlb_-trigger-compliance"
+                                hidden={true}
++                               id="radix-_R_slritqitmlb_-content-compliance"
+-                               id="radix-_R_3inebnaitmlb_-content-compliance"
+                                tabIndex={0}
+                                data-slot="tabs-content"
+                                className="flex-1 outline-none mt-6"
+                                style={{animationDuration:undefined}}
+                                ref={function}
+                              >
+      ...
+ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   67664ms] [ERROR] %o
+
+%s Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function TrendingUp}
+                          ^^^^^^^^^^^^^^^^^^^
+    at fn (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1915:24)
+    at resolveErrorDev (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1894:148)
+    at processFullStringRow (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2402:29)
+    at processFullBinaryRow (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2361:9)
+    at processBinaryChunk (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2470:221)
+    at progress (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2640:13) The above error occurred in the <Unknown> component. It was handled by the <ErrorBoundaryHandler> error boundary. @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_client_f1ea651d._.js:1342
+[   67665ms] [ERROR] Dashboard error: Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function TrendingUp}
+                          ^^^^^^^^^^^^^^^^^^^
+    at fn (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1915:24)
+    at resolveErrorDev (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1894:148)
+    at processFullStringRow (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2402:29)
+    at processFullBinaryRow (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2361:9)
+    at processBinaryChunk (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2470:221)
+    at progress (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2640:13) @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   67665ms] [ERROR] Dashboard error: Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function TrendingUp}
+                          ^^^^^^^^^^^^^^^^^^^
+    at fn (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1915:24)
+    at resolveErrorDev (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1894:148)
+    at processFullStringRow (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2402:29)
+    at processFullBinaryRow (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2361:9)
+    at processBinaryChunk (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2470:221)
+    at progress (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2640:13) @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   68515ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <Popper __scopePopper={{Popper:[...]}}>
+      <PopperProvider scope={{Popper:[...]}} anchor={null} onAnchorChange={function bound dispatchSetState}>
+        <PopoverProvider scope={undefined} contentId="radix-_R_5..." triggerRef={{current:null}} open={false} ...>
+          <PopoverTrigger asChild={true}>
+            <PopoverTrigger data-slot="popover-tr..." asChild={true}>
+              <PopperAnchor asChild={true} __scopePopper={{Popper:[...]}}>
+                <Primitive.div asChild={true} ref={function}>
+                  <Primitive.div.Slot ref={function}>
+                    <Primitive.div.SlotClone ref={function}>
+                      <Primitive.button type="button" aria-haspopup="dialog" aria-expanded={false} ...>
+                        <Primitive.button.Slot type="button" aria-haspopup="dialog" aria-expanded={false} ...>
+                          <Primitive.button.SlotClone type="button" aria-haspopup="dialog" aria-expanded={false} ...>
+                            <Button variant="ghost" size="icon" className="relative h..." aria-label="Notifications" ...>
+                              <button
+                                data-slot="popover-trigger"
+                                data-variant="ghost"
+                                data-size="icon"
+                                className={"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-m..."}
+                                aria-label="Notifications"
+                                type="button"
+                                aria-haspopup="dialog"
+                                aria-expanded={false}
++                               aria-controls="radix-_R_5mitmlb_"
+-                               aria-controls="radix-_R_mqitmlb_"
+                                data-state="closed"
+                                onClick={function handleEvent}
+                                ref={function}
+                              >
+          ...
+ @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127

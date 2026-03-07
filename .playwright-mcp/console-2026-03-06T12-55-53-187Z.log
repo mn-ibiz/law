@@ -1,0 +1,322 @@
+[    1604ms] [ERROR] %o
+
+%s Error: Environment validation failed:
+  DATABASE_URL: Invalid input: expected string, received undefined
+  AUTH_SECRET: Invalid input: expected string, received undefined
+    at validateEnv (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:1983:15)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:1987:13)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6096:180)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6140:188)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6446:193)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6822:235)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6967:236)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.commonJsRequire [as r] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:259:12)
+    at requireModule (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:85:84)
+    at initializeModuleChunk (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1089:25)
+    at readChunk (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:829:17)
+    at Object.react_stack_bottom_frame (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:14890:20)
+    at resolveLazy (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:3895:20)
+    at beginWork (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:6687:77)
+    at runWithFiberInDEV (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:965:74)
+    at performUnitOfWork (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:9562:97)
+    at workLoopConcurrentByScheduler (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:9558:58)
+    at renderRootConcurrent (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:9541:71)
+    at performWorkOnRoot (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:9068:150)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:10230:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_115ccda1._.js:2647:64) The above error occurred in the <Lazy> component. It was handled by the <ErrorBoundaryHandler> error boundary. @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_client_f1ea651d._.js:1342
+[    1607ms] [ERROR] Dashboard error: Error: Environment validation failed:
+  DATABASE_URL: Invalid input: expected string, received undefined
+  AUTH_SECRET: Invalid input: expected string, received undefined
+    at validateEnv (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:1983:15)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:1987:13)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6096:180)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6140:188)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6446:193)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6822:235)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6967:236)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.commonJsRequire [as r] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:259:12)
+    at requireModule (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:85:84)
+    at initializeModuleChunk (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1089:25)
+    at readChunk (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:829:17)
+    at Object.react_stack_bottom_frame (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:14890:20)
+    at resolveLazy (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:3895:20)
+    at beginWork (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:6687:77)
+    at runWithFiberInDEV (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:965:74)
+    at performUnitOfWork (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:9562:97)
+    at workLoopConcurrentByScheduler (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:9558:58)
+    at renderRootConcurrent (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:9541:71)
+    at performWorkOnRoot (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:9068:150)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:10230:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_115ccda1._.js:2647:64) @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[    1608ms] [ERROR] Dashboard error: Error: Environment validation failed:
+  DATABASE_URL: Invalid input: expected string, received undefined
+  AUTH_SECRET: Invalid input: expected string, received undefined
+    at validateEnv (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:1983:15)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:1987:13)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6096:180)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6140:188)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6446:193)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6822:235)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6967:236)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.commonJsRequire [as r] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:259:12)
+    at requireModule (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:85:84)
+    at initializeModuleChunk (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1089:25)
+    at readChunk (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:829:17)
+    at Object.react_stack_bottom_frame (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:14890:20)
+    at resolveLazy (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:3895:20)
+    at beginWork (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:6687:77)
+    at runWithFiberInDEV (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:965:74)
+    at performUnitOfWork (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:9562:97)
+    at workLoopConcurrentByScheduler (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:9558:58)
+    at renderRootConcurrent (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:9541:71)
+    at performWorkOnRoot (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:9068:150)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:10230:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_115ccda1._.js:2647:64) @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   17018ms] [ERROR] %o
+
+%s Error: Environment validation failed:
+  DATABASE_URL: Invalid input: expected string, received undefined
+  AUTH_SECRET: Invalid input: expected string, received undefined
+    at validateEnv (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:1983:15)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:1987:13)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6096:180)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6140:188)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6446:193)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6822:235)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6967:236)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.commonJsRequire [as r] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:259:12)
+    at requireModule (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:85:84)
+    at initializeModuleChunk (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1089:25)
+    at readChunk (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:829:17)
+    at Object.react_stack_bottom_frame (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:14890:20)
+    at resolveLazy (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:3895:20)
+    at beginWork (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:6687:77)
+    at runWithFiberInDEV (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:965:74)
+    at performUnitOfWork (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:9562:97)
+    at workLoopConcurrentByScheduler (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:9558:58)
+    at renderRootConcurrent (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:9541:71)
+    at performWorkOnRoot (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:9068:150)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:10230:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_115ccda1._.js:2647:64) The above error occurred in the <Lazy> component. It was handled by the <ErrorBoundaryHandler> error boundary. @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_client_f1ea651d._.js:1342
+[   17019ms] [ERROR] Dashboard error: Error: Environment validation failed:
+  DATABASE_URL: Invalid input: expected string, received undefined
+  AUTH_SECRET: Invalid input: expected string, received undefined
+    at validateEnv (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:1983:15)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:1987:13)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6096:180)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6140:188)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6446:193)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6822:235)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6967:236)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.commonJsRequire [as r] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:259:12)
+    at requireModule (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:85:84)
+    at initializeModuleChunk (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1089:25)
+    at readChunk (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:829:17)
+    at Object.react_stack_bottom_frame (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:14890:20)
+    at resolveLazy (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:3895:20)
+    at beginWork (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:6687:77)
+    at runWithFiberInDEV (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:965:74)
+    at performUnitOfWork (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:9562:97)
+    at workLoopConcurrentByScheduler (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:9558:58)
+    at renderRootConcurrent (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:9541:71)
+    at performWorkOnRoot (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:9068:150)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:10230:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_115ccda1._.js:2647:64) @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   17019ms] [ERROR] Dashboard error: Error: Environment validation failed:
+  DATABASE_URL: Invalid input: expected string, received undefined
+  AUTH_SECRET: Invalid input: expected string, received undefined
+    at validateEnv (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:1983:15)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:1987:13)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6096:180)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6140:188)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6446:193)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6822:235)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.esmImport [as i] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:238:20)
+    at module evaluation (http://localhost:3001/_next/static/chunks/Desktop_Law%20Firm%20Registry_src_706cd159._.js:6967:236)
+    at http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:879:13
+    at runModuleExecutionHooks (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:904:13)
+    at instantiateModule (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:877:9)
+    at getOrInstantiateModuleFromParent (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:830:12)
+    at DevContext.commonJsRequire [as r] (http://localhost:3001/_next/static/chunks/turbopack-Desktop_Law%20Firm%20Registry_a7793f41._.js:259:12)
+    at requireModule (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:85:84)
+    at initializeModuleChunk (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1089:25)
+    at readChunk (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:829:17)
+    at Object.react_stack_bottom_frame (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:14890:20)
+    at resolveLazy (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:3895:20)
+    at beginWork (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:6687:77)
+    at runWithFiberInDEV (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:965:74)
+    at performUnitOfWork (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:9562:97)
+    at workLoopConcurrentByScheduler (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:9558:58)
+    at renderRootConcurrent (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:9541:71)
+    at performWorkOnRoot (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:9068:150)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-dom_2f054e6f._.js:10230:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_115ccda1._.js:2647:64) @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127

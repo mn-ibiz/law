@@ -1,0 +1,29 @@
+[   21365ms] [ERROR] %o
+
+%s Error: You tried to reference "totalInvoiced" field from a subquery, which is a raw SQL field, but it doesn't have an alias declared. Please add an alias to the field using ".as('alias')" method.
+    at fn (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1915:24)
+    at fn (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1915:24)
+    at fn (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1915:24)
+    at resolveErrorDev (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1894:148)
+    at processFullStringRow (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2402:29)
+    at processFullBinaryRow (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2361:9)
+    at processBinaryChunk (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2470:221)
+    at progress (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2640:13) The above error occurred in the <OperationalReports> component. It was handled by the <ErrorBoundaryHandler> error boundary. @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_client_f1ea651d._.js:1342
+[   21366ms] [ERROR] Dashboard error: Error: You tried to reference "totalInvoiced" field from a subquery, which is a raw SQL field, but it doesn't have an alias declared. Please add an alias to the field using ".as('alias')" method.
+    at fn (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1915:24)
+    at fn (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1915:24)
+    at fn (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1915:24)
+    at resolveErrorDev (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1894:148)
+    at processFullStringRow (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2402:29)
+    at processFullBinaryRow (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2361:9)
+    at processBinaryChunk (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2470:221)
+    at progress (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2640:13) @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
+[   21366ms] [ERROR] Dashboard error: Error: You tried to reference "totalInvoiced" field from a subquery, which is a raw SQL field, but it doesn't have an alias declared. Please add an alias to the field using ".as('alias')" method.
+    at fn (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1915:24)
+    at fn (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1915:24)
+    at fn (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1915:24)
+    at resolveErrorDev (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:1894:148)
+    at processFullStringRow (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2402:29)
+    at processFullBinaryRow (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2361:9)
+    at processBinaryChunk (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2470:221)
+    at progress (http://localhost:3001/_next/static/chunks/3ab26_next_dist_compiled_react-server-dom-turbopack_eba4258f._.js:2640:13) @ http://localhost:3001/_next/static/chunks/3ab26_next_dist_3b6b9877._.js:3127
