@@ -45,6 +45,7 @@ export async function getAttorneys(filters: AttorneyFilters = {}) {
       hourlyRate: attorneys.hourlyRate,
       lskNumber: attorneys.lskNumber,
       isActive: attorneys.isActive,
+      photoUrl: attorneys.photoUrl,
       name: users.name,
       email: users.email,
     })
@@ -86,6 +87,7 @@ export const getAttorneyById = cache(async (id: string) => {
       notaryPublic: attorneys.notaryPublic,
       seniorCounsel: attorneys.seniorCounsel,
       isActive: attorneys.isActive,
+      photoUrl: attorneys.photoUrl,
       createdAt: attorneys.createdAt,
       name: users.name,
       email: users.email,

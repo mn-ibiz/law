@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { RowActionsMenu } from "@/components/shared/row-actions-menu";
 import { useAction } from "@/hooks/use-action";
 import { deleteCourtRule, toggleCourtRuleActive } from "@/lib/actions/courts";
+import { CourtRuleEditDialog } from "./court-rule-edit-dialog";
 import { ToggleLeft, ToggleRight } from "lucide-react";
 import {
   AlertDialog,
@@ -22,11 +23,24 @@ interface CourtRuleActionsProps {
   id: string;
   name: string;
   isActive: boolean;
+  rule: {
+    id: string;
+    courtId: string | null;
+    name: string;
+    description: string | null;
+    triggerEvent: string;
+    offsetDays: number;
+    deadlineTitle: string;
+    priority: string;
+    isStatutory: boolean;
+  };
+  courts: { id: string; name: string }[];
 }
 
-export function CourtRuleActions({ id, name, isActive }: CourtRuleActionsProps) {
+export function CourtRuleActions({ id, name, isActive, rule, courts }: CourtRuleActionsProps) {
   const router = useRouter();
   const [showDelete, setShowDelete] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
 
   const { execute: executeToggle, isPending: isToggling } = useAction(toggleCourtRuleActive, {
     successMessage: isActive ? "Court rule deactivated" : "Court rule activated",
@@ -52,8 +66,18 @@ export function CourtRuleActions({ id, name, isActive }: CourtRuleActionsProps) 
             disabled: isToggling,
           },
         ]}
+        onEdit={() => setShowEdit(true)}
         onDelete={() => setShowDelete(true)}
       />
+
+      {showEdit && (
+        <CourtRuleEditDialog
+          open={showEdit}
+          onOpenChange={setShowEdit}
+          rule={rule}
+          courts={courts}
+        />
+      )}
 
       <AlertDialog open={showDelete} onOpenChange={setShowDelete}>
         <AlertDialogContent>

@@ -6,6 +6,7 @@ import { getClientById, getClientContacts } from "@/lib/queries/clients";
 import { getClientKycDocuments, getClientRiskAssessment } from "@/lib/queries/kyc";
 import { ClientDetailTabs } from "@/components/clients/client-detail-tabs";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
@@ -49,6 +50,19 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       />
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
+          <Avatar className="h-20 w-20">
+            {client.photoUrl && (
+              <AvatarImage src={client.photoUrl} alt={clientName} />
+            )}
+            <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
+              {clientName
+                .split(" ")
+                .map((n: string) => n[0])
+                .join("")
+                .toUpperCase()
+                .slice(0, 2)}
+            </AvatarFallback>
+          </Avatar>
           <div>
             <h1 className="text-2xl font-bold tracking-tight">
               {clientName}

@@ -20,6 +20,7 @@ import { deserializeEvents, type CalendarEvent } from "./calendar-types";
 const START_HOUR = 6;
 const END_HOUR = 22;
 const TOTAL_HOURS = END_HOUR - START_HOUR;
+const HOUR_HEIGHT_REM = 3.5;
 
 interface CalendarWeekViewProps {
   events: SerializedCalendarEvent[];
@@ -36,7 +37,6 @@ export function CalendarWeekView({ events: serializedEvents, currentWeek }: Cale
   const weekEnd = endOfWeek(currentWeek, { weekStartsOn: 1 });
   const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
-  /** Partition events by day */
   const eventsByDay = useMemo(() => {
     const map = new Map<string, { allDay: CalendarEvent[]; timed: CalendarEvent[] }>();
     for (const day of days) {
@@ -55,23 +55,22 @@ export function CalendarWeekView({ events: serializedEvents, currentWeek }: Cale
     return map;
   }, [events, days]);
 
-  function handleEventClick(day: Date) {
+  function handleDayClick(day: Date) {
     setSelectedDay(day);
     setSheetOpen(true);
   }
 
-  /** Compute top offset and height for a timed event */
   function getEventPosition(event: CalendarEvent) {
     const start = new Date(event.startTime);
     const end = new Date(event.endTime);
     const startMinutes = (getHours(start) - START_HOUR) * 60 + getMinutes(start);
-    const durationMinutes = Math.max(differenceInMinutes(end, start), 30); // min 30 min height
+    const durationMinutes = Math.max(differenceInMinutes(end, start), 30);
     const totalMinutes = TOTAL_HOURS * 60;
 
     const topPercent = Math.max(0, (startMinutes / totalMinutes) * 100);
     const heightPercent = Math.min((durationMinutes / totalMinutes) * 100, 100 - topPercent);
 
-    return { top: `${topPercent}%`, height: `${Math.max(heightPercent, 2)}%` };
+    return { top: `${topPercent}%`, height: `${Math.max(heightPercent, 2.5)}%` };
   }
 
   const selectedDayKey = selectedDay ? format(selectedDay, "yyyy-MM-dd") : null;
@@ -79,16 +78,14 @@ export function CalendarWeekView({ events: serializedEvents, currentWeek }: Cale
     ? [...(eventsByDay.get(selectedDayKey)?.allDay ?? []), ...(eventsByDay.get(selectedDayKey)?.timed ?? [])]
     : [];
 
-  // Hour labels
   const hours = Array.from({ length: TOTAL_HOURS }, (_, i) => START_HOUR + i);
 
   return (
     <>
-      <div className="rounded-lg border bg-card shadow-sm overflow-hidden">
+      <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
         {/* Header: day labels + all-day events */}
-        <div className="grid grid-cols-[3.5rem_repeat(7,1fr)] border-b">
-          {/* Corner cell */}
-          <div className="border-r p-1" />
+        <div className="grid grid-cols-[4rem_repeat(7,1fr)] border-b bg-muted/30">
+          <div className="border-r border-border/50 p-2" />
           {days.map((day) => {
             const key = format(day, "yyyy-MM-dd");
             const bucket = eventsByDay.get(key);
@@ -99,34 +96,33 @@ export function CalendarWeekView({ events: serializedEvents, currentWeek }: Cale
               <div
                 key={key}
                 className={cn(
-                  "border-r last:border-r-0 p-1 text-center",
-                  today && "bg-primary/5"
+                  "border-l border-border/50 p-2 text-center",
+                  today && "bg-primary/[0.04]"
                 )}
               >
                 <button
-                  onClick={() => handleEventClick(day)}
-                  className="w-full hover:bg-muted/50 rounded-md py-1 transition-colors"
+                  onClick={() => handleDayClick(day)}
+                  className="w-full hover:bg-accent/30 rounded-lg py-1.5 transition-colors"
                 >
-                  <div className="text-[10px] uppercase text-muted-foreground sm:text-xs">
+                  <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                     {format(day, "EEE")}
                   </div>
                   <div
                     className={cn(
-                      "mx-auto flex h-7 w-7 items-center justify-center rounded-full text-sm font-medium",
-                      today && "bg-primary text-primary-foreground font-bold"
+                      "mx-auto flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold",
+                      today && "bg-red-500 text-white font-bold"
                     )}
                   >
                     {format(day, "d")}
                   </div>
                 </button>
-                {/* All-day events */}
                 {allDayEvents.length > 0 && (
-                  <div className="mt-1 space-y-0.5">
+                  <div className="mt-1.5 space-y-0.5 px-0.5">
                     {allDayEvents.slice(0, 2).map((event) => (
                       <div
                         key={event.id}
                         className={cn(
-                          "rounded px-1 py-0.5 text-[10px] font-medium truncate border-l-2",
+                          "rounded-md px-1.5 py-0.5 text-[10px] font-medium truncate",
                           getBlockColor(event.type)
                         )}
                         title={event.title}
@@ -147,16 +143,16 @@ export function CalendarWeekView({ events: serializedEvents, currentWeek }: Cale
         </div>
 
         {/* Time grid */}
-        <div className="grid grid-cols-[3.5rem_repeat(7,1fr)] overflow-auto max-h-[600px]">
+        <div className="grid grid-cols-[4rem_repeat(7,1fr)] overflow-auto max-h-[650px]">
           {/* Hour labels column */}
-          <div className="relative border-r">
+          <div className="relative border-r border-border/50">
             {hours.map((hour) => (
               <div
                 key={hour}
-                className="flex h-12 items-start justify-end pr-2 text-[10px] text-muted-foreground sm:text-xs"
-                style={{ marginTop: hour === START_HOUR ? 0 : undefined }}
+                className="flex items-start justify-end pr-3 text-[11px] font-medium text-muted-foreground"
+                style={{ height: `${HOUR_HEIGHT_REM}rem` }}
               >
-                {format(new Date(2000, 0, 1, hour), "h a")}
+                <span className="-mt-1.5">{format(new Date(2000, 0, 1, hour), "h a")}</span>
               </div>
             ))}
           </div>
@@ -172,16 +168,16 @@ export function CalendarWeekView({ events: serializedEvents, currentWeek }: Cale
               <div
                 key={key}
                 className={cn(
-                  "relative border-r last:border-r-0",
-                  today && "bg-primary/5"
+                  "relative border-l border-border/50",
+                  today && "bg-primary/[0.02]"
                 )}
-                style={{ height: `${TOTAL_HOURS * 3}rem` }}
+                style={{ height: `${TOTAL_HOURS * HOUR_HEIGHT_REM}rem` }}
               >
                 {/* Hour grid lines */}
                 {hours.map((hour) => (
                   <div
                     key={hour}
-                    className="absolute left-0 right-0 border-t border-dashed border-muted"
+                    className="absolute left-0 right-0 border-t border-border/30"
                     style={{ top: `${((hour - START_HOUR) / TOTAL_HOURS) * 100}%` }}
                   />
                 ))}
@@ -192,19 +188,20 @@ export function CalendarWeekView({ events: serializedEvents, currentWeek }: Cale
                   return (
                     <button
                       key={event.id}
-                      onClick={() => handleEventClick(day)}
+                      onClick={() => handleDayClick(day)}
                       className={cn(
-                        "absolute left-0.5 right-0.5 overflow-hidden rounded border-l-2 px-1 py-0.5 text-left transition-opacity hover:opacity-90",
+                        "absolute left-1 right-1 overflow-hidden rounded-md border-l-[3px] px-1.5 py-1 text-left transition-opacity hover:opacity-90 shadow-sm",
                         getBlockColor(event.type)
                       )}
-                      style={{ top: pos.top, height: pos.height, minHeight: "1.25rem" }}
-                      title={event.title}
+                      style={{ top: pos.top, height: pos.height, minHeight: "1.75rem" }}
+                      title={`${event.title}${event.location ? ` - ${event.location}` : ""}`}
                     >
-                      <p className="truncate text-[10px] font-medium sm:text-xs">
+                      <p className="truncate text-[11px] font-semibold leading-tight">
                         {event.title}
                       </p>
-                      <p className="truncate text-[9px] opacity-75 sm:text-[10px]">
+                      <p className="truncate text-[10px] opacity-75 leading-tight font-medium">
                         {format(new Date(event.startTime), "h:mm a")}
+                        {event.location ? ` · ${event.location}` : ""}
                       </p>
                     </button>
                   );

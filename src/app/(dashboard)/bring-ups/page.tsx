@@ -1,5 +1,7 @@
 import { requireAdminOrAttorney } from "@/lib/auth/get-session";
 import { getBringUps } from "@/lib/queries/calendar";
+import { getCases } from "@/lib/queries/cases";
+import { getUsers } from "@/lib/queries/settings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BringUpStatusBadge } from "@/components/shared/status-badges";
@@ -25,7 +27,22 @@ export const metadata: Metadata = {
 
 export default async function BringUpsPage() {
   await requireAdminOrAttorney();
-  const bringUpList = await getBringUps();
+  const [bringUpList, { data: caseList }, userList] = await Promise.all([
+    getBringUps(),
+    getCases({ limit: 200 }),
+    getUsers(),
+  ]);
+
+  const cases = caseList.map((c) => ({
+    id: c.id,
+    caseNumber: c.caseNumber,
+    title: c.title,
+  }));
+
+  const users = userList.map((u) => ({
+    id: u.id,
+    name: u.name ?? u.email,
+  }));
 
   return (
     <div className="space-y-6">
@@ -91,6 +108,20 @@ export default async function BringUpsPage() {
                       <BringUpRowActions
                         bringUpId={bu.id}
                         status={bu.status}
+                        bringUp={
+                          bu.status === "pending"
+                            ? {
+                                id: bu.id,
+                                caseId: bu.caseId,
+                                assignedTo: bu.assignedTo,
+                                date: bu.date,
+                                reason: bu.reason,
+                                notes: bu.notes,
+                              }
+                            : undefined
+                        }
+                        cases={cases}
+                        users={users}
                       />
                     </TableCell>
                   </TableRow>

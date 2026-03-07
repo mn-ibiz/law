@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -18,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { Paperclip, X } from "lucide-react";
 
 const NONE_VALUE = "__none__";
 
@@ -28,6 +30,8 @@ interface MessageFormProps {
 
 export function MessageForm({ users, cases }: MessageFormProps) {
   const router = useRouter();
+  const [uploading, setUploading] = useState(false);
+  const [attachment, setAttachment] = useState<{ url: string; name: string } | null>(null);
 
   const form = useForm<SendMessageInput>({
     resolver: zodResolver(sendMessageSchema),
@@ -36,8 +40,41 @@ export function MessageForm({ users, cases }: MessageFormProps) {
       subject: "",
       body: "",
       caseId: undefined,
+      attachmentUrl: undefined,
+      attachmentName: undefined,
     },
   });
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const json = await res.json();
+      if (!res.ok) {
+        toast.error(json.error || "Upload failed");
+        return;
+      }
+      setAttachment({ url: json.fileUrl, name: file.name });
+      form.setValue("attachmentUrl", json.fileUrl);
+      form.setValue("attachmentName", file.name);
+      toast.success("File attached");
+    } catch {
+      toast.error("Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function removeAttachment() {
+    setAttachment(null);
+    form.setValue("attachmentUrl", undefined);
+    form.setValue("attachmentName", undefined);
+  }
 
   async function onSubmit(data: SendMessageInput) {
     try {
@@ -127,8 +164,37 @@ export function MessageForm({ users, cases }: MessageFormProps) {
             )}
           </div>
 
+          <div className="space-y-2">
+            <Label>Attachment (optional)</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                type="file"
+                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,.txt"
+                onChange={handleFileUpload}
+                disabled={uploading}
+                className="flex-1"
+              />
+              {uploading && <span className="text-xs text-muted-foreground">Uploading...</span>}
+            </div>
+            {attachment && (
+              <div className="flex items-center gap-2 rounded-md bg-muted px-3 py-1.5 text-sm">
+                <Paperclip className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="truncate">{attachment.name}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5 ml-auto"
+                  onClick={removeAttachment}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
+          </div>
+
           <div className="flex gap-4">
-            <Button type="submit" disabled={form.formState.isSubmitting}>
+            <Button type="submit" disabled={form.formState.isSubmitting || uploading}>
               {form.formState.isSubmitting ? "Sending..." : "Send Message"}
             </Button>
             <Button type="button" variant="outline" onClick={() => router.back()}>

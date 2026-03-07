@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
 
 interface ClientFormProps {
   defaultValues?: Partial<CreateClientInput>;
@@ -50,6 +51,7 @@ export function ClientForm({ defaultValues, clientId }: ClientFormProps) {
       dateOfBirth: "",
       referralSource: "",
       notes: "",
+      photoUrl: "",
       ...defaultValues,
     },
   });
@@ -78,6 +80,17 @@ export function ClientForm({ defaultValues, clientId }: ClientFormProps) {
     <Card>
       <CardContent className="pt-6">
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="flex justify-center">
+            <AvatarUpload
+              currentUrl={form.watch("photoUrl") || null}
+              fallbackText={
+                (form.watch("firstName")?.[0] ?? "") + (form.watch("lastName")?.[0] ?? "") || "CL"
+              }
+              onUpload={(url) => form.setValue("photoUrl", url)}
+              onRemove={() => form.setValue("photoUrl", "")}
+            />
+          </div>
+
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label>Client Type *</Label>

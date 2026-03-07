@@ -8,7 +8,8 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/empty-state";
-import { Wallet } from "lucide-react";
+import { PettyCashDialog } from "@/components/petty-cash/petty-cash-dialog";
+import { Wallet, ExternalLink } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -22,9 +23,12 @@ export default async function PettyCashPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Petty Cash</h1>
-        <p className="text-muted-foreground">Track petty cash deposits and withdrawals.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Petty Cash</h1>
+          <p className="text-muted-foreground">Track petty cash deposits and withdrawals.</p>
+        </div>
+        <PettyCashDialog />
       </div>
       <Card className="shadow-sm">
         <CardHeader>
@@ -46,6 +50,7 @@ export default async function PettyCashPage() {
                   <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Description</TableHead>
                   <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Category</TableHead>
                   <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">By</TableHead>
+                  <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Receipt</TableHead>
                   <TableHead className="text-right text-xs font-medium uppercase tracking-wide text-muted-foreground">Amount</TableHead>
                 </TableRow>
               </TableHeader>
@@ -59,6 +64,16 @@ export default async function PettyCashPage() {
                     <TableCell>{t.description}</TableCell>
                     <TableCell>{t.category ?? "—"}</TableCell>
                     <TableCell>{t.performedByName}</TableCell>
+                    <TableCell>
+                      {t.receiptUrl ? (
+                        <a href={t.receiptUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1 text-xs">
+                          <ExternalLink className="h-3 w-3" />
+                          View
+                        </a>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">{"\u2014"}</span>
+                      )}
+                    </TableCell>
                     <TableCell className="text-right font-medium">{formatKES(Number(t.amount))}</TableCell>
                   </TableRow>
                 ))}

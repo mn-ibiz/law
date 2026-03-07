@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
 
 interface UserOption {
   id: string;
@@ -50,6 +51,7 @@ export function AttorneyForm({ defaultValues, attorneyId, users }: AttorneyFormP
       commissionerForOaths: false,
       notaryPublic: false,
       seniorCounsel: false,
+      photoUrl: "",
       ...defaultValues,
     },
   });
@@ -76,6 +78,15 @@ export function AttorneyForm({ defaultValues, attorneyId, users }: AttorneyFormP
     <Card>
       <CardContent className="pt-6">
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="flex justify-center">
+            <AvatarUpload
+              currentUrl={form.watch("photoUrl") || null}
+              fallbackText={form.watch("barNumber")?.slice(0, 2)?.toUpperCase() || "AT"}
+              onUpload={(url) => form.setValue("photoUrl", url)}
+              onRemove={() => form.setValue("photoUrl", "")}
+            />
+          </div>
+
           <div className="grid gap-4 md:grid-cols-2">
             {!isEditing && (
               <div className="space-y-2">

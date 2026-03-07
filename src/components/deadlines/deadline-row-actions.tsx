@@ -17,20 +17,31 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { DeadlineEditSheet } from "./deadline-edit-sheet";
 
 interface DeadlineRowActionsProps {
   deadlineId: string;
   deadlineTitle: string;
   isCompleted: boolean;
+  deadline: {
+    id: string;
+    title: string;
+    description: string | null;
+    priority: string;
+    dueDate: Date;
+    isStatutory: boolean;
+  };
 }
 
 export function DeadlineRowActions({
   deadlineId,
   deadlineTitle,
   isCompleted,
+  deadline,
 }: DeadlineRowActionsProps) {
   const router = useRouter();
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   const { execute: execComplete, isPending: completePending } = useAction(
     (input: { id: string }) => completeDeadline(input.id),
@@ -66,7 +77,14 @@ export function DeadlineRowActions({
                 },
               ]
         }
+        onEdit={isCompleted ? undefined : () => setEditOpen(true)}
         onDelete={() => setDeleteOpen(true)}
+      />
+
+      <DeadlineEditSheet
+        deadline={deadline}
+        open={editOpen}
+        onOpenChange={setEditOpen}
       />
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>

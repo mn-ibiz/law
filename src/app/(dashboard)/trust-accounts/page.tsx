@@ -1,34 +1,16 @@
-import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/get-session";
 import { getTrustAccounts, getClientsForSelect, getCasesForSelect } from "@/lib/queries/trust";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { formatKES } from "@/lib/utils/format";
-import { formatEnum } from "@/lib/utils/format-enum";
-import { cn } from "@/lib/utils";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import { EmptyState } from "@/components/shared/empty-state";
+import { TrustAccountDataTable } from "@/components/trust/trust-account-data-table";
 import { CreateTrustAccountDialog } from "@/components/trust/create-trust-account-dialog";
-import { TrustTransactionDialog } from "@/components/trust/trust-transaction-dialog";
-import { Button } from "@/components/ui/button";
-import { ArrowDownToLine, ArrowUpFromLine, Landmark } from "lucide-react";
+import { Landmark, DollarSign, Wallet } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Trust Accounts",
   description: "Manage client trust accounts",
 };
-
-const accountTypeStyles: Record<string, string> = {
-  client: "bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20",
-  general: "bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/20",
-  office: "bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/20",
-  escrow: "bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20",
-};
-
-const capsule =
-  "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold leading-none whitespace-nowrap";
 
 export default async function TrustAccountsPage() {
   await requireAdmin();
@@ -38,107 +20,63 @@ export default async function TrustAccountsPage() {
     getCasesForSelect(),
   ]);
 
+  const totalBalance = accounts.reduce((sum, a) => sum + Number(a.balance), 0);
+  const clientAccounts = accounts.filter((a) => a.type === "client").length;
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Trust Accounts</h1>
-          <p className="text-muted-foreground">Client trust and escrow account management.</p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+            <Landmark className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Trust Accounts</h1>
+            <p className="text-sm text-muted-foreground">
+              Client trust and escrow account management.
+            </p>
+          </div>
         </div>
         <CreateTrustAccountDialog clients={clients} cases={cases} />
       </div>
-      <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle>Trust Accounts</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {accounts.length === 0 ? (
-            <EmptyState
-              icon={Landmark}
-              title="No trust accounts"
-              description="Create your first trust account to manage client funds securely."
-            />
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Account Name</TableHead>
-                    <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Account Number</TableHead>
-                    <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Type</TableHead>
-                    <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Client</TableHead>
-                    <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Bank</TableHead>
-                    <TableHead className="text-right text-xs font-medium uppercase tracking-wide text-muted-foreground">Balance</TableHead>
-                    <TableHead className="text-right text-xs font-medium uppercase tracking-wide text-muted-foreground">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {accounts.map((a) => {
-                    const balance = Number(a.balance);
-                    return (
-                      <TableRow key={a.id} className="transition-colors hover:bg-muted/50">
-                        <TableCell className="font-medium">
-                          <Link
-                            href={`/trust-accounts/${a.id}`}
-                            className="hover:underline"
-                          >
-                            {a.accountName}
-                          </Link>
-                        </TableCell>
-                        <TableCell className="font-mono">
-                          <Link
-                            href={`/trust-accounts/${a.id}`}
-                            className="hover:underline"
-                          >
-                            {a.accountNumber}
-                          </Link>
-                        </TableCell>
-                        <TableCell>
-                          <span className={cn(capsule, accountTypeStyles[a.type] ?? accountTypeStyles.client)}>
-                            {formatEnum(a.type)}
-                          </span>
-                        </TableCell>
-                        <TableCell>{a.clientName}</TableCell>
-                        <TableCell>{a.bankName ?? "\u2014"}</TableCell>
-                        <TableCell className="text-right font-medium">{formatKES(balance)}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <TrustTransactionDialog
-                              accountId={a.id}
-                              type="deposit"
-                              currentBalance={balance}
-                              trigger={
-                                <Button variant="ghost" size="icon-xs" title="Deposit">
-                                  <ArrowDownToLine className="size-3.5 text-emerald-600" />
-                                </Button>
-                              }
-                            />
-                            <TrustTransactionDialog
-                              accountId={a.id}
-                              type="withdrawal"
-                              currentBalance={balance}
-                              trigger={
-                                <Button variant="ghost" size="icon-xs" title="Withdraw">
-                                  <ArrowUpFromLine className="size-3.5 text-amber-600" />
-                                </Button>
-                              }
-                            />
-                            <Button variant="ghost" size="icon-xs" asChild title="View details">
-                              <Link href={`/trust-accounts/${a.id}`}>
-                                <Landmark className="size-3.5" />
-                              </Link>
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Card>
+          <CardContent className="flex items-center gap-3 pt-6">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+              <Wallet className="h-5 w-5" />
             </div>
-          )}
-        </CardContent>
-      </Card>
+            <div>
+              <p className="text-sm text-muted-foreground">Total Accounts</p>
+              <p className="text-2xl font-bold">{accounts.length}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-3 pt-6">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+              <DollarSign className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Total Balance</p>
+              <p className="text-2xl font-bold">{formatKES(totalBalance)}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-3 pt-6">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
+              <Landmark className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Client Accounts</p>
+              <p className="text-2xl font-bold">{clientAccounts}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <TrustAccountDataTable data={accounts} />
     </div>
   );
 }

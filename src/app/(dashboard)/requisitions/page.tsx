@@ -1,15 +1,11 @@
 import { requireAdminOrAttorney } from "@/lib/auth/get-session";
 import { getRequisitions } from "@/lib/queries/time-expenses";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RequisitionStatusBadge } from "@/components/shared/status-badges";
-import { EmptyState } from "@/components/shared/empty-state";
-import { RequisitionRowActions } from "@/components/requisitions/requisition-row-actions";
+import { getCasesForSelect } from "@/lib/queries/trust";
+import { Card, CardContent } from "@/components/ui/card";
+import { RequisitionDataTable } from "@/components/requisitions/requisition-data-table";
 import { Button } from "@/components/ui/button";
 import { formatKES } from "@/lib/utils/format";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import { Plus, ClipboardList } from "lucide-react";
+import { Plus, ClipboardList, CheckCircle2, Clock, DollarSign } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -20,74 +16,83 @@ export const metadata: Metadata = {
 
 export default async function RequisitionsPage() {
   const session = await requireAdminOrAttorney();
-  const reqs = await getRequisitions();
+  const [reqs, cases] = await Promise.all([getRequisitions(), getCasesForSelect()]);
   const userRole = session.user.role;
+
+  const pendingCount = reqs.filter((r) => r.status === "pending_approval").length;
+  const approvedCount = reqs.filter((r) => r.status === "approved").length;
+  const totalAmount = reqs.reduce((sum, r) => sum + Number(r.amount), 0);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Requisitions</h1>
-          <p className="text-muted-foreground">Expense requisitions and purchase orders.</p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+            <ClipboardList className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Requisitions</h1>
+            <p className="text-sm text-muted-foreground">
+              Expense requisitions and purchase orders.
+            </p>
+          </div>
         </div>
-        <Button size="sm" asChild>
+        <Button asChild>
           <Link href="/requisitions/new">
-            <Plus className="h-3.5 w-3.5 mr-1.5" />
+            <Plus className="mr-2 h-4 w-4" />
             New Requisition
           </Link>
         </Button>
       </div>
-      <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle>All Requisitions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {reqs.length === 0 ? (
-            <EmptyState
-              icon={ClipboardList}
-              title="No requisitions yet"
-              description="Submit your first expense requisition to get started."
-              actionLabel="New Requisition"
-              actionHref="/requisitions/new"
-            />
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Number</TableHead>
-                  <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Description</TableHead>
-                  <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Case</TableHead>
-                  <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Requested By</TableHead>
-                  <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Amount</TableHead>
-                  <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Status</TableHead>
-                  <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground w-[50px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {reqs.map((r) => (
-                  <TableRow key={r.id} className="transition-colors hover:bg-muted/50">
-                    <TableCell className="font-mono">{r.requisitionNumber}</TableCell>
-                    <TableCell>{r.description}</TableCell>
-                    <TableCell className="font-mono text-xs">{r.caseNumber ?? "\u2014"}</TableCell>
-                    <TableCell>{r.requestedByName}</TableCell>
-                    <TableCell>{formatKES(Number(r.amount))}</TableCell>
-                    <TableCell>
-                      <RequisitionStatusBadge status={r.status} />
-                    </TableCell>
-                    <TableCell>
-                      <RequisitionRowActions
-                        requisitionId={r.id}
-                        status={r.status}
-                        userRole={userRole}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardContent className="flex items-center gap-3 pt-6">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+              <ClipboardList className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Total</p>
+              <p className="text-2xl font-bold">{reqs.length}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-3 pt-6">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
+              <Clock className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Pending</p>
+              <p className="text-2xl font-bold">{pendingCount}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-3 pt-6">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+              <CheckCircle2 className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Approved</p>
+              <p className="text-2xl font-bold">{approvedCount}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-3 pt-6">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
+              <DollarSign className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Total Amount</p>
+              <p className="text-2xl font-bold">{formatKES(totalAmount)}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <RequisitionDataTable data={reqs} userRole={userRole} cases={cases} />
     </div>
   );
 }

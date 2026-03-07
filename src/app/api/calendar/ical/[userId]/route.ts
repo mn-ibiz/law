@@ -4,6 +4,7 @@ import { calendarEvents, deadlines } from "@/lib/db/schema/calendar";
 import { sql, eq, and } from "drizzle-orm";
 import { verifyIcalToken } from "@/lib/utils/ical";
 import { createEvents, type EventAttributes } from "ics";
+import { auth } from "@/lib/auth/auth";
 
 export async function GET(
   request: NextRequest,
@@ -14,6 +15,12 @@ export async function GET(
 
   if (!token || !verifyIcalToken(userId, token)) {
     return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+  }
+
+  // Verify the requesting user owns this calendar
+  const session = await auth();
+  if (!session?.user?.id || session.user.id !== userId) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   // Fetch events from 90 days ago to 1 year forward

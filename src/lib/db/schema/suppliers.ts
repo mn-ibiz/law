@@ -15,6 +15,7 @@ export const suppliers = pgTable("suppliers", {
   bankAccountNumber: text("bank_account_number"),
   bankBranch: text("bank_branch"),
   category: text("category"),
+  logoUrl: text("logo_url"),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),

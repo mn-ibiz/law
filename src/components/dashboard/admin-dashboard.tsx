@@ -32,7 +32,7 @@ async function AdminStats() {
   const stats = await getAdminDashboardStats();
 
   return (
-    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
       <StatCard
         label="Active Cases"
         value={formatNumber(stats.activeCases)}
@@ -95,14 +95,20 @@ async function AdminCharts() {
   ]);
 
   return (
-    <>
-      <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid gap-4 lg:grid-cols-7">
+      <div className="lg:col-span-4">
         <RevenueChart data={revenue} />
+      </div>
+      <div className="lg:col-span-3">
         <CaseStatusChart data={caseStatus} />
       </div>
-      <ARAgingChart data={arAging} />
-    </>
+    </div>
   );
+}
+
+async function AdminARChart() {
+  const arAging = await getARAgingBuckets();
+  return <ARAgingChart data={arAging} />;
 }
 
 async function AdminWidgets() {
@@ -114,11 +120,11 @@ async function AdminWidgets() {
 
   return (
     <>
-      <RecentCasesTable data={recentCases} />
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <UpcomingDeadlines data={deadlines} />
         <OverdueInvoicesTable data={overdueInvoices} />
       </div>
+      <RecentCasesTable data={recentCases} />
     </>
   );
 }
@@ -126,20 +132,38 @@ async function AdminWidgets() {
 export function AdminDashboard() {
   return (
     <div className="space-y-6">
+      {/* Row 1: Key stat cards */}
       <Suspense fallback={<DashboardSkeleton cards={6} />}>
         <AdminStats />
       </Suspense>
-      <Suspense fallback={<DashboardSkeleton cards={3} />}>
-        <AdminKPIs />
-      </Suspense>
+
+      {/* Row 2: KPI gauges + Compliance side-by-side */}
+      <div className="grid gap-4 lg:grid-cols-5">
+        <div className="lg:col-span-3">
+          <Suspense fallback={<DashboardSkeleton cards={3} />}>
+            <AdminKPIs />
+          </Suspense>
+        </div>
+        <div className="lg:col-span-2">
+          <Suspense fallback={<div className="animate-pulse h-48 bg-muted rounded-xl" />}>
+            <ComplianceWidget />
+          </Suspense>
+        </div>
+      </div>
+
+      {/* Row 3: Charts */}
       <Suspense fallback={<DashboardSkeleton cards={0} />}>
         <AdminCharts />
       </Suspense>
-      <Suspense fallback={<div className="animate-pulse h-32 bg-muted rounded-lg" />}>
-        <AdminWidgets />
+
+      {/* Row 4: AR Aging */}
+      <Suspense fallback={<div className="animate-pulse h-48 bg-muted rounded-xl" />}>
+        <AdminARChart />
       </Suspense>
-      <Suspense fallback={<div className="animate-pulse h-32 bg-muted rounded-lg" />}>
-        <ComplianceWidget />
+
+      {/* Row 5: Action tables */}
+      <Suspense fallback={<div className="animate-pulse h-32 bg-muted rounded-xl" />}>
+        <AdminWidgets />
       </Suspense>
     </div>
   );

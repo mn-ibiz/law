@@ -32,12 +32,10 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
 
   const params = await searchParams;
 
-  // Parse view param
   const view: ViewType = VALID_VIEWS.has(params.view as ViewType)
     ? (params.view as ViewType)
     : "month";
 
-  // Parse month param (format: yyyy-MM)
   let currentDate: Date;
   if (params.month && /^\d{4}-\d{2}$/.test(params.month)) {
     currentDate = parse(params.month, "yyyy-MM", new Date());
@@ -48,7 +46,6 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
     currentDate = new Date();
   }
 
-  // Compute date range based on view
   let start: Date;
   let end: Date;
 
@@ -56,7 +53,6 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
     start = startOfWeek(currentDate, { weekStartsOn: 1 });
     end = endOfWeek(currentDate, { weekStartsOn: 1 });
   } else {
-    // For month and list, fetch the full month (including overflow days visible in grid)
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(currentDate);
     start = startOfWeek(monthStart, { weekStartsOn: 1 });
@@ -71,12 +67,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
   const serializedEvents = serializeEvents(events);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Calendar</h1>
-        <p className="text-muted-foreground">Court dates, deadlines, and events.</p>
-      </div>
-
+    <div className="space-y-4">
       <CalendarToolbar currentDate={currentDate} view={view} />
 
       {view === "month" && (

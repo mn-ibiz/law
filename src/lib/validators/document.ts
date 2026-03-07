@@ -48,8 +48,18 @@ export const clientUploadDocumentSchema = z.object({
   mimeType: z.string().max(100).optional(),
 });
 
+export const updateDocumentSchema = z.object({
+  id: z.string().uuid(),
+  title: z.string().min(1, "Title is required").max(255),
+  category: z.enum(["pleading", "correspondence", "contract", "evidence", "court_order", "filing", "template", "other"]),
+  description: z.string().max(5000).optional(),
+  caseId: z.string().uuid().nullable().optional(),
+  clientId: z.string().uuid().nullable().optional(),
+});
+
 export type UploadDocumentInput = z.infer<typeof uploadDocumentSchema>;
 export type CreateTemplateInput = z.infer<typeof createTemplateSchema>;
 export type CreateDocumentRecordInput = z.infer<typeof createDocumentRecordSchema>;
 export type CreateDocumentVersionInput = z.infer<typeof createDocumentVersionSchema>;
 export type ClientUploadDocumentInput = z.infer<typeof clientUploadDocumentSchema>;
+export type UpdateDocumentInput = z.infer<typeof updateDocumentSchema>;

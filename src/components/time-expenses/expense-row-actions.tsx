@@ -16,14 +16,17 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Spinner } from "@/components/ui/spinner";
+import { ExpenseEditSheet } from "./expense-edit-sheet";
+import type { ExpenseRow } from "./expense-columns";
 
 interface ExpenseRowActionsProps {
-  expenseId: string;
+  expense: ExpenseRow;
 }
 
-export function ExpenseRowActions({ expenseId }: ExpenseRowActionsProps) {
+export function ExpenseRowActions({ expense }: ExpenseRowActionsProps) {
   const router = useRouter();
   const [showDelete, setShowDelete] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
 
   const { execute: executeDelete, isPending: isDeleting } = useAction(
     deleteExpense,
@@ -40,8 +43,18 @@ export function ExpenseRowActions({ expenseId }: ExpenseRowActionsProps) {
     <>
       <RowActionsMenu
         actions={[]}
-        onDelete={() => setShowDelete(true)}
+        onEdit={!expense.isBilled ? () => setShowEdit(true) : undefined}
+        onDelete={!expense.isBilled ? () => setShowDelete(true) : undefined}
       />
+
+      {/* Edit sheet */}
+      {showEdit && (
+        <ExpenseEditSheet
+          expense={expense}
+          open={showEdit}
+          onOpenChange={setShowEdit}
+        />
+      )}
 
       {/* Delete confirmation */}
       <AlertDialog open={showDelete} onOpenChange={setShowDelete}>
@@ -55,7 +68,7 @@ export function ExpenseRowActions({ expenseId }: ExpenseRowActionsProps) {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => executeDelete(expenseId)}
+              onClick={() => executeDelete(expense.id)}
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >

@@ -13,6 +13,7 @@ export const createAttorneySchema = z.object({
   commissionerForOaths: z.boolean(),
   notaryPublic: z.boolean(),
   seniorCounsel: z.boolean(),
+  photoUrl: z.string().url().optional().or(z.literal("")),
 });
 
 export const updateAttorneySchema = createAttorneySchema.partial().omit({ userId: true });

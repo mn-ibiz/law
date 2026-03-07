@@ -12,34 +12,40 @@ interface StatCardProps {
 
 const colorMap = {
   blue: {
+    gradient: "from-blue-500 to-blue-600",
     bg: "bg-blue-500/10",
     icon: "text-blue-600",
-    trend: "text-blue-600",
+    border: "border-blue-100 dark:border-blue-500/20",
   },
   amber: {
+    gradient: "from-amber-500 to-orange-500",
     bg: "bg-amber-500/10",
     icon: "text-amber-600",
-    trend: "text-amber-600",
+    border: "border-amber-100 dark:border-amber-500/20",
   },
   emerald: {
+    gradient: "from-emerald-500 to-teal-500",
     bg: "bg-emerald-500/10",
     icon: "text-emerald-600",
-    trend: "text-emerald-600",
+    border: "border-emerald-100 dark:border-emerald-500/20",
   },
   rose: {
+    gradient: "from-rose-500 to-pink-500",
     bg: "bg-rose-500/10",
     icon: "text-rose-600",
-    trend: "text-rose-600",
+    border: "border-rose-100 dark:border-rose-500/20",
   },
   purple: {
+    gradient: "from-purple-500 to-violet-500",
     bg: "bg-purple-500/10",
     icon: "text-purple-600",
-    trend: "text-purple-600",
+    border: "border-purple-100 dark:border-purple-500/20",
   },
   cyan: {
+    gradient: "from-cyan-500 to-sky-500",
     bg: "bg-cyan-500/10",
     icon: "text-cyan-600",
-    trend: "text-cyan-600",
+    border: "border-cyan-100 dark:border-cyan-500/20",
   },
 };
 
@@ -54,7 +60,9 @@ export function StatCard({
   const colors = colorMap[color];
 
   return (
-    <div className="rounded-xl border bg-card p-5 shadow-sm transition-all hover:shadow-md">
+    <div className="relative overflow-hidden rounded-xl border bg-card p-5 shadow-sm transition-all hover:shadow-md">
+      {/* Subtle gradient accent at top */}
+      <div className={cn("absolute inset-x-0 top-0 h-1 bg-gradient-to-r", colors.gradient)} />
       <div className="flex items-start justify-between">
         <div className="space-y-1">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -64,7 +72,7 @@ export function StatCard({
         </div>
         <div
           className={cn(
-            "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
+            "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
             colors.bg
           )}
         >

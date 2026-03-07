@@ -5,7 +5,7 @@ import { trustAccounts, trustTransactions } from "@/lib/db/schema/billing";
 import { pettyCashTransactions } from "@/lib/db/schema/financial";
 import { auth } from "@/lib/auth/auth";
 import { createAuditLog } from "@/lib/utils/audit";
-import { createTrustTransactionSchema, createTrustAccountSchema, createPettyCashSchema } from "@/lib/validators/trust";
+import { createTrustTransactionSchema, createTrustAccountSchema, createPettyCashSchema, updateTrustAccountSchema } from "@/lib/validators/trust";
 import { eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { safeAction } from "@/lib/utils/safe-action";
@@ -124,6 +124,52 @@ export async function createTrustAccount(data: unknown) {
   });
 }
 
+export async function updateTrustAccount(id: string, data: unknown) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || session.user.role !== "admin") {
+      return { error: "Unauthorized: admin access required" };
+    }
+
+    if (!id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+      return { error: "Invalid ID" };
+    }
+
+    const validated = updateTrustAccountSchema.safeParse(data);
+    if (!validated.success) {
+      return { error: validated.error.issues[0].message };
+    }
+
+    const result = await db
+      .update(trustAccounts)
+      .set({
+        accountName: validated.data.accountName,
+        type: validated.data.type,
+        bankName: validated.data.bankName || null,
+        branchName: validated.data.branchName || null,
+        updatedAt: new Date(),
+      })
+      .where(eq(trustAccounts.id, id))
+      .returning({ id: trustAccounts.id });
+
+    if (result.length === 0) {
+      return { error: "Trust account not found" };
+    }
+
+    await createAuditLog(
+      session.user.id,
+      "update",
+      "trust_account",
+      id,
+      validated.data
+    );
+
+    revalidatePath("/trust-accounts");
+    revalidatePath(`/trust-accounts/${id}`);
+    return { success: true };
+  });
+}
+
 export async function createPettyCashTransaction(data: unknown) {
   return safeAction(async () => {
     const session = await auth();
@@ -143,6 +189,7 @@ export async function createPettyCashTransaction(data: unknown) {
         amount: String(validated.data.amount),
         description: validated.data.description,
         category: validated.data.category,
+        receiptUrl: validated.data.receiptUrl || null,
         performedBy: session.user.id,
       })
       .returning();

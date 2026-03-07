@@ -22,7 +22,8 @@ export default async function BrandingSettingsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Branding</h1>
           <p className="text-sm text-muted-foreground">
-            Customize your firm&apos;s logo and colors.
+            Customize your firm&apos;s identity, colors, typography, and
+            document appearance.
           </p>
         </div>
       </div>

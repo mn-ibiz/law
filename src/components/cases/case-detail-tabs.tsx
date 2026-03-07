@@ -1,14 +1,28 @@
 "use client";
 
+import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatKES } from "@/lib/utils/format";
 import { formatEnum } from "@/lib/utils/format-enum";
-import { Clock, Users, MessageSquare, FileText, Scale } from "lucide-react";
+import { formatRelativeDate } from "@/lib/utils/format";
+import { Clock, Users, MessageSquare, FileText, Scale, Receipt, ListTodo, CalendarClock, CircleDollarSign, AlertCircle, CheckCircle2, Timer, ArrowUpRight } from "lucide-react";
 import { APP_LOCALE } from "@/lib/constants/locale";
 import { CaseDocumentsTab } from "./case-documents-tab";
+import { PersonAvatar } from "@/components/shared/person-avatar";
+import { InvoiceStatusBadge, TaskStatusBadge, PriorityBadge, BillableBadge } from "@/components/shared/status-badges";
+import {
+  AddNoteDialog, DeleteNoteButton,
+  AddPartyDialog, DeletePartyButton,
+  AssignMemberDialog, UnassignButton,
+  AddTaskDialog, TaskStatusButton, DeleteTaskButton,
+  AddDeadlineDialog, CompleteDeadlineButton, DeleteDeadlineButton,
+} from "./case-crud-dialogs";
+import { Pencil } from "lucide-react";
 
 interface CaseDetail {
   id: string;
@@ -84,6 +98,66 @@ interface Doc {
   uploadedByName: string | null;
 }
 
+interface Invoice {
+  id: string;
+  invoiceNumber: string;
+  status: string;
+  totalAmount: string | null;
+  paidAmount: string | null;
+  dueDate: Date | null;
+  createdAt: Date;
+}
+
+interface TimeEntry {
+  id: string;
+  description: string | null;
+  date: Date;
+  hours: string | null;
+  rate: string | null;
+  amount: string | null;
+  isBillable: boolean;
+  isBilled: boolean;
+  userName: string | null;
+  userAvatar: string | null;
+}
+
+interface Expense {
+  id: string;
+  category: string;
+  description: string | null;
+  amount: string | null;
+  date: Date;
+  isBillable: boolean;
+  isBilled: boolean;
+  userName: string | null;
+  userAvatar: string | null;
+}
+
+interface Deadline {
+  id: string;
+  title: string;
+  description: string | null;
+  priority: string;
+  dueDate: Date;
+  completedAt: Date | null;
+  isStatutory: boolean;
+}
+
+interface Task {
+  id: string;
+  title: string;
+  description: string | null;
+  status: string;
+  priority: string;
+  dueDate: Date | null;
+  assignedToName: string | null;
+}
+
+interface UserOption {
+  id: string;
+  name: string | null;
+}
+
 interface CaseDetailTabsProps {
   caseData: CaseDetail;
   assignments: Assignment[];
@@ -91,6 +165,12 @@ interface CaseDetailTabsProps {
   timeline: TimelineEvent[];
   parties: Party[];
   documents: Doc[];
+  invoices: Invoice[];
+  timeEntries: TimeEntry[];
+  expenses: Expense[];
+  deadlines: Deadline[];
+  tasks: Task[];
+  users: UserOption[];
   sidebar?: React.ReactNode;
 }
 
@@ -128,15 +208,31 @@ export function CaseDetailTabs({
   timeline,
   parties,
   documents,
+  invoices,
+  timeEntries,
+  expenses,
+  deadlines,
+  tasks,
+  users,
   sidebar,
 }: CaseDetailTabsProps) {
   return (
     <Tabs defaultValue="details">
       {/* Tab bar spans full width */}
-      <TabsList>
+      <TabsList className="flex-wrap h-auto gap-1">
         <TabsTrigger value="details">
           <Scale className="mr-1.5 h-3.5 w-3.5" />
           Details
+        </TabsTrigger>
+        <TabsTrigger value="financial">
+          <CircleDollarSign className="mr-1.5 h-3.5 w-3.5" />
+          Financial
+          <TabCount count={invoices.length + timeEntries.length + expenses.length} />
+        </TabsTrigger>
+        <TabsTrigger value="tasks-deadlines">
+          <ListTodo className="mr-1.5 h-3.5 w-3.5" />
+          Tasks & Deadlines
+          <TabCount count={tasks.length + deadlines.length} />
         </TabsTrigger>
         <TabsTrigger value="documents">
           <FileText className="mr-1.5 h-3.5 w-3.5" />
@@ -145,7 +241,7 @@ export function CaseDetailTabs({
         </TabsTrigger>
         <TabsTrigger value="assignments">
           <Users className="mr-1.5 h-3.5 w-3.5" />
-          Assignments
+          Team
           <TabCount count={assignments.length} />
         </TabsTrigger>
         <TabsTrigger value="parties">
@@ -186,7 +282,9 @@ export function CaseDetailTabs({
                 )}
                 {caseData.statuteOfLimitations && (
                   <DL label="Statute of Limitations">
-                    {new Date(caseData.statuteOfLimitations).toLocaleDateString(APP_LOCALE)}
+                    <span className={new Date(caseData.statuteOfLimitations) < new Date() ? "text-destructive" : ""}>
+                      {new Date(caseData.statuteOfLimitations).toLocaleDateString(APP_LOCALE)}
+                    </span>
                   </DL>
                 )}
                 {caseData.estimatedValue && (
@@ -196,7 +294,7 @@ export function CaseDetailTabs({
               {caseData.description && (
                 <div className="mt-4">
                   <dt className="text-xs text-muted-foreground mb-1">Description</dt>
-                  <dd className="text-sm whitespace-pre-wrap leading-relaxed">
+                  <dd className="text-sm whitespace-pre-wrap leading-relaxed rounded-lg bg-muted/50 p-3">
                     {caseData.description}
                   </dd>
                 </div>
@@ -239,13 +337,374 @@ export function CaseDetailTabs({
         </Card>
       </TabsContent>
 
+      {/* ── Financial ── */}
+      <TabsContent value="financial" className="mt-0 space-y-6">
+        {/* Invoices */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Receipt className="h-4 w-4 text-muted-foreground" />
+                Invoices
+              </CardTitle>
+              <Link
+                href={`/billing?caseId=${caseData.id}`}
+                className="text-xs text-primary hover:underline flex items-center gap-1"
+              >
+                View all <ArrowUpRight className="h-3 w-3" />
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {invoices.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                No invoices for this case yet.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {invoices.map((inv) => {
+                  const total = Number(inv.totalAmount || 0);
+                  const paid = Number(inv.paidAmount || 0);
+                  const pctPaid = total > 0 ? Math.min(100, (paid / total) * 100) : 0;
+                  return (
+                    <Link
+                      key={inv.id}
+                      href={`/billing/${inv.id}`}
+                      className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs font-medium">{inv.invoiceNumber}</span>
+                          <InvoiceStatusBadge status={inv.status} />
+                        </div>
+                        <div className="mt-1.5 flex items-center gap-3">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex-1 max-w-[200px]">
+                                  <Progress value={pctPaid} className="h-1.5" />
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {formatKES(paid)} of {formatKES(total)} paid ({Math.round(pctPaid)}%)
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          <span className="text-[10px] text-muted-foreground shrink-0">
+                            {formatKES(paid)} / {formatKES(total)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-sm font-semibold">{formatKES(total)}</p>
+                        {inv.dueDate && (
+                          <p className="text-[10px] text-muted-foreground">
+                            Due {formatRelativeDate(new Date(inv.dueDate))}
+                          </p>
+                        )}
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Time Entries */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Timer className="h-4 w-4 text-muted-foreground" />
+                Time Entries
+              </CardTitle>
+              <Link
+                href={`/time-expenses?caseId=${caseData.id}`}
+                className="text-xs text-primary hover:underline flex items-center gap-1"
+              >
+                View all <ArrowUpRight className="h-3 w-3" />
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {timeEntries.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                No time entries recorded.
+              </p>
+            ) : (
+              <div className="space-y-1">
+                {timeEntries.slice(0, 10).map((entry) => (
+                  <div
+                    key={entry.id}
+                    className="flex items-center gap-3 rounded-lg p-2.5 hover:bg-muted/50"
+                  >
+                    <PersonAvatar name={entry.userName} imageUrl={entry.userAvatar} size="sm" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm truncate">{entry.description || "Time entry"}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[10px] text-muted-foreground">
+                          {new Date(entry.date).toLocaleDateString(APP_LOCALE)}
+                        </span>
+                        <BillableBadge billable={entry.isBillable} />
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-semibold tabular-nums">{Number(entry.hours || 0).toFixed(1)}h</p>
+                      {entry.amount && (
+                        <p className="text-[10px] text-muted-foreground">{formatKES(Number(entry.amount))}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {timeEntries.length > 10 && (
+                  <p className="pt-2 text-center text-xs text-muted-foreground">
+                    + {timeEntries.length - 10} more entries
+                  </p>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Expenses */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <CircleDollarSign className="h-4 w-4 text-muted-foreground" />
+                Expenses
+              </CardTitle>
+              <Link
+                href={`/time-expenses?tab=expenses&caseId=${caseData.id}`}
+                className="text-xs text-primary hover:underline flex items-center gap-1"
+              >
+                View all <ArrowUpRight className="h-3 w-3" />
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {expenses.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                No expenses recorded.
+              </p>
+            ) : (
+              <div className="space-y-1">
+                {expenses.slice(0, 10).map((exp) => (
+                  <div
+                    key={exp.id}
+                    className="flex items-center gap-3 rounded-lg p-2.5 hover:bg-muted/50"
+                  >
+                    <PersonAvatar name={exp.userName} imageUrl={exp.userAvatar} size="sm" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm truncate">{exp.description || formatEnum(exp.category)}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[10px] text-muted-foreground">
+                          {new Date(exp.date).toLocaleDateString(APP_LOCALE)}
+                        </span>
+                        <Badge variant="outline" className="text-[10px]">
+                          {formatEnum(exp.category)}
+                        </Badge>
+                      </div>
+                    </div>
+                    <p className="text-sm font-semibold shrink-0">{formatKES(Number(exp.amount || 0))}</p>
+                  </div>
+                ))}
+                {expenses.length > 10 && (
+                  <p className="pt-2 text-center text-xs text-muted-foreground">
+                    + {expenses.length - 10} more expenses
+                  </p>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* ── Tasks & Deadlines ── */}
+      <TabsContent value="tasks-deadlines" className="mt-0 space-y-6">
+        {/* Deadlines */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <CalendarClock className="h-4 w-4 text-muted-foreground" />
+                Deadlines
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <AddDeadlineDialog caseId={caseData.id} users={users} />
+                <Link
+                  href="/deadlines"
+                  className="text-xs text-primary hover:underline flex items-center gap-1"
+                >
+                  View all <ArrowUpRight className="h-3 w-3" />
+                </Link>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {deadlines.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                No deadlines set for this case.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {deadlines.map((d) => {
+                  const isOverdue = !d.completedAt && new Date(d.dueDate) < new Date();
+                  const isCompleted = !!d.completedAt;
+                  return (
+                    <div
+                      key={d.id}
+                      className={`flex items-start gap-3 rounded-lg border p-3 ${
+                        isOverdue ? "border-destructive/30 bg-destructive/5" : isCompleted ? "opacity-60" : ""
+                      }`}
+                    >
+                      <div className="mt-0.5 shrink-0">
+                        {isCompleted ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        ) : isOverdue ? (
+                          <AlertCircle className="h-4 w-4 text-destructive" />
+                        ) : (
+                          <CalendarClock className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className={`text-sm font-medium ${isCompleted ? "line-through" : ""}`}>
+                            {d.title}
+                          </p>
+                          <PriorityBadge priority={d.priority} />
+                          {d.isStatutory && (
+                            <Badge variant="secondary" className="text-[10px]">Statutory</Badge>
+                          )}
+                        </div>
+                        {d.description && (
+                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{d.description}</p>
+                        )}
+                        <p className={`text-[10px] mt-1 ${isOverdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+                          {isCompleted
+                            ? `Completed ${formatRelativeDate(new Date(d.completedAt!))}`
+                            : `Due ${formatRelativeDate(new Date(d.dueDate))}`}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        {!isCompleted && <CompleteDeadlineButton deadlineId={d.id} />}
+                        <AddDeadlineDialog
+                          caseId={caseData.id}
+                          deadline={d}
+                          users={users}
+                          trigger={
+                            <button className="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted text-muted-foreground">
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                          }
+                        />
+                        <DeleteDeadlineButton deadlineId={d.id} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Tasks */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <ListTodo className="h-4 w-4 text-muted-foreground" />
+                Tasks
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <AddTaskDialog caseId={caseData.id} users={users} />
+                <Link
+                  href="/tasks"
+                  className="text-xs text-primary hover:underline flex items-center gap-1"
+                >
+                  View all <ArrowUpRight className="h-3 w-3" />
+                </Link>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {tasks.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                No tasks created for this case.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {tasks.map((t) => (
+                  <div
+                    key={t.id}
+                    className={`flex items-start gap-3 rounded-lg border p-3 ${
+                      t.status === "completed" ? "opacity-60" : ""
+                    }`}
+                  >
+                    <div className="mt-0.5 shrink-0">
+                      {t.status === "completed" ? (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                      ) : (
+                        <ListTodo className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className={`text-sm font-medium ${t.status === "completed" ? "line-through" : ""}`}>
+                          {t.title}
+                        </p>
+                        <TaskStatusBadge status={t.status} />
+                        <PriorityBadge priority={t.priority} />
+                      </div>
+                      {t.description && (
+                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{t.description}</p>
+                      )}
+                      <div className="flex items-center gap-2 mt-1">
+                        {t.assignedToName && (
+                          <span className="text-[10px] text-muted-foreground">
+                            Assigned to {t.assignedToName}
+                          </span>
+                        )}
+                        {t.dueDate && (
+                          <span className="text-[10px] text-muted-foreground">
+                            · Due {formatRelativeDate(new Date(t.dueDate))}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <TaskStatusButton taskId={t.id} status={t.status} />
+                      <AddTaskDialog
+                        caseId={caseData.id}
+                        task={t}
+                        users={users}
+                        trigger={
+                          <button className="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted text-muted-foreground">
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                        }
+                      />
+                      <DeleteTaskButton taskId={t.id} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </TabsContent>
+
       {/* ── Documents ── */}
       <TabsContent value="documents" className="mt-0">
         <CaseDocumentsTab caseId={caseData.id} documents={documents} />
       </TabsContent>
 
-      {/* ── Assignments ── */}
-      <TabsContent value="assignments" className="mt-0">
+      {/* ── Assignments (Team) ── */}
+      <TabsContent value="assignments" className="mt-0 space-y-4">
+        <div className="flex justify-end">
+          <AssignMemberDialog caseId={caseData.id} users={users} />
+        </div>
         {assignments.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">
             No attorneys assigned.
@@ -269,6 +728,7 @@ export function CaseDetailTabs({
                       </span>
                     </div>
                   </div>
+                  <UnassignButton assignmentId={a.id} caseId={caseData.id} />
                 </CardContent>
               </Card>
             ))}
@@ -277,7 +737,10 @@ export function CaseDetailTabs({
       </TabsContent>
 
       {/* ── Parties ── */}
-      <TabsContent value="parties" className="mt-0">
+      <TabsContent value="parties" className="mt-0 space-y-4">
+        <div className="flex justify-end">
+          <AddPartyDialog caseId={caseData.id} />
+        </div>
         {parties.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">
             No parties added.
@@ -287,11 +750,25 @@ export function CaseDetailTabs({
             {parties.map((p) => (
               <Card key={p.id}>
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <p className="text-sm font-medium">{p.name}</p>
-                    <Badge variant="outline" className="text-[10px]">
-                      {formatEnum(p.role)}
-                    </Badge>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium">{p.name}</p>
+                      <Badge variant="outline" className="text-[10px]">
+                        {formatEnum(p.role)}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <AddPartyDialog
+                        caseId={caseData.id}
+                        party={p}
+                        trigger={
+                          <button className="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted text-muted-foreground">
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                        }
+                      />
+                      <DeletePartyButton partyId={p.id} caseId={caseData.id} />
+                    </div>
                   </div>
                   <div className="space-y-0.5 text-xs text-muted-foreground">
                     {p.email && <p>{p.email}</p>}
@@ -305,7 +782,10 @@ export function CaseDetailTabs({
       </TabsContent>
 
       {/* ── Notes ── */}
-      <TabsContent value="notes" className="mt-0">
+      <TabsContent value="notes" className="mt-0 space-y-4">
+        <div className="flex justify-end">
+          <AddNoteDialog caseId={caseData.id} />
+        </div>
         {notes.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">
             No notes added.
@@ -329,6 +809,16 @@ export function CaseDetailTabs({
                       <span className="text-[10px] text-muted-foreground">
                         {new Date(n.createdAt).toLocaleString(APP_LOCALE)}
                       </span>
+                      <AddNoteDialog
+                        caseId={caseData.id}
+                        note={n}
+                        trigger={
+                          <button className="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted text-muted-foreground">
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                        }
+                      />
+                      <DeleteNoteButton noteId={n.id} caseId={caseData.id} />
                     </div>
                   </div>
                   <p className="text-sm whitespace-pre-wrap leading-relaxed pl-9">

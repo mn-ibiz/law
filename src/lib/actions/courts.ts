@@ -5,7 +5,7 @@ import { courts, courtFilings, courtStations, causeLists, causeListEntries, cour
 import { bringUps, deadlines } from "@/lib/db/schema/calendar";
 import { auth } from "@/lib/auth/auth";
 import { createAuditLog } from "@/lib/utils/audit";
-import { createCourtSchema, createFilingSchema, updateFilingStatusSchema, createBringUpSchema, createServiceOfDocumentSchema, createCauseListSchema, createCauseListEntrySchema, createCourtRuleSchema } from "@/lib/validators/court";
+import { createCourtSchema, updateCourtSchema, createFilingSchema, updateFilingStatusSchema, createBringUpSchema, updateBringUpSchema, createServiceOfDocumentSchema, createCauseListSchema, createCauseListEntrySchema, createCourtRuleSchema, updateFilingSchema, updateCourtRuleSchema, updateCauseListSchema, updateCauseListEntrySchema } from "@/lib/validators/court";
 import { serviceOfDocuments } from "@/lib/db/schema/courts";
 import { eq, and, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -34,6 +34,65 @@ export async function createCourt(data: unknown) {
   });
 }
 
+export async function updateCourt(id: string, data: unknown) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || session.user.role !== "admin") {
+      return { error: "Unauthorized" };
+    }
+
+    if (!validateId(id)) return { error: "Invalid ID" };
+
+    const validated = updateCourtSchema.safeParse(data);
+    if (!validated.success) {
+      return { error: validated.error.issues[0].message };
+    }
+
+    const result = await db
+      .update(courts)
+      .set(validated.data)
+      .where(eq(courts.id, id))
+      .returning();
+
+    if (result.length === 0) {
+      return { error: "Court not found" };
+    }
+
+    await createAuditLog(session.user.id, "update", "court", id, validated.data);
+
+    revalidatePath("/courts");
+    return { data: result[0] };
+  });
+}
+
+export async function toggleCourtActive(id: string) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || session.user.role !== "admin") {
+      return { error: "Unauthorized" };
+    }
+
+    if (!validateId(id)) return { error: "Invalid ID" };
+
+    const result = await db
+      .update(courts)
+      .set({ isActive: sql`NOT ${courts.isActive}` })
+      .where(eq(courts.id, id))
+      .returning({ id: courts.id, isActive: courts.isActive });
+
+    if (result.length === 0) {
+      return { error: "Court not found" };
+    }
+
+    await createAuditLog(session.user.id, "update", "court", id, {
+      action: result[0].isActive ? "activate" : "deactivate",
+    });
+
+    revalidatePath("/courts");
+    return { success: true };
+  });
+}
+
 export async function createCourtFiling(data: unknown) {
   return safeAction(async () => {
     const session = await auth();
@@ -46,7 +105,7 @@ export async function createCourtFiling(data: unknown) {
       return { error: validated.error.issues[0].message };
     }
 
-    const { filingDate, ...rest } = validated.data;
+    const { filingDate, documentUrl, ...rest } = validated.data;
 
     const result = await db
       .insert(courtFilings)
@@ -54,9 +113,11 @@ export async function createCourtFiling(data: unknown) {
         ...rest,
         filedBy: session.user.id,
         filingDate: filingDate ? new Date(filingDate) : undefined,
+        documentUrl: documentUrl || null,
       })
       .returning();
 
+    revalidatePath("/courts");
     revalidatePath(`/cases/${validated.data.caseId}`);
     return { data: result[0] };
   });
@@ -96,7 +157,7 @@ export async function createServiceOfDocument(data: unknown) {
       return { error: validated.error.issues[0].message };
     }
 
-    const { serviceDate, ...rest } = validated.data;
+    const { serviceDate, proofOfServiceUrl, ...rest } = validated.data;
 
     const result = await db
       .insert(serviceOfDocuments)
@@ -104,11 +165,63 @@ export async function createServiceOfDocument(data: unknown) {
         ...rest,
         servedBy: session.user.id,
         serviceDate: serviceDate ? new Date(serviceDate) : undefined,
+        proofOfServiceUrl: proofOfServiceUrl || null,
       })
       .returning();
 
     revalidatePath("/courts");
     return { data: result[0] };
+  });
+}
+
+export async function updateServiceOfDocument(id: string, data: unknown) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    if (!validateId(id)) return { error: "Invalid ID" };
+
+    const validated = createServiceOfDocumentSchema.safeParse(data);
+    if (!validated.success) {
+      return { error: validated.error.issues[0].message };
+    }
+
+    const { serviceDate, proofOfServiceUrl, ...rest } = validated.data;
+
+    const result = await db
+      .update(serviceOfDocuments)
+      .set({
+        ...rest,
+        serviceDate: serviceDate ? new Date(serviceDate) : null,
+        proofOfServiceUrl: proofOfServiceUrl || null,
+      })
+      .where(eq(serviceOfDocuments.id, id))
+      .returning();
+
+    if (result.length === 0) {
+      return { error: "Service record not found" };
+    }
+
+    revalidatePath("/courts");
+    return { data: result[0] };
+  });
+}
+
+export async function deleteServiceOfDocument(id: string) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    if (!validateId(id)) return { error: "Invalid ID" };
+
+    await db.delete(serviceOfDocuments).where(eq(serviceOfDocuments.id, id));
+
+    revalidatePath("/courts");
+    return { success: true };
   });
 }
 
@@ -160,6 +273,45 @@ export async function completeBringUp(id: string) {
     if (result.length === 0) {
       return { error: "Bring-up not found or already completed" };
     }
+
+    revalidatePath("/bring-ups");
+    return { success: true };
+  });
+}
+
+export async function updateBringUp(id: string, data: unknown) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    if (!validateId(id)) return { error: "Invalid ID" };
+
+    const validated = updateBringUpSchema.safeParse(data);
+    if (!validated.success) {
+      return { error: validated.error.issues[0].message };
+    }
+
+    const { date, ...rest } = validated.data;
+
+    // Only allow editing pending bring-ups — atomic conditional update
+    const result = await db
+      .update(bringUps)
+      .set({
+        ...rest,
+        assignedTo: validated.data.assignedTo || null,
+        date: new Date(date),
+        updatedAt: new Date(),
+      })
+      .where(sql`${bringUps.id} = ${id} AND ${bringUps.status} = 'pending'`)
+      .returning({ id: bringUps.id });
+
+    if (result.length === 0) {
+      return { error: "Bring-up not found or cannot be edited (not in pending status)" };
+    }
+
+    await createAuditLog(session.user.id, "update", "bring_up", id, validated.data);
 
     revalidatePath("/bring-ups");
     return { success: true };
@@ -371,6 +523,191 @@ export async function toggleCourtRuleActive(id: string) {
       .where(eq(courtRules.id, id));
 
     revalidatePath("/settings/court-rules");
+    return { success: true };
+  });
+}
+
+// --- Court Filing: Update & Delete ---
+
+export async function updateCourtFiling(id: string, data: unknown) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    if (!validateId(id)) return { error: "Invalid ID" };
+
+    const validated = updateFilingSchema.safeParse(data);
+    if (!validated.success) {
+      return { error: validated.error.issues[0].message };
+    }
+
+    const { filingDate, ...rest } = validated.data;
+
+    const result = await db
+      .update(courtFilings)
+      .set({
+        ...rest,
+        filingDate: filingDate ? new Date(filingDate) : null,
+        updatedAt: new Date(),
+      })
+      .where(eq(courtFilings.id, id))
+      .returning();
+
+    if (result.length === 0) {
+      return { error: "Filing not found" };
+    }
+
+    revalidatePath("/courts");
+    revalidatePath(`/cases/${validated.data.caseId}`);
+    return { data: result[0] };
+  });
+}
+
+export async function deleteCourtFiling(id: string) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    if (!validateId(id)) return { error: "Invalid ID" };
+
+    await db.delete(courtFilings).where(eq(courtFilings.id, id));
+
+    revalidatePath("/courts");
+    return { success: true };
+  });
+}
+
+// --- Court Rules: Update ---
+
+export async function updateCourtRule(id: string, data: unknown) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || session.user.role !== "admin") {
+      return { error: "Unauthorized" };
+    }
+
+    if (!validateId(id)) return { error: "Invalid ID" };
+
+    const validated = updateCourtRuleSchema.safeParse(data);
+    if (!validated.success) {
+      return { error: validated.error.issues[0].message };
+    }
+
+    const result = await db
+      .update(courtRules)
+      .set({ ...validated.data, updatedAt: new Date() })
+      .where(eq(courtRules.id, id))
+      .returning();
+
+    if (result.length === 0) {
+      return { error: "Court rule not found" };
+    }
+
+    revalidatePath("/settings/court-rules");
+    return { data: result[0] };
+  });
+}
+
+// --- Cause Lists: Update & Delete ---
+
+export async function updateCauseList(id: string, data: unknown) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    if (!validateId(id)) return { error: "Invalid ID" };
+
+    const validated = updateCauseListSchema.safeParse(data);
+    if (!validated.success) {
+      return { error: validated.error.issues[0].message };
+    }
+
+    const { date, ...rest } = validated.data;
+
+    const result = await db
+      .update(causeLists)
+      .set({
+        ...rest,
+        date: new Date(date),
+        updatedAt: new Date(),
+      })
+      .where(eq(causeLists.id, id))
+      .returning();
+
+    if (result.length === 0) {
+      return { error: "Cause list not found" };
+    }
+
+    revalidatePath("/cause-lists");
+    return { data: result[0] };
+  });
+}
+
+export async function deleteCauseList(id: string) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    if (!validateId(id)) return { error: "Invalid ID" };
+
+    await db.delete(causeLists).where(eq(causeLists.id, id));
+
+    revalidatePath("/cause-lists");
+    return { success: true };
+  });
+}
+
+// --- Cause List Entries: Update & Delete ---
+
+export async function updateCauseListEntry(id: string, data: unknown) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    if (!validateId(id)) return { error: "Invalid ID" };
+
+    const validated = updateCauseListEntrySchema.safeParse(data);
+    if (!validated.success) {
+      return { error: validated.error.issues[0].message };
+    }
+
+    const result = await db
+      .update(causeListEntries)
+      .set({ ...validated.data, updatedAt: new Date() })
+      .where(eq(causeListEntries.id, id))
+      .returning();
+
+    if (result.length === 0) {
+      return { error: "Entry not found" };
+    }
+
+    revalidatePath("/cause-lists");
+    return { data: result[0] };
+  });
+}
+
+export async function deleteCauseListEntry(id: string) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    if (!validateId(id)) return { error: "Invalid ID" };
+
+    await db.delete(causeListEntries).where(eq(causeListEntries.id, id));
+
+    revalidatePath("/cause-lists");
     return { success: true };
   });
 }

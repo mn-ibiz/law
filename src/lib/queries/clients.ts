@@ -43,6 +43,7 @@ export async function getClients(filters: ClientFilters = {}) {
       companyName: clients.companyName,
       county: clients.county,
       isPep: clients.isPep,
+      photoUrl: clients.photoUrl,
       createdAt: clients.createdAt,
     })
     .from(clients)

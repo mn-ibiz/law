@@ -25,6 +25,8 @@ export async function sendMessage(data: unknown) {
         subject: validated.data.subject,
         body: validated.data.body,
         caseId: validated.data.caseId || undefined,
+        attachmentUrl: validated.data.attachmentUrl || null,
+        attachmentName: validated.data.attachmentName || null,
       })
       .returning();
 

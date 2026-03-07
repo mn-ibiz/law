@@ -10,7 +10,12 @@ import { APP_LOCALE } from "@/lib/constants/locale";
 import { FilingStatusBadge } from "@/components/shared/status-badges";
 import { FilingForm } from "@/components/courts/filing-form";
 import { ServiceForm } from "@/components/courts/service-form";
-import { Plus } from "lucide-react";
+import { FilingRowActions } from "@/components/courts/filing-row-actions";
+import { ServiceRowActions } from "@/components/courts/service-row-actions";
+import { ServiceEditDialog } from "@/components/courts/service-edit-dialog";
+import { CourtEditDialog } from "@/components/courts/court-edit-dialog";
+import { Plus, Pencil, ExternalLink } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -21,15 +26,22 @@ interface Court {
   level: string;
   jurisdiction: string | null;
   address: string | null;
+  phone: string | null;
+  email: string | null;
+  isActive: boolean;
   stations: { id: string; name: string; county: string | null }[];
 }
 
 interface Filing {
   id: string;
+  caseId: string;
+  courtId: string | null;
   filingType: string;
   filingNumber: string | null;
   status: string;
   filingDate: Date | null;
+  documentUrl: string | null;
+  notes: string | null;
   courtName: string | null;
   caseNumber: string;
   filedByName: string | null;
@@ -38,10 +50,13 @@ interface Filing {
 
 interface ServiceRecord {
   id: string;
+  caseId: string;
   documentTitle: string;
   servedTo: string;
   method: string;
   serviceDate: Date | null;
+  proofOfServiceUrl: string | null;
+  notes: string | null;
   caseNumber: string;
   servedByName: string | null;
   createdAt: Date;
@@ -53,6 +68,7 @@ interface CourtsTabsProps {
   serviceRecords: ServiceRecord[];
   cases: { id: string; caseNumber: string; title: string }[];
   courts: { id: string; name: string }[];
+  userRole?: string;
 }
 
 const levelStyles: Record<string, string> = {
@@ -66,9 +82,12 @@ const levelStyles: Record<string, string> = {
 const capsule =
   "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold leading-none whitespace-nowrap";
 
-export function CourtsTabs({ hierarchy, filings, serviceRecords, cases, courts }: CourtsTabsProps) {
+export function CourtsTabs({ hierarchy, filings, serviceRecords, cases, courts, userRole }: CourtsTabsProps) {
   const [showFilingForm, setShowFilingForm] = useState(false);
   const [showServiceForm, setShowServiceForm] = useState(false);
+  const [editingCourt, setEditingCourt] = useState<Court | null>(null);
+  const [editingService, setEditingService] = useState<ServiceRecord | null>(null);
+  const isAdmin = userRole === "admin";
 
   return (
     <>
@@ -92,19 +111,36 @@ export function CourtsTabs({ hierarchy, filings, serviceRecords, cases, courts }
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
               {hierarchy.map((court) => (
-                <Card key={court.id} className="shadow-sm transition-all hover:shadow-md">
+                <Card key={court.id} className={cn("shadow-sm transition-all hover:shadow-md", !court.isActive && "opacity-60")}>
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-base font-semibold">{court.name}</CardTitle>
-                      <span
-                        className={cn(
-                          capsule,
-                          levelStyles[court.level?.toLowerCase()] ??
-                            "bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-500/20"
+                      <div className="flex items-center gap-2">
+                        <CardTitle className="text-base font-semibold">{court.name}</CardTitle>
+                        {!court.isActive && (
+                          <Badge variant="secondary" className="text-[10px]">Inactive</Badge>
                         )}
-                      >
-                        {court.level}
-                      </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={cn(
+                            capsule,
+                            levelStyles[court.level?.toLowerCase()] ??
+                              "bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-500/20"
+                          )}
+                        >
+                          {court.level}
+                        </span>
+                        {isAdmin && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => setEditingCourt(court)}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -176,6 +212,7 @@ export function CourtsTabs({ hierarchy, filings, serviceRecords, cases, courts }
                       <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Filing Type</TableHead>
                       <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Filing Number</TableHead>
                       <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Status</TableHead>
+                      <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground w-[50px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -190,6 +227,23 @@ export function CourtsTabs({ hierarchy, filings, serviceRecords, cases, courts }
                         <TableCell className="font-mono text-xs">{f.filingNumber ?? "\u2014"}</TableCell>
                         <TableCell>
                           <FilingStatusBadge status={f.status} />
+                        </TableCell>
+                        <TableCell>
+                          <FilingRowActions
+                            filing={{
+                              id: f.id,
+                              caseId: f.caseId,
+                              courtId: f.courtId,
+                              filingType: f.filingType,
+                              filingNumber: f.filingNumber,
+                              filingDate: f.filingDate,
+                              documentUrl: f.documentUrl,
+                              notes: f.notes,
+                              status: f.status,
+                            }}
+                            cases={cases}
+                            courts={courts}
+                          />
                         </TableCell>
                       </TableRow>
                     ))}
@@ -225,6 +279,8 @@ export function CourtsTabs({ hierarchy, filings, serviceRecords, cases, courts }
                       <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Party Served</TableHead>
                       <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Method</TableHead>
                       <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Served By</TableHead>
+                      <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Proof</TableHead>
+                      <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground w-[50px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -242,6 +298,32 @@ export function CourtsTabs({ hierarchy, filings, serviceRecords, cases, courts }
                           </span>
                         </TableCell>
                         <TableCell>{s.servedByName ?? "\u2014"}</TableCell>
+                        <TableCell>
+                          {s.proofOfServiceUrl ? (
+                            <a href={s.proofOfServiceUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1 text-xs">
+                              <ExternalLink className="h-3 w-3" />
+                              View
+                            </a>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">{"\u2014"}</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <ServiceRowActions
+                            record={{
+                              id: s.id,
+                              caseId: s.caseId,
+                              documentTitle: s.documentTitle,
+                              servedTo: s.servedTo,
+                              method: s.method,
+                              serviceDate: s.serviceDate,
+                              proofOfServiceUrl: s.proofOfServiceUrl,
+                              notes: s.notes,
+                            }}
+                            cases={cases}
+                            onEdit={(rec) => setEditingService(rec as ServiceRecord)}
+                          />
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -266,6 +348,29 @@ export function CourtsTabs({ hierarchy, filings, serviceRecords, cases, courts }
         onOpenChange={setShowServiceForm}
         cases={cases}
       />
+
+      {/* Court Edit Dialog */}
+      {editingCourt && (
+        <CourtEditDialog
+          court={editingCourt}
+          open={!!editingCourt}
+          onOpenChange={(open) => {
+            if (!open) setEditingCourt(null);
+          }}
+        />
+      )}
+
+      {/* Service Edit Dialog */}
+      {editingService && (
+        <ServiceEditDialog
+          record={editingService}
+          open={!!editingService}
+          onOpenChange={(open) => {
+            if (!open) setEditingService(null);
+          }}
+          cases={cases}
+        />
+      )}
     </>
   );
 }

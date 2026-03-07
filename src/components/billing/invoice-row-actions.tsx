@@ -99,6 +99,7 @@ export function InvoiceRowActions({
       <RowActionsMenu
         actions={actions}
         onView={() => router.push(`/billing/${invoiceId}`)}
+        onEdit={isDraft ? () => router.push(`/billing/${invoiceId}/edit`) : undefined}
         onDelete={isDraft ? () => setShowDelete(true) : undefined}
       />
 

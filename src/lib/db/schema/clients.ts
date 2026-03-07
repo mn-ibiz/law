@@ -29,6 +29,7 @@ export const clients = pgTable(
     physicalAddress: text("physical_address"),
     nextOfKin: text("next_of_kin"),
     employer: text("employer"),
+    photoUrl: text("photo_url"),
     // General
     address: text("address"),
     city: text("city"),

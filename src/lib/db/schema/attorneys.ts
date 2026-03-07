@@ -19,6 +19,7 @@ export const attorneys = pgTable(
     hourlyRate: numeric("hourly_rate", { precision: 10, scale: 2 }),
     dateAdmitted: timestamp("date_admitted", { withTimezone: true }),
     bio: text("bio"),
+    photoUrl: text("photo_url"),
     lskNumber: text("lsk_number"),
     commissionerForOaths: boolean("commissioner_for_oaths").default(false),
     notaryPublic: boolean("notary_public").default(false),

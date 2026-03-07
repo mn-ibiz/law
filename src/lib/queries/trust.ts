@@ -18,6 +18,7 @@ export async function getTrustAccounts() {
       bankName: trustAccounts.bankName,
       currency: trustAccounts.currency,
       clientName: sql<string>`coalesce(${clients.firstName} || ' ' || ${clients.lastName}, 'General')`,
+      clientPhotoUrl: clients.photoUrl,
     })
     .from(trustAccounts)
     .leftJoin(clients, eq(trustAccounts.clientId, clients.id))
@@ -98,6 +99,7 @@ export async function getPettyCashTransactions() {
       amount: pettyCashTransactions.amount,
       description: pettyCashTransactions.description,
       category: pettyCashTransactions.category,
+      receiptUrl: pettyCashTransactions.receiptUrl,
       transactionDate: pettyCashTransactions.transactionDate,
       performedByName: users.name,
     })

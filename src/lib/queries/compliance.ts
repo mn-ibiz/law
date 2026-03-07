@@ -75,6 +75,7 @@ export async function getExpiringCertificates(daysAhead = 60) {
     .select({
       attorneyId: attorneys.id,
       attorneyName: users.name,
+      attorneyPhotoUrl: attorneys.photoUrl,
       certificateNumber: practisingCertificates.certificateNumber,
       expiryDate: practisingCertificates.expiryDate,
       year: practisingCertificates.year,
@@ -98,19 +99,21 @@ export async function getNonCompliantCpdAttorneys(year?: number) {
   const result = await db.execute<{
     attorney_id: string;
     attorney_name: string;
+    attorney_photo_url: string | null;
     total_units: number;
     lsk_units: number;
   }>(sql`
     SELECT
       a.id as attorney_id,
       u.name as attorney_name,
+      a.photo_url as attorney_photo_url,
       coalesce(sum(c.units::numeric), 0)::float as total_units,
       coalesce(sum(case when c.is_lsk_program then c.units::numeric else 0 end), 0)::float as lsk_units
     FROM ${attorneys} a
     INNER JOIN ${users} u ON a.user_id = u.id
     LEFT JOIN ${cpdRecords} c ON c.attorney_id = a.id AND c.year = ${String(currentYear)}
     WHERE a.is_active = true
-    GROUP BY a.id, u.name
+    GROUP BY a.id, u.name, a.photo_url
     HAVING coalesce(sum(c.units::numeric), 0) < 5
        OR coalesce(sum(case when c.is_lsk_program then c.units::numeric else 0 end), 0) < 2
   `);

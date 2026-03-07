@@ -47,6 +47,7 @@ export async function getCases(filters: CaseFilters = {}) {
       billingType: cases.billingType,
       dateFiled: cases.dateFiled,
       clientName: sql<string>`COALESCE(${clients.firstName}, '') || ' ' || COALESCE(${clients.lastName}, '')`,
+      clientPhotoUrl: clients.photoUrl,
       clientId: cases.clientId,
       createdAt: cases.createdAt,
     })
@@ -134,6 +135,7 @@ export async function getCaseAssignments(caseId: string) {
       role: caseAssignments.role,
       assignedAt: caseAssignments.assignedAt,
       userName: users.name,
+      userAvatar: users.avatar,
       userId: caseAssignments.userId,
     })
     .from(caseAssignments)
@@ -257,4 +259,16 @@ export async function generateCaseNumber(): Promise<string> {
     if (!isNaN(lastNum)) next = lastNum + 1;
   }
   return `${prefix}${String(next).padStart(4, "0")}`;
+}
+
+/** Lightweight case list for select dropdowns (id, caseNumber, title) */
+export async function getCaseOptions() {
+  return db
+    .select({
+      id: cases.id,
+      caseNumber: cases.caseNumber,
+      title: cases.title,
+    })
+    .from(cases)
+    .orderBy(desc(cases.createdAt));
 }

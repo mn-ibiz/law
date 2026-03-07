@@ -4,10 +4,17 @@ import Link from "next/link";
 import { requireAdminOrAttorney } from "@/lib/auth/get-session";
 import { getCaseById, getCaseAssignments, getCaseNotes, getCaseTimeline, getCaseParties } from "@/lib/queries/cases";
 import { getDocuments } from "@/lib/queries/documents";
+import { getInvoices } from "@/lib/queries/billing";
+import { getTimeEntries, getExpenses } from "@/lib/queries/time-expenses";
+import { getDeadlines, getTasks } from "@/lib/queries/calendar";
+import { getUsers } from "@/lib/queries/settings";
 import { CaseDetailTabs } from "@/components/cases/case-detail-tabs";
 import { CaseSummarySidebar } from "@/components/cases/case-summary-sidebar";
 import { CaseStatusBadge, PriorityBadge } from "@/components/shared/status-badges";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
+import { StatCard } from "@/components/shared/stat-card";
+import { formatKES } from "@/lib/utils/format";
+import { Clock, Receipt, AlertTriangle, CheckCircle2 } from "lucide-react";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -24,13 +31,27 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
   const caseData = await getCaseById(id);
   if (!caseData) notFound();
 
-  const [assignments, notes, timeline, parties, documents] = await Promise.all([
+  const [assignments, notes, timeline, parties, documents, caseInvoices, caseTimeEntries, caseExpenses, caseDeadlines, caseTasks, allUsers] = await Promise.all([
     getCaseAssignments(id),
     getCaseNotes(id),
     getCaseTimeline(id),
     getCaseParties(id),
     getDocuments({ caseId: id }),
+    getInvoices({ caseId: id }),
+    getTimeEntries({ caseId: id }),
+    getExpenses({ caseId: id }),
+    getDeadlines({ caseId: id }),
+    getTasks({ caseId: id }),
+    getUsers(),
   ]);
+
+  // Compute financial stats
+  const totalHours = caseTimeEntries.reduce((sum, t) => sum + Number(t.hours || 0), 0);
+  const totalBilled = caseInvoices.reduce((sum, inv) => sum + Number(inv.totalAmount || 0), 0);
+  const totalPaid = caseInvoices.reduce((sum, inv) => sum + Number(inv.paidAmount || 0), 0);
+  const outstanding = totalBilled - totalPaid;
+  const pendingDeadlines = caseDeadlines.filter((d) => !d.completedAt).length;
+  const pendingTasks = caseTasks.filter((t) => t.status !== "completed" && t.status !== "cancelled").length;
 
   return (
     <div className="space-y-6">
@@ -42,19 +63,53 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
       />
 
       {/* Header */}
-      <div>
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold tracking-tight">{caseData.title}</h1>
-          <CaseStatusBadge status={caseData.status} />
-          <PriorityBadge priority={caseData.priority} />
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold tracking-tight">{caseData.title}</h1>
+            <CaseStatusBadge status={caseData.status} />
+            <PriorityBadge priority={caseData.priority} />
+          </div>
+          <p className="mt-1 text-muted-foreground">
+            <span className="font-mono text-xs">{caseData.caseNumber}</span>
+            {" — "}
+            <Link href={`/clients/${caseData.clientId}`} className="text-primary hover:underline">
+              {caseData.clientName}
+            </Link>
+          </p>
         </div>
-        <p className="mt-1 text-muted-foreground">
-          <span className="font-mono text-xs">{caseData.caseNumber}</span>
-          {" — "}
-          <Link href={`/clients/${caseData.clientId}`} className="text-primary hover:underline">
-            {caseData.clientName}
-          </Link>
-        </p>
+      </div>
+
+      {/* Financial KPI Strip */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          label="Hours Tracked"
+          value={totalHours.toFixed(1)}
+          icon={Clock}
+          description={`${caseTimeEntries.filter((t) => t.isBillable).length} billable entries`}
+          color="blue"
+        />
+        <StatCard
+          label="Total Billed"
+          value={formatKES(totalBilled)}
+          icon={Receipt}
+          description={`${caseInvoices.length} invoice${caseInvoices.length !== 1 ? "s" : ""}`}
+          color="emerald"
+        />
+        <StatCard
+          label="Outstanding"
+          value={formatKES(outstanding)}
+          icon={AlertTriangle}
+          description={outstanding > 0 ? "Unpaid balance" : "Fully paid"}
+          color={outstanding > 0 ? "amber" : "emerald"}
+        />
+        <StatCard
+          label="Open Items"
+          value={pendingDeadlines + pendingTasks}
+          icon={CheckCircle2}
+          description={`${pendingDeadlines} deadline${pendingDeadlines !== 1 ? "s" : ""}, ${pendingTasks} task${pendingTasks !== 1 ? "s" : ""}`}
+          color="purple"
+        />
       </div>
 
       {/* Tabs row spans full width; content + sidebar are aligned below */}
@@ -65,7 +120,20 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
         timeline={timeline}
         parties={parties}
         documents={documents}
-        sidebar={<CaseSummarySidebar caseData={caseData} assignments={assignments} />}
+        invoices={caseInvoices}
+        timeEntries={caseTimeEntries}
+        expenses={caseExpenses}
+        deadlines={caseDeadlines}
+        tasks={caseTasks}
+        users={allUsers.filter((u) => u.role === "admin" || u.role === "attorney").map((u) => ({ id: u.id, name: u.name }))}
+        sidebar={
+          <CaseSummarySidebar
+            caseData={caseData}
+            assignments={assignments}
+            deadlines={caseDeadlines}
+            tasks={caseTasks}
+          />
+        }
       />
     </div>
   );

@@ -12,7 +12,13 @@ import { safeAction } from "@/lib/utils/safe-action";
 const changePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, "Current password is required"),
-    newPassword: z.string().min(8, "Password must be at least 8 characters"),
+    newPassword: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .max(128, "Password must be at most 128 characters")
+      .regex(/[A-Z]/, "Must contain an uppercase letter")
+      .regex(/[a-z]/, "Must contain a lowercase letter")
+      .regex(/[0-9]/, "Must contain a number"),
     confirmPassword: z.string().min(1, "Please confirm your new password"),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
@@ -46,7 +52,7 @@ export async function changePassword(data: unknown) {
       return { error: "Current password is incorrect" };
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     await db
       .update(users)
@@ -60,6 +66,7 @@ export async function changePassword(data: unknown) {
 const updateProfileSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
   phone: z.string().max(20).optional().or(z.literal("")),
+  avatar: z.string().url().optional().or(z.literal("")).or(z.null()),
 });
 
 export async function updateProfile(data: unknown) {
@@ -76,6 +83,7 @@ export async function updateProfile(data: unknown) {
       .set({
         name: validated.data.name,
         phone: validated.data.phone || null,
+        avatar: validated.data.avatar || null,
         updatedAt: new Date(),
       })
       .where(eq(users.id, session.user.id));

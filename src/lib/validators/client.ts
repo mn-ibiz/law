@@ -30,6 +30,7 @@ export const createClientSchema = z.object({
   leadScore: z.number().int().min(0).max(100).optional(),
   followUpDate: z.string().optional(),
   lostReason: z.string().max(5000).optional(),
+  photoUrl: z.string().url().optional().or(z.literal("")),
 });
 
 export const updateClientSchema = createClientSchema.partial();
@@ -41,6 +42,27 @@ export const createContactLogSchema = z.object({
   contactDate: z.string().min(1, "Date is required"),
 });
 
+export const createKycDocumentSchema = z.object({
+  documentType: z.enum(["national_id", "passport", "kra_pin", "drivers_license", "company_registration", "tax_compliance", "other"]),
+  documentNumber: z.string().max(100).optional(),
+  expiryDate: z.string().optional(),
+});
+
+export const updateKycDocumentSchema = z.object({
+  documentType: z.enum(["national_id", "passport", "kra_pin", "drivers_license", "company_registration", "tax_compliance", "other"]).optional(),
+  documentNumber: z.string().max(100).optional(),
+  status: z.enum(["pending", "in_progress", "verified", "rejected", "expired"]).optional(),
+  expiryDate: z.string().optional(),
+});
+
+export const createRiskAssessmentSchema = z.object({
+  riskLevel: z.enum(["low", "medium", "high", "critical"]),
+  factors: z.string().max(5000).optional(),
+  notes: z.string().max(5000).optional(),
+});
+
 export type CreateClientInput = z.infer<typeof createClientSchema>;
 export type UpdateClientInput = z.infer<typeof updateClientSchema>;
 export type CreateContactLogInput = z.infer<typeof createContactLogSchema>;
+export type CreateKycDocumentInput = z.infer<typeof createKycDocumentSchema>;
+export type CreateRiskAssessmentInput = z.infer<typeof createRiskAssessmentSchema>;

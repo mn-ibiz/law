@@ -11,6 +11,7 @@ export const createSupplierSchema = z.object({
   bankAccountNumber: z.string().max(100).optional(),
   bankBranch: z.string().max(255).optional(),
   category: z.string().max(255).optional(),
+  logoUrl: z.string().url().optional().or(z.literal("")),
 });
 
 export type CreateSupplierInput = z.infer<typeof createSupplierSchema>;
@@ -24,6 +25,7 @@ export const createSupplierInvoiceSchema = z.object({
   description: z.string().max(5000).optional(),
   invoiceDate: z.string().min(1),
   dueDate: z.string().optional(),
+  fileUrl: z.string().max(2048).optional(),
 });
 
 export type CreateSupplierInvoiceInput = z.infer<typeof createSupplierInvoiceSchema>;

@@ -58,6 +58,7 @@ export async function getDeadlines(filters: { caseId?: string; userId?: string; 
       caseId: deadlines.caseId,
       caseNumber: cases.caseNumber,
       assignedToName: users.name,
+      assignedToAvatar: users.avatar,
     })
     .from(deadlines)
     .leftJoin(cases, eq(deadlines.caseId, cases.id))
@@ -105,6 +106,7 @@ export async function getBringUps(filters: { caseId?: string; status?: string } 
       status: bringUps.status,
       notes: bringUps.notes,
       caseId: bringUps.caseId,
+      assignedTo: bringUps.assignedTo,
       caseNumber: cases.caseNumber,
       caseTitle: cases.title,
       createdByName: users.name,

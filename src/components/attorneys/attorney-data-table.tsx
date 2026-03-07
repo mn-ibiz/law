@@ -1,27 +1,35 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  useReactTable,
-  getCoreRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  getFilteredRowModel,
-  flexRender,
-  type SortingState,
-} from "@tanstack/react-table";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  EnhancedDataTable,
+  SortableHeader,
+  type DataTableFilterConfig,
+  type ExportColumn,
+} from "@/components/shared/enhanced-data-table";
 import { attorneyColumns, type AttorneyRow } from "./attorney-columns";
+import { Scale } from "lucide-react";
+
+const filters: DataTableFilterConfig[] = [
+  {
+    id: "isActive",
+    label: "All Statuses",
+    options: [
+      { value: "true", label: "Active" },
+      { value: "false", label: "Inactive" },
+    ],
+  },
+];
+
+const exportColumns: ExportColumn[] = [
+  { key: "name", label: "Name" },
+  { key: "title", label: "Title" },
+  { key: "department", label: "Department" },
+  { key: "barNumber", label: "Bar Number" },
+  { key: "lskNumber", label: "LSK Number" },
+  { key: "hourlyRate", label: "Hourly Rate" },
+  { key: "isActive", label: "Status" },
+];
 
 interface AttorneyDataTableProps {
   data: AttorneyRow[];
@@ -29,90 +37,22 @@ interface AttorneyDataTableProps {
 
 export function AttorneyDataTable({ data }: AttorneyDataTableProps) {
   const router = useRouter();
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [globalFilter, setGlobalFilter] = useState("");
-
-  const table = useReactTable({
-    data,
-    columns: attorneyColumns,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
-    state: { sorting, globalFilter },
-  });
 
   return (
-    <div className="space-y-4">
-      <Input
-        placeholder="Search attorneys..."
-        value={globalFilter}
-        onChange={(e) => setGlobalFilter(e.target.value)}
-        className="max-w-sm"
-      />
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  className="cursor-pointer"
-                  onClick={(e) => {
-                    if ((e.target as HTMLElement).closest("a, button")) return;
-                    router.push(`/attorneys/${row.original.id}`);
-                  }}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={attorneyColumns.length} className="h-24 text-center">
-                  No attorneys found.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      <div className="flex items-center justify-end gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          Previous
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          Next
-        </Button>
-      </div>
-    </div>
+    <EnhancedDataTable
+      data={data}
+      columns={attorneyColumns}
+      searchPlaceholder="Search by name, bar number, email..."
+      filters={filters}
+      exportFilename="attorneys.csv"
+      exportColumns={exportColumns}
+      onRowClick={(row) => router.push(`/attorneys/${row.id}`)}
+      emptyIcon={Scale}
+      emptyTitle="No attorneys yet"
+      emptyDescription="Add your first attorney to get started."
+      emptyActionLabel="Add Attorney"
+      emptyActionHref="/attorneys/new"
+      enableSelection
+    />
   );
 }

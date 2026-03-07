@@ -7,7 +7,11 @@ export function generateCSV<T extends Record<string, unknown>>(
   columns: { key: keyof T; label: string }[]
 ): string {
   const escapeField = (value: unknown): string => {
-    const str = value == null ? "" : String(value);
+    let str = value == null ? "" : String(value);
+    // Prevent CSV formula injection — prefix formula-triggering characters
+    if (str.length > 0 && /^[=+\-@|^]/.test(str)) {
+      str = `'${str}`;
+    }
     if (str.includes(",") || str.includes('"') || str.includes("\n")) {
       return `"${str.replace(/"/g, '""')}"`;
     }

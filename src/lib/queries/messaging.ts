@@ -71,6 +71,8 @@ export async function getMessageById(id: string) {
       senderEmail: sender.email,
       recipientName: recipient.name,
       recipientEmail: recipient.email,
+      attachmentUrl: messages.attachmentUrl,
+      attachmentName: messages.attachmentName,
     })
     .from(messages)
     .innerJoin(sender, eq(messages.senderId, sender.id))
@@ -100,6 +102,8 @@ export async function getMessageThread(userA: string, userB: string) {
       recipientId: messages.recipientId,
       senderName: sender.name,
       recipientName: recipient.name,
+      attachmentUrl: messages.attachmentUrl,
+      attachmentName: messages.attachmentName,
     })
     .from(messages)
     .innerJoin(sender, eq(messages.senderId, sender.id))

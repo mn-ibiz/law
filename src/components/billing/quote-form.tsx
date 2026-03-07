@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createQuoteWithLineItemsSchema, type CreateQuoteWithLineItemsInput } from "@/lib/validators/billing";
 import { createQuoteWithLineItems } from "@/lib/actions/billing";
+import { APP_LOCALE } from "@/lib/constants/locale";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -218,7 +219,7 @@ export function QuoteForm({ cases, clients }: QuoteFormProps) {
                     <Label>Amount (KES)</Label>
                     <Input
                       readOnly
-                      value={(watchLineItems[index]?.amount || 0).toLocaleString("en-KE", {
+                      value={(watchLineItems[index]?.amount || 0).toLocaleString(APP_LOCALE, {
                         minimumFractionDigits: 2,
                       })}
                       className="bg-muted"
@@ -233,15 +234,15 @@ export function QuoteForm({ cases, clients }: QuoteFormProps) {
           <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
             <div className="flex justify-between text-sm">
               <span>Subtotal</span>
-              <span>KES {subtotal.toLocaleString("en-KE", { minimumFractionDigits: 2 })}</span>
+              <span>KES {subtotal.toLocaleString(APP_LOCALE, { minimumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span>VAT (16%)</span>
-              <span>KES {vatAmount.toLocaleString("en-KE", { minimumFractionDigits: 2 })}</span>
+              <span>KES {vatAmount.toLocaleString(APP_LOCALE, { minimumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between font-semibold border-t pt-2">
               <span>Total</span>
-              <span>KES {total.toLocaleString("en-KE", { minimumFractionDigits: 2 })}</span>
+              <span>KES {total.toLocaleString(APP_LOCALE, { minimumFractionDigits: 2 })}</span>
             </div>
           </div>
 

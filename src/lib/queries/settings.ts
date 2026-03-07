@@ -130,26 +130,60 @@ export async function getAuditLogs(limit = 100) {
 }
 
 export async function getFirmBranding() {
+  const brandingKeys = [
+    // Identity
+    "firm_logo_url",
+    "firm_name",
+    "firm_tagline",
+    "firm_email",
+    "firm_phone",
+    "firm_website",
+    // Address fields (may be stored separately)
+    "firm_address",
+    "firm_po_box",
+    "firm_city",
+    "firm_county",
+    // Colors
+    "firm_primary_color",
+    "firm_accent_color",
+    "firm_sidebar_color",
+    "firm_sidebar_text_color",
+    "firm_email_header_color",
+    // Typography & documents
+    "firm_font_family",
+    "firm_invoice_footer",
+  ];
   const settings = await db
     .select({ key: firmSettings.key, value: firmSettings.value })
     .from(firmSettings)
-    .where(
-      inArray(firmSettings.key, [
-        "firm_logo_url",
-        "firm_name",
-        "firm_primary_color",
-        "firm_accent_color",
-      ])
-    );
+    .where(inArray(firmSettings.key, brandingKeys));
   const map: Record<string, string> = {};
   for (const s of settings) {
     if (s.value) map[s.key] = s.value;
   }
+
+  // Build a composite address from individual fields if firm_address is empty
+  let address = map.firm_address || null;
+  if (!address) {
+    const parts = [map.firm_po_box, map.firm_city, map.firm_county].filter(Boolean);
+    address = parts.length > 0 ? parts.join("\n") : null;
+  }
+
   return {
     logoUrl: map.firm_logo_url || null,
     firmName: map.firm_name || null,
+    tagline: map.firm_tagline || null,
+    email: map.firm_email || null,
+    phone: map.firm_phone || null,
+    website: map.firm_website || null,
     primaryColor: map.firm_primary_color || null,
     accentColor: map.firm_accent_color || null,
+    sidebarColor: map.firm_sidebar_color || null,
+    sidebarTextColor: map.firm_sidebar_text_color || null,
+    fontFamily: map.firm_font_family || null,
+    invoiceFooter: map.firm_invoice_footer || null,
+    address,
+    emailHeaderColor: map.firm_email_header_color || null,
   };
 }
 

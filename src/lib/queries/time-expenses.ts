@@ -21,6 +21,7 @@ export async function getTimeEntries(filters: TimeFilters = {}) {
   return db
     .select({
       id: timeEntries.id,
+      caseId: timeEntries.caseId,
       description: timeEntries.description,
       date: timeEntries.date,
       hours: timeEntries.hours,
@@ -31,6 +32,7 @@ export async function getTimeEntries(filters: TimeFilters = {}) {
       caseNumber: cases.caseNumber,
       caseTitle: cases.title,
       userName: users.name,
+      userAvatar: users.avatar,
     })
     .from(timeEntries)
     .leftJoin(cases, eq(timeEntries.caseId, cases.id))
@@ -75,14 +77,17 @@ export async function getExpenses(filters: { userId?: string; caseId?: string } 
   return db
     .select({
       id: expenses.id,
+      caseId: expenses.caseId,
       category: expenses.category,
       description: expenses.description,
       amount: expenses.amount,
       date: expenses.date,
+      receiptUrl: expenses.receiptUrl,
       isBillable: expenses.isBillable,
       isBilled: expenses.isBilled,
       caseNumber: cases.caseNumber,
       userName: users.name,
+      userAvatar: users.avatar,
     })
     .from(expenses)
     .leftJoin(cases, eq(expenses.caseId, cases.id))
@@ -99,6 +104,8 @@ export async function getRequisitions() {
       description: requisitions.description,
       amount: requisitions.amount,
       status: requisitions.status,
+      caseId: requisitions.caseId,
+      notes: requisitions.notes,
       createdAt: requisitions.createdAt,
       requestedByName: users.name,
       caseNumber: cases.caseNumber,

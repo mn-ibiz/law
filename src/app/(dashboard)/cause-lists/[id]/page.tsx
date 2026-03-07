@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { APP_LOCALE } from "@/lib/constants/locale";
 import { notFound } from "next/navigation";
+import { CauseListEntryActions } from "@/components/courts/cause-list-entry-actions";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -104,6 +105,7 @@ export default async function CauseListDetailPage({
                   <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Parties</TableHead>
                   <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Matter</TableHead>
                   <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Outcome</TableHead>
+                  <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground w-[50px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -112,7 +114,7 @@ export default async function CauseListDetailPage({
                     <TableCell className="font-medium text-muted-foreground">
                       {idx + 1}
                     </TableCell>
-                    <TableCell>{entry.time ?? "—"}</TableCell>
+                    <TableCell>{entry.time ?? "\u2014"}</TableCell>
                     <TableCell>
                       {entry.caseId ? (
                         <Link
@@ -122,12 +124,27 @@ export default async function CauseListDetailPage({
                           {entry.caseNumber ?? "View Case"}
                         </Link>
                       ) : (
-                        entry.caseNumber ?? "—"
+                        entry.caseNumber ?? "\u2014"
                       )}
                     </TableCell>
-                    <TableCell>{entry.parties ?? "—"}</TableCell>
-                    <TableCell>{entry.matter ?? "—"}</TableCell>
-                    <TableCell>{entry.outcome ?? "—"}</TableCell>
+                    <TableCell>{entry.parties ?? "\u2014"}</TableCell>
+                    <TableCell>{entry.matter ?? "\u2014"}</TableCell>
+                    <TableCell>{entry.outcome ?? "\u2014"}</TableCell>
+                    <TableCell>
+                      <CauseListEntryActions
+                        entry={{
+                          id: entry.id,
+                          causeListId: entry.causeListId,
+                          caseId: entry.caseId,
+                          caseNumber: entry.caseNumber,
+                          parties: entry.parties,
+                          matter: entry.matter,
+                          time: entry.time,
+                          order: entry.order,
+                          outcome: entry.outcome,
+                        }}
+                      />
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

@@ -13,6 +13,7 @@ export async function getSuppliers() {
       phone: suppliers.phone,
       category: suppliers.category,
       kraPin: suppliers.kraPin,
+      logoUrl: suppliers.logoUrl,
       isActive: suppliers.isActive,
       createdAt: suppliers.createdAt,
     })
@@ -40,6 +41,7 @@ export async function getSupplierInvoices(supplierId?: string) {
       dueDate: supplierInvoices.dueDate,
       paidAt: supplierInvoices.paidAt,
       status: supplierInvoices.status,
+      fileUrl: supplierInvoices.fileUrl,
       createdByName: users.name,
       createdAt: supplierInvoices.createdAt,
     })

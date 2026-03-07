@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { updateProfile } from "@/lib/actions/profile";
+import { APP_LOCALE } from "@/lib/constants/locale";
 
 interface ProfileFormProps {
   user: {
@@ -25,6 +26,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
   const router = useRouter();
   const [name, setName] = useState(user.name);
   const [phone, setPhone] = useState(user.phone ?? "");
+  const [avatar, setAvatar] = useState(user.avatar ?? "");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -40,7 +42,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
     setLoading(true);
     setMessage(null);
 
-    const result = await updateProfile({ name, phone });
+    const result = await updateProfile({ name, phone, avatar: avatar || null });
 
     if (result && "error" in result) {
       setMessage({ type: "error", text: result.error as string });
@@ -55,12 +57,14 @@ export function ProfileForm({ user }: ProfileFormProps) {
   return (
     <div className="space-y-6">
       <div className="rounded-xl border bg-card p-6">
-        <div className="flex items-center gap-4 mb-6">
-          <Avatar className="h-16 w-16">
-            {user.avatar && <AvatarImage src={user.avatar} alt={user.name} />}
-            <AvatarFallback className="text-lg">{initials}</AvatarFallback>
-          </Avatar>
-          <div>
+        <div className="flex items-start gap-6 mb-6">
+          <AvatarUpload
+            currentUrl={avatar || null}
+            fallbackText={initials}
+            onUpload={(url) => setAvatar(url)}
+            onRemove={() => setAvatar("")}
+          />
+          <div className="pt-2">
             <h2 className="text-lg font-semibold">{user.name}</h2>
             <p className="text-sm text-muted-foreground">{user.email}</p>
             <Badge variant="outline" className="mt-1 capitalize text-xs">
@@ -117,7 +121,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
       <div className="rounded-xl border bg-card p-6">
         <h3 className="font-semibold mb-1">Account Details</h3>
         <p className="text-sm text-muted-foreground">
-          Member since {user.createdAt.toLocaleDateString("en-KE", { year: "numeric", month: "long", day: "numeric" })}
+          Member since {user.createdAt.toLocaleDateString(APP_LOCALE, { year: "numeric", month: "long", day: "numeric" })}
         </p>
       </div>
     </div>

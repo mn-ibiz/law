@@ -40,7 +40,7 @@ export async function getPipelineThroughput(practiceAreaId?: string | null, mont
     .where(
       and(
         paCondition,
-        sql`${caseStageHistory.enteredAt} >= NOW() - INTERVAL '${sql.raw(String(months))} months'`
+        sql`${caseStageHistory.enteredAt} >= NOW() - make_interval(months => ${months})`
       )
     )
     .groupBy(sql`to_char(${caseStageHistory.enteredAt}, 'YYYY-MM')`, pipelineStages.name, pipelineStages.color)

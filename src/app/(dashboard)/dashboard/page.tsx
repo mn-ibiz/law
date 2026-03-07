@@ -4,7 +4,7 @@ import { requireAuth } from "@/lib/auth/get-session";
 import { AdminDashboard } from "@/components/dashboard/admin-dashboard";
 import { AttorneyDashboard } from "@/components/dashboard/attorney-dashboard";
 import { Button } from "@/components/ui/button";
-import { Plus, Users } from "lucide-react";
+import { Plus, Users, LayoutDashboard } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -25,13 +25,18 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       {/* Welcome Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            {greeting}, {name}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Here&apos;s what&apos;s happening at your firm today.
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+            <LayoutDashboard className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              {greeting}, {name}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Here&apos;s what&apos;s happening at your firm today.
+            </p>
+          </div>
         </div>
         {role === "admin" && (
           <div className="flex items-center gap-2">

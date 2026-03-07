@@ -14,11 +14,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Clock, MapPin, ExternalLink, Trash2, Plus, Gavel } from "lucide-react";
+import { Clock, MapPin, ExternalLink, Trash2, Plus, Gavel, Pencil } from "lucide-react";
 import { formatEnum } from "@/lib/utils/format-enum";
 import { getBadgeStyle } from "./event-type-colors";
 import { deleteEvent } from "@/lib/actions/calendar";
 import type { CalendarEvent } from "./calendar-types";
+import { EventEditDialog } from "./event-edit-dialog";
 import { APP_LOCALE } from "@/lib/constants/locale";
 import Link from "next/link";
 
@@ -63,6 +64,7 @@ export function CalendarDaySheet({
   const router = useRouter();
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
 
   function handleClose(val: boolean) {
     if (!val) {
@@ -190,6 +192,14 @@ export function CalendarDaySheet({
 
               <div className="flex gap-2">
                 <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditingEvent(selectedEvent)}
+                >
+                  <Pencil className="h-3.5 w-3.5 mr-1" />
+                  Edit
+                </Button>
+                <Button
                   variant="destructive"
                   size="sm"
                   onClick={() => handleDelete(selectedEvent.id)}
@@ -243,6 +253,16 @@ export function CalendarDaySheet({
           )}
         </ScrollArea>
       </SheetContent>
+
+      {editingEvent && (
+        <EventEditDialog
+          event={editingEvent}
+          open={!!editingEvent}
+          onOpenChange={(val) => {
+            if (!val) setEditingEvent(null);
+          }}
+        />
+      )}
     </Sheet>
   );
 }

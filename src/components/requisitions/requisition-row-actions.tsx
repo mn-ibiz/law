@@ -10,6 +10,7 @@ import {
   rejectRequisition,
   deleteRequisition,
 } from "@/lib/actions/time-expenses";
+import { RequisitionEditDialog } from "./requisition-edit-dialog";
 import { Send, CheckCircle, XCircle } from "lucide-react";
 import {
   AlertDialog,
@@ -27,15 +28,26 @@ interface RequisitionRowActionsProps {
   requisitionId: string;
   status: string;
   userRole: string;
+  requisition?: {
+    id: string;
+    description: string;
+    amount: string;
+    caseId: string | null;
+    notes: string | null;
+  };
+  cases?: { id: string; caseNumber: string; title: string }[];
 }
 
 export function RequisitionRowActions({
   requisitionId,
   status,
   userRole,
+  requisition,
+  cases = [],
 }: RequisitionRowActionsProps) {
   const router = useRouter();
   const [showDelete, setShowDelete] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
 
   const isDraft = status === "draft";
   const isPendingApproval = status === "pending_approval";
@@ -107,8 +119,19 @@ export function RequisitionRowActions({
     <>
       <RowActionsMenu
         actions={actions}
+        onEdit={isDraft && requisition ? () => setShowEdit(true) : undefined}
         onDelete={isDraft ? () => setShowDelete(true) : undefined}
       />
+
+      {/* Edit dialog — only rendered for draft requisitions */}
+      {isDraft && requisition && (
+        <RequisitionEditDialog
+          open={showEdit}
+          onOpenChange={setShowEdit}
+          requisition={requisition}
+          cases={cases}
+        />
+      )}
 
       {/* Delete confirmation */}
       <AlertDialog open={showDelete} onOpenChange={setShowDelete}>

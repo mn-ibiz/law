@@ -96,7 +96,7 @@ export async function registerAction(formData: {
     } catch (err: unknown) {
       // Postgres unique violation error code
       if (err && typeof err === "object" && "code" in err && err.code === "23505") {
-        return { error: "An account with this email already exists" };
+        return { error: "Registration could not be completed. Please try again or use a different email." };
       }
       throw err;
     }

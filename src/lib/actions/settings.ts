@@ -25,6 +25,7 @@ import {
   smsTemplateSchema,
 } from "@/lib/validators/settings";
 import { safeAction } from "@/lib/utils/safe-action";
+import { createAuditLog } from "@/lib/utils/audit";
 
 // --- Practice Areas ---
 export async function createPracticeArea(data: unknown) {
@@ -296,6 +297,9 @@ export async function changeUserRole(userId: string, data: unknown) {
     }
 
     await db.update(users).set({ role: validated.data.role, updatedAt: new Date() }).where(eq(users.id, userId));
+
+    await createAuditLog(session.user.id, "update", "user", userId, { action: "change_role", newRole: validated.data.role });
+
     revalidatePath("/settings/users");
     return { success: true };
   });
@@ -314,7 +318,11 @@ export async function toggleUserActive(userId: string) {
     const existing = await db.select({ isActive: users.isActive }).from(users).where(eq(users.id, userId)).limit(1);
     if (!existing[0]) return { error: "User not found" };
 
-    await db.update(users).set({ isActive: !existing[0].isActive, updatedAt: new Date() }).where(eq(users.id, userId));
+    const newStatus = !existing[0].isActive;
+    await db.update(users).set({ isActive: newStatus, updatedAt: new Date() }).where(eq(users.id, userId));
+
+    await createAuditLog(session.user.id, "update", "user", userId, { action: newStatus ? "activate" : "deactivate" });
+
     revalidatePath("/settings/users");
     return { success: true };
   });

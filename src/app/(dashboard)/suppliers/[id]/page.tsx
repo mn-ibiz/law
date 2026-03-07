@@ -14,7 +14,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Pencil, ExternalLink, Building2 } from "lucide-react";
+import { SupplierInvoiceActions } from "@/components/suppliers/supplier-invoice-actions";
+import { SupplierInvoiceDialog } from "@/components/suppliers/supplier-invoice-dialog";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -47,9 +53,27 @@ export default async function SupplierDetailPage({
           { label: supplier.name },
         ]}
       />
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{supplier.name}</h1>
-        <p className="text-muted-foreground">Supplier details and invoices.</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Avatar className="h-20 w-20">
+            {supplier.logoUrl && (
+              <AvatarImage src={supplier.logoUrl} alt={supplier.name} />
+            )}
+            <AvatarFallback className="bg-primary/10 text-primary">
+              <Building2 className="h-8 w-8" />
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">{supplier.name}</h1>
+            <p className="text-muted-foreground">Supplier details and invoices.</p>
+          </div>
+        </div>
+        <Button asChild>
+          <Link href={`/suppliers/${id}/edit`}>
+            <Pencil className="mr-2 h-4 w-4" />
+            Edit
+          </Link>
+        </Button>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -115,8 +139,9 @@ export default async function SupplierDetailPage({
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Invoices</CardTitle>
+          <SupplierInvoiceDialog supplierId={id} />
         </CardHeader>
         <CardContent>
           {invoices.length === 0 ? (
@@ -132,6 +157,8 @@ export default async function SupplierDetailPage({
                   <TableHead>VAT</TableHead>
                   <TableHead>Total</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>File</TableHead>
+                  <TableHead className="w-[50px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -147,6 +174,19 @@ export default async function SupplierDetailPage({
                       <Badge variant={inv.status === "paid" ? "secondary" : inv.status === "pending" ? "outline" : "default"}>
                         {inv.status}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {inv.fileUrl ? (
+                        <a href={inv.fileUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1 text-xs">
+                          <ExternalLink className="h-3 w-3" />
+                          View
+                        </a>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <SupplierInvoiceActions invoiceId={inv.id} status={inv.status} fileUrl={inv.fileUrl} />
                     </TableCell>
                   </TableRow>
                 ))}

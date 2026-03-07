@@ -1,17 +1,11 @@
 import { requireAdminOrAttorney } from "@/lib/auth/get-session";
 import { getInvoices } from "@/lib/queries/billing";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { InvoiceStatusBadge } from "@/components/shared/status-badges";
-import { EmptyState } from "@/components/shared/empty-state";
-import { InvoiceRowActions } from "@/components/billing/invoice-row-actions";
+import { Card, CardContent } from "@/components/ui/card";
+import { InvoiceDataTable } from "@/components/billing/invoice-data-table";
 import { formatKES } from "@/lib/utils/format";
-import { APP_LOCALE } from "@/lib/constants/locale";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Plus, FileText } from "lucide-react";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+import { Plus, FileText, DollarSign, Clock, AlertTriangle } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -24,81 +18,87 @@ export default async function BillingPage() {
   const invoiceList = await getInvoices();
   const userRole = session.user.role;
 
+  const totalOutstanding = invoiceList
+    .filter((i) => !["paid", "cancelled", "written_off"].includes(i.status))
+    .reduce((sum, i) => sum + Number(i.totalAmount) - Number(i.paidAmount), 0);
+
+  const totalPaid = invoiceList
+    .filter((i) => i.status === "paid")
+    .reduce((sum, i) => sum + Number(i.totalAmount), 0);
+
+  const overdueCount = invoiceList.filter((i) => i.status === "overdue").length;
+  const draftCount = invoiceList.filter((i) => i.status === "draft").length;
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Billing</h1>
-          <p className="text-muted-foreground">Invoices, payments, and fee notes.</p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+            <FileText className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Billing</h1>
+            <p className="text-sm text-muted-foreground">
+              Invoices, payments, and fee notes.
+            </p>
+          </div>
         </div>
-        <Button size="sm" asChild>
+        <Button asChild>
           <Link href="/billing/new">
-            <Plus className="h-3.5 w-3.5 mr-1.5" />
+            <Plus className="mr-2 h-4 w-4" />
             New Invoice
           </Link>
         </Button>
       </div>
-      <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle>Invoices</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {invoiceList.length === 0 ? (
-            <EmptyState
-              icon={FileText}
-              title="No invoices yet"
-              description="Create your first invoice to start billing clients."
-              actionLabel="New Invoice"
-              actionHref="/billing/new"
-            />
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Invoice #</TableHead>
-                  <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Client</TableHead>
-                  <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Case</TableHead>
-                  <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Total</TableHead>
-                  <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Paid</TableHead>
-                  <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Due Date</TableHead>
-                  <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Status</TableHead>
-                  <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground w-[50px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {invoiceList.map((inv) => (
-                  <TableRow key={inv.id} className="transition-colors hover:bg-muted/50">
-                    <TableCell>
-                      <Link href={`/billing/${inv.id}`} className="font-mono text-primary hover:underline">
-                        {inv.invoiceNumber}
-                      </Link>
-                    </TableCell>
-                    <TableCell>{inv.clientName}</TableCell>
-                    <TableCell className="font-mono text-xs">{inv.caseNumber ?? "\u2014"}</TableCell>
-                    <TableCell>{formatKES(Number(inv.totalAmount))}</TableCell>
-                    <TableCell>{formatKES(Number(inv.paidAmount))}</TableCell>
-                    <TableCell>
-                      {inv.dueDate ? new Date(inv.dueDate).toLocaleDateString(APP_LOCALE) : "\u2014"}
-                    </TableCell>
-                    <TableCell>
-                      <InvoiceStatusBadge status={inv.status} />
-                    </TableCell>
-                    <TableCell>
-                      <InvoiceRowActions
-                        invoiceId={inv.id}
-                        status={inv.status}
-                        totalAmount={Number(inv.totalAmount)}
-                        paidAmount={Number(inv.paidAmount)}
-                        userRole={userRole}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardContent className="flex items-center gap-3 pt-6">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+              <FileText className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Total Invoices</p>
+              <p className="text-2xl font-bold">{invoiceList.length}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-3 pt-6">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
+              <DollarSign className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Outstanding</p>
+              <p className="text-2xl font-bold">{formatKES(totalOutstanding)}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-3 pt-6">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+              <DollarSign className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Total Paid</p>
+              <p className="text-2xl font-bold">{formatKES(totalPaid)}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-3 pt-6">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Overdue</p>
+              <p className="text-2xl font-bold">{overdueCount}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <InvoiceDataTable data={invoiceList} userRole={userRole} />
     </div>
   );
 }

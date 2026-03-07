@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { APP_LOCALE } from "@/lib/constants/locale";
 import { CauseListActions } from "@/components/courts/cause-list-actions";
+import { CauseListRowActions } from "@/components/courts/cause-list-row-actions";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -63,6 +64,7 @@ export default async function CauseListsPage() {
                   <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Court Room</TableHead>
                   <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Notes</TableHead>
                   <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Created</TableHead>
+                  <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground w-[50px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -81,14 +83,26 @@ export default async function CauseListsPage() {
                         })}
                       </Link>
                     </TableCell>
-                    <TableCell>{cl.courtName ?? "—"}</TableCell>
-                    <TableCell>{cl.judge ?? "—"}</TableCell>
-                    <TableCell>{cl.courtRoom ?? "—"}</TableCell>
+                    <TableCell>{cl.courtName ?? "\u2014"}</TableCell>
+                    <TableCell>{cl.judge ?? "\u2014"}</TableCell>
+                    <TableCell>{cl.courtRoom ?? "\u2014"}</TableCell>
                     <TableCell className="max-w-[200px] truncate">
-                      {cl.notes ?? "—"}
+                      {cl.notes ?? "\u2014"}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {new Date(cl.createdAt).toLocaleDateString(APP_LOCALE)}
+                    </TableCell>
+                    <TableCell>
+                      <CauseListRowActions
+                        causeList={{
+                          id: cl.id,
+                          courtId: cl.courtId,
+                          date: cl.date,
+                          judge: cl.judge,
+                          courtRoom: cl.courtRoom,
+                          notes: cl.notes,
+                        }}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}

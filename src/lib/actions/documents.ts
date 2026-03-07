@@ -4,12 +4,13 @@ import { db } from "@/lib/db";
 import { documents, documentTemplates, documentVersions } from "@/lib/db/schema/documents";
 import { clients } from "@/lib/db/schema/clients";
 import { auth } from "@/lib/auth/auth";
-import { createTemplateSchema, createDocumentRecordSchema, createDocumentVersionSchema, clientUploadDocumentSchema } from "@/lib/validators/document";
-import { eq } from "drizzle-orm";
+import { createTemplateSchema, createDocumentRecordSchema, createDocumentVersionSchema, clientUploadDocumentSchema, updateDocumentSchema } from "@/lib/validators/document";
+import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { safeAction } from "@/lib/utils/safe-action";
 import { dispatchWorkflowEvent } from "@/lib/workflows/engine";
+import { createAuditLog } from "@/lib/utils/audit";
 
 export async function createDocumentRecord(data: unknown) {
   return safeAction(async () => {
@@ -63,6 +64,48 @@ export async function updateDocumentStatus(id: string, status: "draft" | "final"
   });
 }
 
+export async function updateDocument(data: unknown) {
+  return safeAction(async () => {
+    const validated = updateDocumentSchema.safeParse(data);
+    if (!validated.success) {
+      return { error: validated.error.issues[0].message };
+    }
+
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    const { id, ...fields } = validated.data;
+
+    // Only allow editing own documents unless admin
+    if (session.user.role !== "admin") {
+      const [doc] = await db
+        .select({ uploadedBy: documents.uploadedBy })
+        .from(documents)
+        .where(eq(documents.id, id))
+        .limit(1);
+      if (!doc) return { error: "Document not found" };
+      if (doc.uploadedBy !== session.user.id) {
+        return { error: "You can only edit your own documents" };
+      }
+    }
+
+    await db
+      .update(documents)
+      .set({
+        ...fields,
+        caseId: fields.caseId ?? null,
+        clientId: fields.clientId ?? null,
+        updatedAt: new Date(),
+      })
+      .where(eq(documents.id, id));
+
+    revalidatePath("/documents");
+    return { success: true };
+  });
+}
+
 export async function createTemplate(data: unknown) {
   return safeAction(async () => {
     const session = await auth();
@@ -96,6 +139,19 @@ export async function deleteDocument(id: string) {
     const session = await auth();
     if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
       return { error: "Unauthorized" };
+    }
+
+    // Only allow deletion of own uploads (unless admin)
+    if (session.user.role !== "admin") {
+      const [doc] = await db
+        .select({ uploadedBy: documents.uploadedBy })
+        .from(documents)
+        .where(eq(documents.id, idParsed.data))
+        .limit(1);
+      if (!doc) return { error: "Document not found" };
+      if (doc.uploadedBy !== session.user.id) {
+        return { error: "You can only delete your own documents" };
+      }
     }
 
     await db.delete(documents).where(eq(documents.id, idParsed.data));
@@ -175,7 +231,8 @@ export async function approveDocument(documentId: string) {
       return { error: "Unauthorized" };
     }
 
-    await db
+    // Atomic conditional update — only approve documents pending review
+    const result = await db
       .update(documents)
       .set({
         reviewStatus: "approved",
@@ -184,7 +241,14 @@ export async function approveDocument(documentId: string) {
         status: "final",
         updatedAt: new Date(),
       })
-      .where(eq(documents.id, idParsed.data));
+      .where(sql`${documents.id} = ${idParsed.data} AND ${documents.reviewStatus} = 'pending_review'`)
+      .returning({ id: documents.id });
+
+    if (result.length === 0) {
+      return { error: "Document not found or not in pending review status" };
+    }
+
+    await createAuditLog(session.user.id, "update", "document", idParsed.data, { action: "approve" });
 
     revalidatePath("/documents/review");
     revalidatePath("/portal/documents");
@@ -204,7 +268,8 @@ export async function rejectDocument(documentId: string, notes: string) {
 
     const safeNotes = (notes ?? "").slice(0, 5000);
 
-    await db
+    // Atomic conditional update — only reject documents pending review
+    const result = await db
       .update(documents)
       .set({
         reviewStatus: "rejected",
@@ -213,7 +278,14 @@ export async function rejectDocument(documentId: string, notes: string) {
         reviewNotes: safeNotes,
         updatedAt: new Date(),
       })
-      .where(eq(documents.id, idParsed.data));
+      .where(sql`${documents.id} = ${idParsed.data} AND ${documents.reviewStatus} = 'pending_review'`)
+      .returning({ id: documents.id });
+
+    if (result.length === 0) {
+      return { error: "Document not found or not in pending review status" };
+    }
+
+    await createAuditLog(session.user.id, "update", "document", idParsed.data, { action: "reject" });
 
     revalidatePath("/documents/review");
     revalidatePath("/portal/documents");

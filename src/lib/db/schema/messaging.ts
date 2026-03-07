@@ -18,6 +18,8 @@ export const messages = pgTable(
     parentMessageId: uuid("parent_message_id").references((): AnyPgColumn => messages.id),
     subject: text("subject"),
     body: text("body").notNull(),
+    attachmentUrl: text("attachment_url"),
+    attachmentName: text("attachment_name"),
     status: messageStatus("status").notNull().default("sent"),
     readAt: timestamp("read_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),

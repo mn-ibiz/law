@@ -1,16 +1,25 @@
 import { getResendClient } from "./resend";
 import { env } from "@/lib/env";
 
+interface EmailAttachment {
+  filename: string;
+  content: string; // base64 encoded
+}
+
 interface SendEmailOptions {
-  to: string;
+  to: string | string[];
   subject: string;
   html: string;
+  cc?: string[];
+  attachments?: EmailAttachment[];
 }
 
 export async function sendEmail({
   to,
   subject,
   html,
+  cc,
+  attachments,
 }: SendEmailOptions): Promise<{ success: boolean; error?: string }> {
   const resend = getResendClient();
   if (!resend) {
@@ -21,7 +30,17 @@ export async function sendEmail({
   const from = env.EMAIL_FROM ?? "noreply@example.com";
 
   try {
-    await resend.emails.send({ from, to, subject, html });
+    await resend.emails.send({
+      from,
+      to: Array.isArray(to) ? to : [to],
+      cc: cc?.length ? cc : undefined,
+      subject,
+      html,
+      attachments: attachments?.map((a) => ({
+        filename: a.filename,
+        content: Buffer.from(a.content, "base64"),
+      })),
+    });
     return { success: true };
   } catch (error) {
     console.error("Failed to send email:", error);

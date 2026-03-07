@@ -19,6 +19,7 @@ import {
 import { TransactionTypeBadge } from "@/components/shared/status-badges";
 import { EmptyState } from "@/components/shared/empty-state";
 import { TrustTransactionDialog } from "@/components/trust/trust-transaction-dialog";
+import { TrustAccountEditDialog } from "@/components/trust/trust-account-edit-dialog";
 import { ArrowLeft, Landmark, Receipt } from "lucide-react";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import type { Metadata } from "next";
@@ -112,6 +113,15 @@ export default async function TrustAccountDetailPage({ params }: PageProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <TrustAccountEditDialog
+            account={{
+              id: account.id,
+              accountName: account.accountName,
+              type: account.type,
+              bankName: account.bankName,
+              branchName: account.branchName,
+            }}
+          />
           <TrustTransactionDialog
             accountId={id}
             type="deposit"

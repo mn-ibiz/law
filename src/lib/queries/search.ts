@@ -1,5 +1,7 @@
 import { db } from "@/lib/db";
-import { sql } from "drizzle-orm";
+import { cases } from "@/lib/db/schema/cases";
+import { documents } from "@/lib/db/schema/documents";
+import { sql, ilike, and, or } from "drizzle-orm";
 
 export interface FullTextSearchResult {
   id: string;
@@ -10,74 +12,73 @@ export interface FullTextSearchResult {
 }
 
 /**
- * Full-text search across cases and documents using PostgreSQL tsvector / GIN indexes.
- * Words are joined with & (AND) and suffixed with :* for prefix matching.
+ * Full-text search across cases and documents using ILIKE pattern matching.
+ * Each search word must match either the title or description.
  */
 export async function fullTextSearch(
   query: string
 ): Promise<FullTextSearchResult[]> {
   if (!query || query.trim().length === 0) return [];
 
-  // Sanitize: strip non-word characters, split into words, suffix with :* for prefix match
-  const sanitized = query
+  // Sanitize: strip non-word characters, split into words
+  const words = query
     .replace(/[^\w\s]/g, " ")
     .trim()
     .split(/\s+/)
-    .filter(Boolean)
-    .map((w) => w + ":*")
-    .join(" & ");
+    .filter(Boolean);
 
-  if (!sanitized) return [];
+  if (words.length === 0) return [];
+
+  // Escape LIKE special characters and build patterns
+  const patterns = words.map(
+    (w) => `%${w.replace(/[%_\\]/g, "\\$&")}%`
+  );
+
+  // Each word must appear in title OR description
+  const caseConditions = patterns.map((p) =>
+    or(ilike(cases.title, p), ilike(cases.description, p))
+  );
+
+  const docConditions = patterns.map((p) =>
+    or(ilike(documents.title, p), ilike(documents.description, p))
+  );
 
   const [caseResults, docResults] = await Promise.all([
-    db.execute<{
-      id: string;
-      title: string;
-      description: string | null;
-      rank: number;
-    }>(sql`
-      SELECT
-        id,
-        title,
-        description,
-        ts_rank(search_vector, to_tsquery('english', ${sanitized})) as rank
-      FROM cases
-      WHERE search_vector @@ to_tsquery('english', ${sanitized})
-      ORDER BY rank DESC
-      LIMIT 20
-    `),
+    db
+      .select({
+        id: cases.id,
+        title: cases.title,
+        description: cases.description,
+        rank: sql<number>`1`.as("rank"),
+      })
+      .from(cases)
+      .where(and(...caseConditions))
+      .orderBy(sql`${cases.updatedAt} DESC`)
+      .limit(20),
 
-    db.execute<{
-      id: string;
-      title: string;
-      description: string | null;
-      rank: number;
-    }>(sql`
-      SELECT
-        id,
-        title,
-        description,
-        ts_rank(search_vector, to_tsquery('english', ${sanitized})) as rank
-      FROM documents
-      WHERE search_vector @@ to_tsquery('english', ${sanitized})
-      ORDER BY rank DESC
-      LIMIT 20
-    `),
+    db
+      .select({
+        id: documents.id,
+        title: documents.title,
+        description: documents.description,
+        rank: sql<number>`1`.as("rank"),
+      })
+      .from(documents)
+      .where(and(...docConditions))
+      .orderBy(sql`${documents.updatedAt} DESC`)
+      .limit(20),
   ]);
 
   const results: FullTextSearchResult[] = [
-    ...(caseResults.rows ?? []).map((r) => ({
+    ...caseResults.map((r) => ({
       ...r,
       type: "case" as const,
     })),
-    ...(docResults.rows ?? []).map((r) => ({
+    ...docResults.map((r) => ({
       ...r,
       type: "document" as const,
     })),
   ];
-
-  // Sort combined results by rank descending
-  results.sort((a, b) => b.rank - a.rank);
 
   return results.slice(0, 30);
 }

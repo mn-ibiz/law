@@ -47,6 +47,7 @@ export async function createEvent(data: unknown) {
     }
 
     revalidatePath("/calendar");
+    if (validated.data.caseId) revalidatePath(`/cases/${validated.data.caseId}`);
     return { data: result[0] };
   });
 }
@@ -76,6 +77,8 @@ export async function createDeadline(data: unknown) {
       .returning();
 
     revalidatePath("/calendar");
+    revalidatePath("/deadlines");
+    if (validated.data.caseId) revalidatePath(`/cases/${validated.data.caseId}`);
     return { data: result[0] };
   });
 }
@@ -126,6 +129,7 @@ export async function createTask(data: unknown) {
       .returning();
 
     revalidatePath("/tasks");
+    if (validated.data.caseId) revalidatePath(`/cases/${validated.data.caseId}`);
     return { data: result[0] };
   });
 }

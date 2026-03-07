@@ -44,10 +44,13 @@ export async function getAllCourtFilings() {
   return db
     .select({
       id: courtFilings.id,
+      caseId: courtFilings.caseId,
+      courtId: courtFilings.courtId,
       filingType: courtFilings.filingType,
       filingNumber: courtFilings.filingNumber,
       status: courtFilings.status,
       filingDate: courtFilings.filingDate,
+      documentUrl: courtFilings.documentUrl,
       notes: courtFilings.notes,
       createdAt: courtFilings.createdAt,
       courtName: courts.name,
@@ -71,6 +74,8 @@ export async function getAllServiceOfDocuments() {
       method: serviceOfDocuments.method,
       serviceDate: serviceOfDocuments.serviceDate,
       notes: serviceOfDocuments.notes,
+      proofOfServiceUrl: serviceOfDocuments.proofOfServiceUrl,
+      caseId: serviceOfDocuments.caseId,
       createdAt: serviceOfDocuments.createdAt,
       caseNumber: cases.caseNumber,
       servedByName: users.name,
@@ -82,8 +87,9 @@ export async function getAllServiceOfDocuments() {
     .limit(500);
 }
 
-export async function getCourtHierarchy() {
-  const courtList = await db.select().from(courts).where(eq(courts.isActive, true)).orderBy(asc(courts.level));
+export async function getCourtHierarchy(includeInactive = false) {
+  const courtConditions = includeInactive ? undefined : eq(courts.isActive, true);
+  const courtList = await db.select().from(courts).where(courtConditions).orderBy(asc(courts.level));
   const stationList = await db.select().from(courtStations).where(eq(courtStations.isActive, true));
 
   return courtList.map((court) => ({

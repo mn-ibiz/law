@@ -13,6 +13,7 @@ export const createPettyCashSchema = z.object({
   amount: z.number().min(0.01, "Amount required"),
   description: z.string().min(1, "Description is required").max(5000),
   category: z.string().max(255).optional(),
+  receiptUrl: z.string().max(2048).optional(),
 });
 
 export const createTrustAccountSchema = z.object({
@@ -25,6 +26,14 @@ export const createTrustAccountSchema = z.object({
   branchName: z.string().max(255).optional(),
 });
 
+export const updateTrustAccountSchema = z.object({
+  accountName: z.string().min(1, "Account name is required").max(255),
+  type: z.enum(["client", "general"]),
+  bankName: z.string().max(255).optional(),
+  branchName: z.string().max(255).optional(),
+});
+
 export type CreateTrustTransactionInput = z.infer<typeof createTrustTransactionSchema>;
 export type CreatePettyCashInput = z.infer<typeof createPettyCashSchema>;
 export type CreateTrustAccountInput = z.infer<typeof createTrustAccountSchema>;
+export type UpdateTrustAccountInput = z.infer<typeof updateTrustAccountSchema>;

@@ -65,4 +65,21 @@ export type RecordPaymentInput = z.infer<typeof recordPaymentSchema>;
 export type CreateQuoteInput = z.infer<typeof createQuoteSchema>;
 export type CreateQuoteWithLineItemsInput = z.infer<typeof createQuoteWithLineItemsSchema>;
 export type CreateReceiptInput = z.infer<typeof createReceiptSchema>;
+export const updateInvoiceSchema = z.object({
+  invoiceId: z.string().uuid("Invalid invoice"),
+  caseId: z.string().uuid("Invalid case"),
+  clientId: z.string().uuid("Invalid client"),
+  dueDate: z.string().min(1, "Due date is required"),
+  notes: z.string().max(5000).optional(),
+  lineItems: z.array(
+    z.object({
+      description: z.string().min(1, "Description is required").max(5000),
+      quantity: z.number().min(0.01),
+      unitPrice: z.number().min(0),
+      amount: z.number(),
+    })
+  ).min(1, "At least one line item required"),
+});
+
 export type CreateCreditNoteInput = z.infer<typeof createCreditNoteSchema>;
+export type UpdateInvoiceInput = z.infer<typeof updateInvoiceSchema>;

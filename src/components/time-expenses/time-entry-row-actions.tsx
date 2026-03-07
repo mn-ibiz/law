@@ -16,18 +16,17 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Spinner } from "@/components/ui/spinner";
+import { TimeEntryEditSheet } from "./time-entry-edit-sheet";
+import type { TimeEntryRow } from "./time-entry-columns";
 
 interface TimeEntryRowActionsProps {
-  timeEntryId: string;
-  isBilled: boolean;
+  entry: TimeEntryRow;
 }
 
-export function TimeEntryRowActions({
-  timeEntryId,
-  isBilled,
-}: TimeEntryRowActionsProps) {
+export function TimeEntryRowActions({ entry }: TimeEntryRowActionsProps) {
   const router = useRouter();
   const [showDelete, setShowDelete] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
 
   const { execute: executeDelete, isPending: isDeleting } = useAction(
     deleteTimeEntry,
@@ -44,8 +43,18 @@ export function TimeEntryRowActions({
     <>
       <RowActionsMenu
         actions={[]}
-        onDelete={!isBilled ? () => setShowDelete(true) : undefined}
+        onEdit={!entry.isBilled ? () => setShowEdit(true) : undefined}
+        onDelete={!entry.isBilled ? () => setShowDelete(true) : undefined}
       />
+
+      {/* Edit sheet */}
+      {showEdit && (
+        <TimeEntryEditSheet
+          entry={entry}
+          open={showEdit}
+          onOpenChange={setShowEdit}
+        />
+      )}
 
       {/* Delete confirmation */}
       <AlertDialog open={showDelete} onOpenChange={setShowDelete}>
@@ -59,7 +68,7 @@ export function TimeEntryRowActions({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => executeDelete(timeEntryId)}
+              onClick={() => executeDelete(entry.id)}
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >

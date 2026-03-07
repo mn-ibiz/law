@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import { cases, caseAssignments, caseNotes, caseTimeline, caseParties, pipelineStages, caseStageHistory } from "@/lib/db/schema/cases";
 import { clients, conflictChecks } from "@/lib/db/schema/clients";
+import { trustAccounts } from "@/lib/db/schema/billing";
 import { auth } from "@/lib/auth/auth";
 import { createAuditLog } from "@/lib/utils/audit";
 import { createCaseSchema, updateCaseSchema, createCaseNoteSchema, addCasePartySchema, assignCaseSchema } from "@/lib/validators/case";
@@ -394,6 +395,151 @@ export async function updateCasePipelineStage(caseId: string, stageId: string) {
 
     revalidatePath("/cases");
     revalidatePath("/cases/pipeline");
+    return { success: true };
+  });
+}
+
+export async function updateCaseNote(noteId: string, caseId: string, data: unknown) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    const validated = createCaseNoteSchema.safeParse(data);
+    if (!validated.success) {
+      return { error: validated.error.issues[0].message };
+    }
+
+    await db
+      .update(caseNotes)
+      .set({
+        content: validated.data.content,
+        isPrivate: validated.data.isPrivate,
+      })
+      .where(and(eq(caseNotes.id, noteId), eq(caseNotes.caseId, caseId)));
+
+    revalidatePath(`/cases/${caseId}`);
+    return { success: true };
+  });
+}
+
+export async function deleteCaseNote(noteId: string, caseId: string) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    await db.delete(caseNotes).where(and(eq(caseNotes.id, noteId), eq(caseNotes.caseId, caseId)));
+
+    revalidatePath(`/cases/${caseId}`);
+    return { success: true };
+  });
+}
+
+export async function updateCaseParty(partyId: string, caseId: string, data: unknown) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    const validated = addCasePartySchema.safeParse(data);
+    if (!validated.success) {
+      return { error: validated.error.issues[0].message };
+    }
+
+    await db
+      .update(caseParties)
+      .set(validated.data)
+      .where(and(eq(caseParties.id, partyId), eq(caseParties.caseId, caseId)));
+
+    revalidatePath(`/cases/${caseId}`);
+    return { success: true };
+  });
+}
+
+export async function deleteCaseParty(partyId: string, caseId: string) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    await db.delete(caseParties).where(and(eq(caseParties.id, partyId), eq(caseParties.caseId, caseId)));
+
+    revalidatePath(`/cases/${caseId}`);
+    return { success: true };
+  });
+}
+
+export async function archiveCase(id: string) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      return { error: "Invalid ID" };
+    }
+
+    if (session.user.role === "attorney") {
+      const assigned = await isAssignedToCase(session.user.id, id);
+      if (!assigned) return { error: "You are not assigned to this case" };
+    }
+
+    // Check for active trust balance before archiving
+    // Get the case's client, then check their trust accounts
+    const [caseRecord] = await db
+      .select({ clientId: cases.clientId })
+      .from(cases)
+      .where(eq(cases.id, id))
+      .limit(1);
+
+    if (!caseRecord) {
+      return { error: "Case not found" };
+    }
+
+    const activeTrustAccounts = await db
+      .select({ id: trustAccounts.id, balance: trustAccounts.balance })
+      .from(trustAccounts)
+      .where(
+        and(
+          eq(trustAccounts.clientId, caseRecord.clientId),
+          sql`CAST(${trustAccounts.balance} AS numeric) <> 0`
+        )
+      )
+      .limit(1);
+
+    if (activeTrustAccounts.length > 0) {
+      return { error: "Cannot archive case with active trust balance" };
+    }
+
+    const result = await db
+      .update(cases)
+      .set({ status: "closed", updatedAt: new Date() })
+      .where(eq(cases.id, id))
+      .returning({ id: cases.id });
+
+    if (result.length === 0) {
+      return { error: "Case not found" };
+    }
+
+    await db.insert(caseTimeline).values({
+      caseId: id,
+      userId: session.user.id,
+      eventType: "status_change",
+      title: "Case archived (closed)",
+      isAutoGenerated: true,
+    });
+
+    await createAuditLog(session.user.id, "update", "case", id, { action: "archive" });
+
+    revalidatePath("/cases");
+    revalidatePath(`/cases/${id}`);
     return { success: true };
   });
 }

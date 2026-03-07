@@ -4,6 +4,7 @@ import { invoices, invoiceLineItems, payments, quotes } from "@/lib/db/schema/bi
 import { cases } from "@/lib/db/schema/cases";
 import { clients } from "@/lib/db/schema/clients";
 import { users } from "@/lib/db/schema/auth";
+import { auditLog } from "@/lib/db/schema/settings";
 import { eq, desc, sql, and } from "drizzle-orm";
 
 interface InvoiceFilters {
@@ -28,6 +29,7 @@ export async function getInvoices(filters: InvoiceFilters = {}) {
       dueDate: invoices.dueDate,
       createdAt: invoices.createdAt,
       clientName: sql<string>`${clients.firstName} || ' ' || ${clients.lastName}`,
+      clientPhotoUrl: clients.photoUrl,
       caseNumber: cases.caseNumber,
     })
     .from(invoices)
@@ -51,16 +53,28 @@ export const getInvoiceById = cache(async (id: string) => {
       paidAmount: invoices.paidAmount,
       currency: invoices.currency,
       dueDate: invoices.dueDate,
+      sentAt: invoices.sentAt,
+      paidAt: invoices.paidAt,
       notes: invoices.notes,
       createdAt: invoices.createdAt,
+      updatedAt: invoices.updatedAt,
       clientId: invoices.clientId,
       caseId: invoices.caseId,
       clientName: sql<string>`${clients.firstName} || ' ' || ${clients.lastName}`,
+      clientEmail: clients.email,
+      clientPhone: clients.phone,
+      clientAddress: clients.physicalAddress,
+      clientCity: clients.city,
+      clientPoBox: clients.poBox,
+      clientCounty: clients.county,
       caseNumber: cases.caseNumber,
+      caseTitle: cases.title,
+      createdByName: users.name,
     })
     .from(invoices)
     .innerJoin(clients, eq(invoices.clientId, clients.id))
     .leftJoin(cases, eq(invoices.caseId, cases.id))
+    .innerJoin(users, eq(invoices.createdBy, users.id))
     .where(eq(invoices.id, id))
     .limit(1);
 
@@ -103,6 +117,23 @@ export async function getQuotes() {
     .innerJoin(clients, eq(quotes.clientId, clients.id))
     .orderBy(desc(quotes.createdAt))
     .limit(500);
+}
+
+export async function getInvoiceHistory(invoiceId: string) {
+  return db
+    .select({
+      id: auditLog.id,
+      action: auditLog.action,
+      details: auditLog.details,
+      createdAt: auditLog.createdAt,
+      userName: users.name,
+      userAvatar: users.avatar,
+    })
+    .from(auditLog)
+    .leftJoin(users, eq(auditLog.userId, users.id))
+    .where(and(eq(auditLog.entityType, "invoice"), eq(auditLog.entityId, invoiceId)))
+    .orderBy(desc(auditLog.createdAt))
+    .limit(50);
 }
 
 export async function generateInvoiceNumber(): Promise<string> {

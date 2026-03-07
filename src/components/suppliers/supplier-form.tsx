@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
 
 interface SupplierFormProps {
   defaultValues?: Partial<CreateSupplierInput>;
@@ -33,6 +34,7 @@ export function SupplierForm({ defaultValues, supplierId }: SupplierFormProps) {
       bankAccountNumber: "",
       bankBranch: "",
       category: "",
+      logoUrl: "",
       ...defaultValues,
     },
   });
@@ -59,6 +61,15 @@ export function SupplierForm({ defaultValues, supplierId }: SupplierFormProps) {
     <Card>
       <CardContent className="pt-6">
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="flex justify-center">
+            <AvatarUpload
+              currentUrl={form.watch("logoUrl") || null}
+              fallbackText={form.watch("name")?.slice(0, 2)?.toUpperCase() || "SP"}
+              onUpload={(url) => form.setValue("logoUrl", url)}
+              onRemove={() => form.setValue("logoUrl", "")}
+            />
+          </div>
+
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="name">Supplier Name *</Label>

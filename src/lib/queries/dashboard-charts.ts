@@ -40,6 +40,7 @@ export async function getRecentCases(limit = 10) {
       status: cases.status,
       createdAt: cases.createdAt,
       clientName: sql<string>`${clients.firstName} || ' ' || ${clients.lastName}`,
+      clientPhotoUrl: clients.photoUrl,
     })
     .from(cases)
     .innerJoin(clients, eq(cases.clientId, clients.id))
@@ -76,6 +77,7 @@ export async function getOverdueInvoices() {
       id: invoices.id,
       invoiceNumber: invoices.invoiceNumber,
       clientName: sql<string>`${clients.firstName} || ' ' || ${clients.lastName}`,
+      clientPhotoUrl: clients.photoUrl,
       totalAmount: invoices.totalAmount,
       paidAmount: invoices.paidAmount,
       dueDate: invoices.dueDate,

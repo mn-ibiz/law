@@ -3,6 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import { useState, useRef } from "react";
 import { toast } from "sonner";
 import {
   createExpenseSchema,
@@ -23,6 +24,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { formatEnum } from "@/lib/utils/format-enum";
+import { Upload, X, FileText } from "lucide-react";
 
 const EXPENSE_CATEGORIES = [
   "filing_fee",
@@ -40,6 +42,33 @@ interface ExpenseFormProps {
 
 export function ExpenseForm({ cases }: ExpenseFormProps) {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error ?? "Upload failed");
+        return;
+      }
+      setReceiptUrl(data.fileUrl);
+      toast.success("Receipt uploaded");
+    } catch {
+      toast.error("Upload failed");
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
 
   const form = useForm<CreateExpenseInput>({
     resolver: zodResolver(createExpenseSchema),
@@ -55,7 +84,7 @@ export function ExpenseForm({ cases }: ExpenseFormProps) {
 
   async function onSubmit(data: CreateExpenseInput) {
     try {
-      const result = await createExpense(data);
+      const result = await createExpense({ ...data, receiptUrl });
 
       if (result.error) {
         toast.error(result.error);
@@ -168,6 +197,54 @@ export function ExpenseForm({ cases }: ExpenseFormProps) {
               )}
             </div>
 
+            <div className="space-y-2 md:col-span-2">
+              <Label>Receipt (optional)</Label>
+              {receiptUrl ? (
+                <div className="flex items-center gap-2 rounded-md border p-2 text-sm">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <a
+                    href={receiptUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 truncate text-primary underline"
+                  >
+                    View receipt
+                  </a>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0"
+                    onClick={() => setReceiptUrl(null)}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                    <span className="sr-only">Remove receipt</span>
+                  </Button>
+                </div>
+              ) : (
+                <div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.webp"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="create-exp-receipt"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={isUploading}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="mr-2 h-3.5 w-3.5" />
+                    {isUploading ? "Uploading..." : "Upload Receipt"}
+                  </Button>
+                </div>
+              )}
+            </div>
+
             <div className="flex items-center gap-3">
               <Switch
                 id="isBillable"
@@ -181,7 +258,7 @@ export function ExpenseForm({ cases }: ExpenseFormProps) {
           </div>
 
           <div className="flex gap-4">
-            <Button type="submit" disabled={form.formState.isSubmitting}>
+            <Button type="submit" disabled={form.formState.isSubmitting || isUploading}>
               {form.formState.isSubmitting ? "Saving..." : "Create Expense"}
             </Button>
             <Button

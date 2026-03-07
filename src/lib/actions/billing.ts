@@ -5,7 +5,7 @@ import { invoices, invoiceLineItems, payments, quotes, receipts, creditNotes } f
 import { clients } from "@/lib/db/schema/clients";
 import { auth } from "@/lib/auth/auth";
 import { createAuditLog } from "@/lib/utils/audit";
-import { createInvoiceSchema, recordPaymentSchema, createQuoteSchema, createQuoteWithLineItemsSchema, createReceiptSchema, createCreditNoteSchema } from "@/lib/validators/billing";
+import { createInvoiceSchema, updateInvoiceSchema, recordPaymentSchema, createQuoteSchema, createQuoteWithLineItemsSchema, createReceiptSchema, createCreditNoteSchema } from "@/lib/validators/billing";
 import { generateInvoiceNumber } from "@/lib/queries/billing";
 import { eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -36,8 +36,8 @@ export async function createInvoice(data: unknown) {
     }));
     const subtotal = computedLineItems.reduce((sum, item) => sum + item.amount, 0);
     const vatRate = 16;
-    const vatAmount = subtotal * (vatRate / 100);
-    const totalAmount = subtotal + vatAmount;
+    const vatAmount = Math.round(subtotal * vatRate) / 100;
+    const totalAmount = Math.round((subtotal + vatAmount) * 100) / 100;
 
     // Retry on unique constraint violation (concurrent number generation race)
     const result = await withUniqueRetry(async () => {
@@ -49,10 +49,10 @@ export async function createInvoice(data: unknown) {
           caseId: validated.data.caseId,
           clientId: validated.data.clientId,
           createdBy: session.user.id,
-          subtotal: String(subtotal),
+          subtotal: subtotal.toFixed(2),
           vatRate: String(vatRate),
-          vatAmount: String(vatAmount),
-          totalAmount: String(totalAmount),
+          vatAmount: vatAmount.toFixed(2),
+          totalAmount: totalAmount.toFixed(2),
           dueDate: new Date(validated.data.dueDate),
           notes: validated.data.notes,
         })
@@ -90,7 +90,88 @@ export async function createInvoice(data: unknown) {
   });
 }
 
-export async function sendInvoice(id: string) {
+export async function updateInvoice(data: unknown) {
+  return safeAction(async () => {
+    const session = await auth();
+    if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
+      return { error: "Unauthorized" };
+    }
+
+    const validated = updateInvoiceSchema.safeParse(data);
+    if (!validated.success) {
+      return { error: validated.error.issues[0].message };
+    }
+
+    const invoiceId = validated.data.invoiceId;
+    if (!validateId(invoiceId)) return { error: "Invalid ID" };
+
+    // Compute line item amounts server-side to prevent billing fraud
+    const computedLineItems = validated.data.lineItems.map((item) => ({
+      ...item,
+      amount: item.quantity * item.unitPrice,
+    }));
+    const subtotal = computedLineItems.reduce((sum, item) => sum + item.amount, 0);
+    const vatRate = 16;
+    const vatAmount = Math.round(subtotal * vatRate) / 100;
+    const totalAmount = Math.round((subtotal + vatAmount) * 100) / 100;
+
+    // Atomic conditional update — only allow editing draft invoices
+    const result = await db
+      .update(invoices)
+      .set({
+        caseId: validated.data.caseId,
+        clientId: validated.data.clientId,
+        subtotal: subtotal.toFixed(2),
+        vatRate: String(vatRate),
+        vatAmount: vatAmount.toFixed(2),
+        totalAmount: totalAmount.toFixed(2),
+        dueDate: new Date(validated.data.dueDate),
+        notes: validated.data.notes,
+        updatedAt: new Date(),
+      })
+      .where(sql`${invoices.id} = ${invoiceId} AND ${invoices.status} = 'draft'`)
+      .returning({ id: invoices.id });
+
+    if (result.length === 0) {
+      return { error: "Invoice not found or not in draft status" };
+    }
+
+    // Delete existing line items and insert new ones
+    await db.delete(invoiceLineItems).where(eq(invoiceLineItems.invoiceId, invoiceId));
+
+    const lineItemValues = computedLineItems.map((item) => ({
+      invoiceId,
+      description: item.description,
+      quantity: String(item.quantity),
+      unitPrice: String(item.unitPrice),
+      amount: String(item.amount),
+    }));
+
+    await db.insert(invoiceLineItems).values(lineItemValues);
+
+    await createAuditLog(
+      session.user.id,
+      "update",
+      "invoice",
+      invoiceId,
+      { totalAmount }
+    );
+
+    revalidatePath("/billing");
+    revalidatePath(`/billing/${invoiceId}`);
+    return { data: result[0] };
+  });
+}
+
+interface SendInvoiceEmailOptions {
+  to: string;
+  cc?: string[];
+  subject: string;
+  body: string;
+  pdfBase64?: string;
+}
+
+export async function sendInvoice(id: string, emailOptions?: SendInvoiceEmailOptions) {
   return safeAction(async () => {
     const session = await auth();
     if (!session?.user || !["admin", "attorney"].includes(session.user.role)) {
@@ -116,39 +197,58 @@ export async function sendInvoice(id: string) {
       return { error: "Invoice not found or not in draft status" };
     }
 
-    // Send invoice email (fire-and-forget)
     const invoice = result[0];
-    db.select({
-      email: clients.email,
-      firstName: clients.firstName,
-      lastName: clients.lastName,
-    })
-      .from(clients)
-      .where(eq(clients.id, invoice.clientId))
-      .limit(1)
-      .then(([client]) => {
-        if (!client?.email) return;
-        const formattedAmount = Number(invoice.totalAmount).toLocaleString(APP_LOCALE, {
-          style: "currency",
-          currency: "KES",
-        });
-        const formattedDue = invoice.dueDate
-          ? new Date(invoice.dueDate).toLocaleDateString(APP_LOCALE)
-          : "N/A";
-        return sendEmail({
-          to: client.email,
-          subject: `Invoice ${invoice.invoiceNumber}`,
-          html: invoiceDeliveryEmailHtml({
-            clientName: `${client.firstName} ${client.lastName}`,
-            invoiceNumber: invoice.invoiceNumber,
-            amount: formattedAmount,
-            dueDate: formattedDue,
-          }),
-        });
+
+    if (emailOptions) {
+      // Send with user-composed email
+      const attachments = emailOptions.pdfBase64
+        ? [{ filename: `${invoice.invoiceNumber}.pdf`, content: emailOptions.pdfBase64 }]
+        : undefined;
+
+      sendEmail({
+        to: emailOptions.to,
+        cc: emailOptions.cc?.filter(Boolean),
+        subject: emailOptions.subject,
+        html: emailOptions.body,
+        attachments,
+      }).catch((err) => console.error("Invoice email failed:", err));
+    } else {
+      // Fallback: send with default template
+      db.select({
+        email: clients.email,
+        firstName: clients.firstName,
+        lastName: clients.lastName,
       })
-      .catch((err) => console.error("Invoice email failed:", err));
+        .from(clients)
+        .where(eq(clients.id, invoice.clientId))
+        .limit(1)
+        .then(([client]) => {
+          if (!client?.email) return;
+          const formattedAmount = Number(invoice.totalAmount).toLocaleString(APP_LOCALE, {
+            style: "currency",
+            currency: "KES",
+          });
+          const formattedDue = invoice.dueDate
+            ? new Date(invoice.dueDate).toLocaleDateString(APP_LOCALE)
+            : "N/A";
+          return sendEmail({
+            to: client.email,
+            subject: `Invoice ${invoice.invoiceNumber}`,
+            html: invoiceDeliveryEmailHtml({
+              clientName: `${client.firstName} ${client.lastName}`,
+              invoiceNumber: invoice.invoiceNumber,
+              amount: formattedAmount,
+              dueDate: formattedDue,
+            }),
+          });
+        })
+        .catch((err) => console.error("Invoice email failed:", err));
+    }
+
+    await createAuditLog(session.user.id, "update", "invoice", id, { action: "sent" });
 
     revalidatePath("/billing");
+    revalidatePath(`/billing/${id}`);
     return { success: true };
   });
 }
@@ -199,6 +299,12 @@ export async function recordPayment(data: unknown) {
       })
       .returning();
 
+    await createAuditLog(session.user.id, "create", "payment", result[0].id, {
+      invoiceId,
+      amount: validated.data.amount,
+      method: validated.data.paymentMethod,
+    });
+
     // Fire workflow event for payment received (fire-and-forget)
     dispatchWorkflowEvent("payment_received", {
       entityId: result[0].id,
@@ -231,6 +337,9 @@ export async function cancelInvoice(id: string) {
     if (result.length === 0) {
       return { error: "Invoice not found, already paid, or already cancelled" };
     }
+
+    await createAuditLog(session.user.id, "update", "invoice", id, { action: "cancel" });
+
     revalidatePath("/billing");
     return { success: true };
   });
@@ -326,8 +435,8 @@ export async function createQuoteWithLineItems(data: unknown) {
     }));
     const subtotal = computedLineItems.reduce((sum, item) => sum + item.amount, 0);
     const vatRate = 16;
-    const vatAmount = subtotal * (vatRate / 100);
-    const totalAmount = subtotal + vatAmount;
+    const vatAmount = Math.round(subtotal * vatRate) / 100;
+    const totalAmount = Math.round((subtotal + vatAmount) * 100) / 100;
 
     // Retry on unique constraint violation (concurrent number generation race)
     const result = await withUniqueRetry(async () => {
@@ -352,9 +461,9 @@ export async function createQuoteWithLineItems(data: unknown) {
           clientId: validated.data.clientId,
           caseId: validated.data.caseId || undefined,
           createdBy: session.user.id,
-          subtotal: String(subtotal),
-          vatAmount: String(vatAmount),
-          totalAmount: String(totalAmount),
+          subtotal: subtotal.toFixed(2),
+          vatAmount: vatAmount.toFixed(2),
+          totalAmount: totalAmount.toFixed(2),
           validUntil: validated.data.validUntil ? new Date(validated.data.validUntil) : undefined,
           notes: validated.data.notes,
         })
@@ -399,12 +508,11 @@ export async function updateQuoteStatus(id: string, status: "draft" | "sent" | "
       return { error: `Cannot transition any quote to '${status}'` };
     }
 
-    // Atomic conditional update with state guard
-    const placeholders = validFromStatuses.map((s) => `'${s}'`).join(", ");
+    // Atomic conditional update with state guard (parameterized, no sql.raw)
     const result = await db
       .update(quotes)
       .set({ status, updatedAt: new Date() })
-      .where(sql`${quotes.id} = ${id} AND ${quotes.status} IN (${sql.raw(placeholders)})`)
+      .where(sql`${quotes.id} = ${id} AND ${quotes.status} = ANY(${validFromStatuses})`)
       .returning({ id: quotes.id });
 
     if (result.length === 0) {

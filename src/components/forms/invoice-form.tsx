@@ -5,7 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createInvoiceSchema, type CreateInvoiceInput } from "@/lib/validators/billing";
-import { createInvoice } from "@/lib/actions/billing";
+import { createInvoice, updateInvoice } from "@/lib/actions/billing";
+import { APP_LOCALE } from "@/lib/constants/locale";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,14 +24,23 @@ import { Plus, Trash2 } from "lucide-react";
 interface InvoiceFormProps {
   cases: { id: string; caseNumber: string; title: string }[];
   clients: { id: string; name: string }[];
+  invoiceId?: string;
+  defaultValues?: {
+    caseId: string;
+    clientId: string;
+    dueDate: string;
+    notes: string;
+    lineItems: { description: string; quantity: number; unitPrice: number; amount: number }[];
+  };
 }
 
-export function InvoiceForm({ cases, clients }: InvoiceFormProps) {
+export function InvoiceForm({ cases, clients, invoiceId, defaultValues }: InvoiceFormProps) {
   const router = useRouter();
+  const isEditing = !!invoiceId;
 
   const form = useForm<CreateInvoiceInput>({
     resolver: zodResolver(createInvoiceSchema),
-    defaultValues: {
+    defaultValues: defaultValues ?? {
       caseId: "",
       clientId: "",
       dueDate: "",
@@ -68,15 +78,17 @@ export function InvoiceForm({ cases, clients }: InvoiceFormProps) {
         })),
       };
 
-      const result = await createInvoice(dataWithAmounts);
+      const result = isEditing
+        ? await updateInvoice({ ...dataWithAmounts, invoiceId })
+        : await createInvoice(dataWithAmounts);
 
       if (result.error) {
         toast.error(result.error);
         return;
       }
 
-      toast.success("Invoice created");
-      router.push("/billing");
+      toast.success(isEditing ? "Invoice updated" : "Invoice created");
+      router.push(isEditing ? `/billing/${invoiceId}` : "/billing");
       router.refresh();
     } catch {
       toast.error("An unexpected error occurred");
@@ -223,7 +235,7 @@ export function InvoiceForm({ cases, clients }: InvoiceFormProps) {
                     <Label>Amount (KES)</Label>
                     <Input
                       readOnly
-                      value={(watchLineItems[index]?.amount || 0).toLocaleString("en-KE", {
+                      value={(watchLineItems[index]?.amount || 0).toLocaleString(APP_LOCALE, {
                         minimumFractionDigits: 2,
                       })}
                       className="bg-muted"
@@ -238,15 +250,15 @@ export function InvoiceForm({ cases, clients }: InvoiceFormProps) {
           <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
             <div className="flex justify-between text-sm">
               <span>Subtotal</span>
-              <span>KES {subtotal.toLocaleString("en-KE", { minimumFractionDigits: 2 })}</span>
+              <span>KES {subtotal.toLocaleString(APP_LOCALE, { minimumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span>VAT (16%)</span>
-              <span>KES {vatAmount.toLocaleString("en-KE", { minimumFractionDigits: 2 })}</span>
+              <span>KES {vatAmount.toLocaleString(APP_LOCALE, { minimumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between font-semibold border-t pt-2">
               <span>Total</span>
-              <span>KES {total.toLocaleString("en-KE", { minimumFractionDigits: 2 })}</span>
+              <span>KES {total.toLocaleString(APP_LOCALE, { minimumFractionDigits: 2 })}</span>
             </div>
           </div>
 
@@ -260,7 +272,9 @@ export function InvoiceForm({ cases, clients }: InvoiceFormProps) {
 
           <div className="flex gap-4">
             <Button type="submit" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? "Creating..." : "Create Invoice"}
+              {form.formState.isSubmitting
+                ? (isEditing ? "Updating..." : "Creating...")
+                : (isEditing ? "Update Invoice" : "Create Invoice")}
             </Button>
             <Button type="button" variant="outline" onClick={() => router.back()}>
               Cancel

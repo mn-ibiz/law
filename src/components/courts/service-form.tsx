@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -24,6 +25,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { formatEnum } from "@/lib/utils/format-enum";
+import { Upload } from "lucide-react";
 
 interface ServiceFormProps {
   open: boolean;
@@ -42,6 +44,8 @@ const serviceMethods = [
 
 export function ServiceForm({ open, onOpenChange, cases }: ServiceFormProps) {
   const router = useRouter();
+  const [uploading, setUploading] = useState(false);
+  const [proofUrl, setProofUrl] = useState("");
 
   const form = useForm<CreateServiceOfDocumentInput>({
     resolver: zodResolver(createServiceOfDocumentSchema),
@@ -51,13 +55,39 @@ export function ServiceForm({ open, onOpenChange, cases }: ServiceFormProps) {
       servedTo: "",
       method: "personal",
       serviceDate: "",
+      proofOfServiceUrl: "",
       notes: "",
     },
   });
 
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const json = await res.json();
+      if (!res.ok) {
+        toast.error(json.error || "Upload failed");
+        return;
+      }
+      setProofUrl(json.fileUrl);
+      form.setValue("proofOfServiceUrl", json.fileUrl);
+      toast.success("File uploaded");
+    } catch {
+      toast.error("Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   async function onSubmit(data: CreateServiceOfDocumentInput) {
     try {
-      const result = await createServiceOfDocument(data);
+      const submitData = { ...data, proofOfServiceUrl: proofUrl || data.proofOfServiceUrl };
+      const result = await createServiceOfDocument(submitData);
 
       if (result.error) {
         toast.error(result.error);
@@ -66,6 +96,7 @@ export function ServiceForm({ open, onOpenChange, cases }: ServiceFormProps) {
 
       toast.success("Service of process recorded");
       form.reset();
+      setProofUrl("");
       onOpenChange(false);
       router.refresh();
     } catch {
@@ -145,6 +176,26 @@ export function ServiceForm({ open, onOpenChange, cases }: ServiceFormProps) {
               <Label htmlFor="serviceDate">Date Served</Label>
               <Input id="serviceDate" type="date" {...form.register("serviceDate")} />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Proof of Service (optional)</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                type="file"
+                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp"
+                onChange={handleFileUpload}
+                disabled={uploading}
+                className="flex-1"
+              />
+              {uploading && <span className="text-xs text-muted-foreground">Uploading...</span>}
+            </div>
+            {proofUrl && (
+              <a href={proofUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline inline-flex items-center gap-1">
+                <Upload className="h-3 w-3" />
+                Uploaded file
+              </a>
+            )}
           </div>
 
           <div className="space-y-2">

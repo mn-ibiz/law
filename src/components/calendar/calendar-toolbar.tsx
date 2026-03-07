@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { format, addMonths, subMonths, addWeeks, subWeeks } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, CalendarDays } from "lucide-react";
 import Link from "next/link";
 
 type ViewType = "month" | "week" | "list";
@@ -46,26 +46,30 @@ export function CalendarToolbar({ currentDate, view }: CalendarToolbarProps) {
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-center gap-2">
-        <Button variant="outline" size="icon-sm" onClick={navigatePrev} aria-label="Previous">
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        <Button variant="outline" size="icon-sm" onClick={navigateNext} aria-label="Next">
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-        <Button variant="outline" size="sm" onClick={navigateToday}>
+      {/* Left: Title + Navigation */}
+      <div className="flex items-center gap-3">
+        <h2 className="text-2xl font-bold tracking-tight min-w-[200px]">{label}</h2>
+        <div className="flex items-center gap-1">
+          <Button variant="outline" size="icon" className="h-8 w-8" onClick={navigatePrev} aria-label="Previous">
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="icon" className="h-8 w-8" onClick={navigateNext} aria-label="Next">
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+        <Button variant="outline" size="sm" className="h-8 font-medium" onClick={navigateToday}>
           Today
         </Button>
-        <h2 className="ml-2 text-lg font-semibold">{label}</h2>
       </div>
 
-      <div className="flex items-center gap-2">
-        <div className="inline-flex rounded-md bg-muted p-0.5">
+      {/* Right: View toggle + Add */}
+      <div className="flex items-center gap-3">
+        <div className="inline-flex h-9 items-center rounded-lg border bg-muted/50 p-1">
           {(["month", "week", "list"] as const).map((v) => (
             <button
               key={v}
               onClick={() => switchView(v)}
-              className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${
+              className={`rounded-md px-3.5 py-1 text-sm font-medium transition-all ${
                 view === v
                   ? "bg-background text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
@@ -75,9 +79,9 @@ export function CalendarToolbar({ currentDate, view }: CalendarToolbarProps) {
             </button>
           ))}
         </div>
-        <Button size="sm" asChild>
+        <Button size="sm" className="h-9 gap-1.5" asChild>
           <Link href="/calendar/new">
-            <Plus className="h-3.5 w-3.5 mr-1.5" />
+            <Plus className="h-4 w-4" />
             New Event
           </Link>
         </Button>

@@ -127,6 +127,18 @@ export default async function CourtRulesPage() {
                         id={rule.id}
                         name={rule.name}
                         isActive={rule.isActive}
+                        rule={{
+                          id: rule.id,
+                          courtId: rule.courtId,
+                          name: rule.name,
+                          description: rule.description,
+                          triggerEvent: rule.triggerEvent,
+                          offsetDays: rule.offsetDays,
+                          deadlineTitle: rule.deadlineTitle,
+                          priority: rule.priority,
+                          isStatutory: rule.isStatutory,
+                        }}
+                        courts={courts}
                       />
                     </TableCell>
                   </TableRow>

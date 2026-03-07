@@ -3,15 +3,19 @@
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { ActiveBadge } from "@/components/shared/status-badges";
+import { SortableHeader } from "@/components/shared/enhanced-data-table";
+import { formatEnum } from "@/lib/utils/format-enum";
 import { Button } from "@/components/ui/button";
+import { PersonAvatar } from "@/components/shared/person-avatar";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, ShieldAlert } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { MoreHorizontal, Eye, Pencil, ShieldAlert } from "lucide-react";
 
 export interface ClientRow {
   id: string;
@@ -24,45 +28,62 @@ export interface ClientRow {
   companyName: string | null;
   county: string | null;
   isPep: boolean;
+  photoUrl: string | null;
   createdAt: Date;
+}
+
+function getDisplayName(row: ClientRow) {
+  return row.type === "organization" && row.companyName
+    ? row.companyName
+    : `${row.firstName} ${row.lastName}`;
 }
 
 export const clientColumns: ColumnDef<ClientRow>[] = [
   {
     accessorKey: "name",
-    header: "Name",
-    accessorFn: (row) =>
-      row.type === "organization" && row.companyName
-        ? row.companyName
-        : `${row.firstName} ${row.lastName}`,
-    cell: ({ row }) => (
-      <Link
-        href={`/clients/${row.original.id}`}
-        className="font-medium text-primary hover:underline"
-      >
-        {row.getValue("name")}
-      </Link>
-    ),
+    accessorFn: (row) => getDisplayName(row),
+    header: ({ column }) => <SortableHeader column={column}>Name</SortableHeader>,
+    cell: ({ row }) => {
+      const name = getDisplayName(row.original);
+      return (
+        <div className="flex items-center gap-3">
+          <PersonAvatar name={name} imageUrl={row.original.photoUrl} />
+          <div className="min-w-0">
+            <Link
+              href={`/clients/${row.original.id}`}
+              className="font-medium text-foreground hover:text-primary hover:underline"
+            >
+              {name}
+            </Link>
+            <p className="text-xs text-muted-foreground truncate">{row.original.email}</p>
+          </div>
+        </div>
+      );
+    },
   },
   {
     accessorKey: "type",
-    header: "Type",
+    header: ({ column }) => <SortableHeader column={column}>Type</SortableHeader>,
     cell: ({ row }) => (
-      <span className="capitalize">{row.getValue("type")}</span>
+      <span className="text-sm">{formatEnum(row.getValue("type"))}</span>
     ),
-  },
-  {
-    accessorKey: "email",
-    header: "Email",
+    filterFn: (row, id, filterValue) => {
+      return String(row.getValue(id)) === filterValue;
+    },
   },
   {
     accessorKey: "phone",
     header: "Phone",
+    cell: ({ row }) => (
+      <span className="text-sm">{row.getValue("phone") || "\u2014"}</span>
+    ),
   },
   {
     accessorKey: "county",
-    header: "County",
-    cell: ({ row }) => row.getValue("county") ?? "\u2014",
+    header: ({ column }) => <SortableHeader column={column}>County</SortableHeader>,
+    cell: ({ row }) => (
+      <span className="text-sm">{row.getValue("county") ?? "\u2014"}</span>
+    ),
   },
   {
     accessorKey: "isPep",
@@ -77,19 +98,24 @@ export const clientColumns: ColumnDef<ClientRow>[] = [
         </Badge>
       );
     },
+    filterFn: (row, id, filterValue) => {
+      return String(row.getValue(id)) === filterValue;
+    },
   },
   {
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
       const status = row.getValue("status") as string;
-      return (
-        <ActiveBadge active={status === "active"} />
-      );
+      return <ActiveBadge active={status === "active"} />;
+    },
+    filterFn: (row, id, filterValue) => {
+      return String(row.getValue(id)) === filterValue;
     },
   },
   {
     id: "actions",
+    enableHiding: false,
     cell: ({ row }) => (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -99,10 +125,17 @@ export const clientColumns: ColumnDef<ClientRow>[] = [
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem asChild>
-            <Link href={`/clients/${row.original.id}`}>View</Link>
+            <Link href={`/clients/${row.original.id}`}>
+              <Eye className="mr-2 h-3.5 w-3.5" />
+              View Profile
+            </Link>
           </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
-            <Link href={`/clients/${row.original.id}/edit`}>Edit</Link>
+            <Link href={`/clients/${row.original.id}/edit`}>
+              <Pencil className="mr-2 h-3.5 w-3.5" />
+              Edit
+            </Link>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

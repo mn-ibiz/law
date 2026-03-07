@@ -15,6 +15,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ConflictCheckDialog } from "./conflict-check-dialog";
+import {
+  AddContactLogDialog,
+  DeleteContactLogButton,
+  AddKycDocumentDialog,
+  DeleteKycDocumentButton,
+  AddRiskAssessmentDialog,
+  DeleteRiskAssessmentButton,
+} from "./client-crud-dialogs";
 import { formatEnum } from "@/lib/utils/format-enum";
 import { Shield, ShieldAlert, AlertTriangle, CheckCircle, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -251,7 +259,10 @@ export function ClientDetailTabs({ client, contacts, kycDocuments, riskAssessmen
         <TabsContent value="contacts">
           <Card className="shadow-sm">
             <CardHeader>
-              <CardTitle>Contact History</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Contact History</CardTitle>
+                <AddContactLogDialog clientId={client.id} />
+              </div>
             </CardHeader>
             <CardContent>
               {contacts.length === 0 ? (
@@ -264,6 +275,7 @@ export function ClientDetailTabs({ client, contacts, kycDocuments, riskAssessmen
                       <TableHead>Type</TableHead>
                       <TableHead>Subject</TableHead>
                       <TableHead>Contacted By</TableHead>
+                      <TableHead className="w-20">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -277,6 +289,12 @@ export function ClientDetailTabs({ client, contacts, kycDocuments, riskAssessmen
                         </TableCell>
                         <TableCell>{c.subject}</TableCell>
                         <TableCell>{c.contactedByName ?? "\u2014"}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <AddContactLogDialog clientId={client.id} existing={c} />
+                            <DeleteContactLogButton contactId={c.id} clientId={client.id} />
+                          </div>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -294,6 +312,7 @@ export function ClientDetailTabs({ client, contacts, kycDocuments, riskAssessmen
                   <FileText className="h-5 w-5" />
                   KYC Documents
                 </CardTitle>
+                <AddKycDocumentDialog clientId={client.id} />
               </div>
             </CardHeader>
             <CardContent>
@@ -308,6 +327,7 @@ export function ClientDetailTabs({ client, contacts, kycDocuments, riskAssessmen
                       <TableHead>Status</TableHead>
                       <TableHead>Verified By</TableHead>
                       <TableHead>Expiry Date</TableHead>
+                      <TableHead className="w-20">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -326,6 +346,12 @@ export function ClientDetailTabs({ client, contacts, kycDocuments, riskAssessmen
                             ? new Date(doc.expiryDate).toLocaleDateString(APP_LOCALE)
                             : "\u2014"}
                         </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <AddKycDocumentDialog clientId={client.id} existing={doc} />
+                            <DeleteKycDocumentButton docId={doc.id} clientId={client.id} />
+                          </div>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -338,10 +364,21 @@ export function ClientDetailTabs({ client, contacts, kycDocuments, riskAssessmen
         <TabsContent value="risk">
           <Card className="shadow-sm">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Risk Assessment
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Risk Assessment
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  {riskAssessment && (
+                    <DeleteRiskAssessmentButton assessmentId={riskAssessment.id} clientId={client.id} />
+                  )}
+                  <AddRiskAssessmentDialog
+                    clientId={client.id}
+                    existing={riskAssessment ?? undefined}
+                  />
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               {riskAssessment ? (

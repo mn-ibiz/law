@@ -11,9 +11,10 @@ export const metadata: Metadata = {
 };
 
 export default async function CourtsPage() {
-  await requireAdminOrAttorney();
+  const session = await requireAdminOrAttorney();
+  const isAdmin = session.user.role === "admin";
   const [hierarchy, filings, serviceRecords, courtList, caseResult] = await Promise.all([
-    getCourtHierarchy(),
+    getCourtHierarchy(isAdmin),
     getAllCourtFilings(),
     getAllServiceOfDocuments(),
     getCourts(),
@@ -51,6 +52,7 @@ export default async function CourtsPage() {
         serviceRecords={serviceRecords}
         cases={cases}
         courts={courts}
+        userRole={session.user.role}
       />
     </div>
   );

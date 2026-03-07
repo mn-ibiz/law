@@ -5,7 +5,7 @@ import { ReplyForm } from "@/components/messages/reply-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Mail, Clock, User, Briefcase } from "lucide-react";
+import { ArrowLeft, Mail, Clock, User, Briefcase, Paperclip } from "lucide-react";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -107,6 +107,19 @@ export default async function MessageDetailPage({
           <div className="prose prose-sm max-w-none whitespace-pre-wrap">
             {message.body}
           </div>
+          {message.attachmentUrl && (
+            <div className="mt-4 pt-4 border-t">
+              <a
+                href={message.attachmentUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-md bg-muted px-3 py-2 text-sm text-primary hover:underline"
+              >
+                <Paperclip className="h-4 w-4" />
+                {message.attachmentName || "Attachment"}
+              </a>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -157,6 +170,17 @@ export default async function MessageDetailPage({
                       </p>
                     )}
                     <p className="text-sm whitespace-pre-wrap">{msg.body}</p>
+                    {msg.attachmentUrl && (
+                      <a
+                        href={msg.attachmentUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
+                      >
+                        <Paperclip className="h-3 w-3" />
+                        {msg.attachmentName || "Attachment"}
+                      </a>
+                    )}
                   </div>
                 </div>
               );

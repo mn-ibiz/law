@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -23,6 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Upload, FileText, X } from "lucide-react";
 
 interface FilingFormProps {
   open: boolean;
@@ -47,6 +49,9 @@ const filingTypes = [
 
 export function FilingForm({ open, onOpenChange, cases, courts }: FilingFormProps) {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
 
   const form = useForm<CreateFilingInput>({
     resolver: zodResolver(createFilingSchema),
@@ -60,9 +65,37 @@ export function FilingForm({ open, onOpenChange, cases, courts }: FilingFormProp
     },
   });
 
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const result = await res.json();
+
+      if (!res.ok) {
+        toast.error(result.error ?? "Upload failed");
+        return;
+      }
+
+      setUploadedUrl(result.fileUrl);
+      toast.success("File uploaded");
+    } catch {
+      toast.error("Upload failed");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
   async function onSubmit(data: CreateFilingInput) {
     try {
-      const result = await createCourtFiling(data);
+      const payload = { ...data, documentUrl: uploadedUrl ?? undefined };
+      const result = await createCourtFiling(payload);
 
       if (result.error) {
         toast.error(result.error);
@@ -71,6 +104,7 @@ export function FilingForm({ open, onOpenChange, cases, courts }: FilingFormProp
 
       toast.success("Filing recorded");
       form.reset();
+      setUploadedUrl(null);
       onOpenChange(false);
       router.refresh();
     } catch {
@@ -80,7 +114,7 @@ export function FilingForm({ open, onOpenChange, cases, courts }: FilingFormProp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Record Court Filing</DialogTitle>
         </DialogHeader>
@@ -157,6 +191,52 @@ export function FilingForm({ open, onOpenChange, cases, courts }: FilingFormProp
               <Label htmlFor="filingDate">Filing Date</Label>
               <Input id="filingDate" type="date" {...form.register("filingDate")} />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Document</Label>
+            {uploadedUrl ? (
+              <div className="flex items-center gap-2 rounded-md border p-2 text-sm">
+                <FileText className="h-4 w-4 text-muted-foreground" />
+                <a
+                  href={uploadedUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 truncate text-primary hover:underline"
+                >
+                  {uploadedUrl.split("/").pop()}
+                </a>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  onClick={() => setUploadedUrl(null)}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ) : (
+              <div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,.txt"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={uploading}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="h-3.5 w-3.5 mr-1.5" />
+                  {uploading ? "Uploading..." : "Upload Document"}
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
