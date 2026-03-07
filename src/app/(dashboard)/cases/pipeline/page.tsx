@@ -5,7 +5,7 @@ import { getPracticeAreas } from "@/lib/queries/settings";
 import { CasePipeline } from "@/components/cases/case-pipeline";
 import { PipelineToolbar } from "@/components/cases/pipeline-toolbar";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { BarChart3, Kanban, Settings2, TableProperties } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -30,20 +30,39 @@ export default async function CasePipelinePage({
   const activePracticeAreas = allPracticeAreas.filter((pa) => pa.isActive);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Case Pipeline</h1>
-          <p className="text-sm text-muted-foreground">
-            Visual Kanban board of active cases.
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+            <Kanban className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Case Pipeline</h1>
+            <p className="text-sm text-muted-foreground">
+              Drag and drop cases between stages to update their progress.
+            </p>
+          </div>
         </div>
-        <Button variant="outline" size="sm" asChild>
-          <Link href="/cases">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Table View
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/settings/pipeline-stages">
+              <Settings2 className="mr-2 h-4 w-4" />
+              Manage Stages
+            </Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/cases/pipeline/analytics">
+              <BarChart3 className="mr-2 h-4 w-4" />
+              Analytics
+            </Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/cases">
+              <TableProperties className="mr-2 h-4 w-4" />
+              Table View
+            </Link>
+          </Button>
+        </div>
       </div>
       <PipelineToolbar practiceAreas={activePracticeAreas} />
       <section aria-label="Case pipeline board" role="region">

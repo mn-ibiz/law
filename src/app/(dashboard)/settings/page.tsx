@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/lib/auth/get-session";
 import Link from "next/link";
-import { Users, Briefcase, Building2, Shield, Database, Settings, Paintbrush, Calendar, Gavel } from "lucide-react";
+import { Users, Briefcase, Building2, Shield, Database, Settings, Paintbrush, Calendar, Gavel, Kanban } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -71,6 +71,13 @@ const settingsGroups = [
     href: "/settings/calendar-sync",
     icon: Calendar,
     color: "bg-teal-500/10 text-teal-600",
+  },
+  {
+    title: "Pipeline Stages",
+    description: "Configure case pipeline stages and workflow",
+    href: "/settings/pipeline-stages",
+    icon: Kanban,
+    color: "bg-violet-500/10 text-violet-600",
   },
   {
     title: "Court Rules",
