@@ -15,6 +15,10 @@ const SALT_ROUNDS = 10;
 
 async function main() {
   if (process.env.NODE_ENV === "production") {
+    if (!process.env.SEED_PASSWORD) {
+      console.error("ERROR: SEED_PASSWORD environment variable must be set in production.");
+      process.exit(1);
+    }
     console.error("ERROR: Seed script cannot run in production.");
     process.exit(1);
   }

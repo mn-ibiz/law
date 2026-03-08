@@ -5,6 +5,7 @@ import { suspendOrganization, reactivateOrganization, startImpersonation } from 
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Building2, Users, Briefcase, HardDrive, UserCog } from "lucide-react";
+import { OrgEditForm } from "./org-edit-form";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -127,8 +128,12 @@ export default async function OrganizationDetailPage({ params }: Props) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Organization Info</CardTitle>
+            <OrgEditForm
+              orgId={id}
+              initialData={{ name: org.name, email: org.email, phone: org.phone }}
+            />
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div className="flex justify-between">

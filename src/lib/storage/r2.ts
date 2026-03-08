@@ -2,6 +2,7 @@ import {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
+  DeleteObjectsCommand,
   ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -78,6 +79,46 @@ export async function r2Delete(key: string): Promise<void> {
       Key: key,
     })
   );
+}
+
+/**
+ * Delete all objects with a given prefix (e.g., "{orgId}/").
+ * Uses ListObjectsV2 + DeleteObjects in batches of 1000.
+ * Returns the total number of objects deleted.
+ */
+export async function r2DeleteByPrefix(prefix: string): Promise<number> {
+  const client = getClient();
+  const bucket = getBucket();
+  let totalDeleted = 0;
+  let continuationToken: string | undefined;
+
+  do {
+    const listResponse = await client.send(
+      new ListObjectsV2Command({
+        Bucket: bucket,
+        Prefix: prefix,
+        ContinuationToken: continuationToken,
+      })
+    );
+
+    const objects = listResponse.Contents ?? [];
+    if (objects.length > 0) {
+      await client.send(
+        new DeleteObjectsCommand({
+          Bucket: bucket,
+          Delete: {
+            Objects: objects.map((obj) => ({ Key: obj.Key! })),
+            Quiet: true,
+          },
+        })
+      );
+      totalDeleted += objects.length;
+    }
+
+    continuationToken = listResponse.NextContinuationToken;
+  } while (continuationToken);
+
+  return totalDeleted;
 }
 
 export async function r2GetPrefixSize(prefix: string): Promise<number> {

@@ -31,6 +31,7 @@ const SETTING_LABELS: Record<string, string> = {
   fiscal_year_start: "Fiscal Year Start",
   invoice_prefix: "Invoice Prefix",
   case_prefix: "Case Number Prefix",
+  "data.retentionDays": "Data Retention Period (days)",
 };
 
 export default async function FirmSettingsPage() {

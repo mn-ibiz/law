@@ -10,6 +10,23 @@ import { getPermissionsForRole } from "@/lib/queries/permissions";
 import { getOrgConfig, toClientConfig } from "@/lib/utils/tenant-config";
 import { defaultPermissions } from "@/lib/auth/permissions";
 import type { Role } from "@/lib/auth/permissions";
+import type { Metadata } from "next";
+
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const { organizationId } = await requireOrg();
+    const config = await getOrgConfig(organizationId);
+    return {
+      title: {
+        default: config.orgName,
+        template: `%s | ${config.orgName}`,
+      },
+      description: `${config.orgName} — Legal Practice Management`,
+    };
+  } catch {
+    return {};
+  }
+}
 
 export default async function DashboardLayout({
   children,

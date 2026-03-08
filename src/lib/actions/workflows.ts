@@ -118,7 +118,9 @@ export async function deleteWorkflowRule(id: string) {
       .limit(1);
     if (!rule) return { error: "Rule not found" };
 
-    await db.delete(workflowRules).where(eq(workflowRules.id, id));
+    await db.delete(workflowRules).where(
+      and(eq(workflowRules.id, id), eq(workflowRules.organizationId, organizationId))
+    );
     revalidatePath("/settings");
     return { success: true };
   });

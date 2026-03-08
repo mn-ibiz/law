@@ -16,8 +16,8 @@ import { validateId } from "@/lib/utils/validate-id";
 export async function createCourt(data: unknown) {
   return safeAction(async () => {
     const { organizationId, userId, role } = await getTenantContext();
-    if (role !== "admin") {
-      return { error: "Unauthorized" };
+    if (role !== "super_admin") {
+      return { error: "Only platform administrators can manage courts" };
     }
 
     const validated = createCourtSchema.safeParse(data);
@@ -37,8 +37,8 @@ export async function createCourt(data: unknown) {
 export async function updateCourt(id: string, data: unknown) {
   return safeAction(async () => {
     const { organizationId, userId, role } = await getTenantContext();
-    if (role !== "admin") {
-      return { error: "Unauthorized" };
+    if (role !== "super_admin") {
+      return { error: "Only platform administrators can manage courts" };
     }
 
     if (!validateId(id)) return { error: "Invalid ID" };
@@ -68,8 +68,8 @@ export async function updateCourt(id: string, data: unknown) {
 export async function toggleCourtActive(id: string) {
   return safeAction(async () => {
     const { organizationId, userId, role } = await getTenantContext();
-    if (role !== "admin") {
-      return { error: "Unauthorized" };
+    if (role !== "super_admin") {
+      return { error: "Only platform administrators can manage courts" };
     }
 
     if (!validateId(id)) return { error: "Invalid ID" };
@@ -333,8 +333,8 @@ const courtStationSchema = z.object({
 export async function createCourtStation(data: unknown) {
   return safeAction(async () => {
     const { organizationId, role } = await getTenantContext();
-    if (role !== "admin") {
-      return { error: "Unauthorized" };
+    if (role !== "super_admin") {
+      return { error: "Only platform administrators can manage court stations" };
     }
 
     const validated = courtStationSchema.safeParse(data);
@@ -352,8 +352,8 @@ export async function createCourtStation(data: unknown) {
 export async function updateCourtStation(id: string, data: unknown) {
   return safeAction(async () => {
     const { organizationId, role } = await getTenantContext();
-    if (role !== "admin") {
-      return { error: "Unauthorized" };
+    if (role !== "super_admin") {
+      return { error: "Only platform administrators can manage court stations" };
     }
 
     const validated = courtStationSchema.safeParse(data);
@@ -410,8 +410,8 @@ export async function dismissBringUp(id: string) {
 export async function toggleCourtStationActive(id: string) {
   return safeAction(async () => {
     const { organizationId, role } = await getTenantContext();
-    if (role !== "admin") {
-      return { error: "Unauthorized" };
+    if (role !== "super_admin") {
+      return { error: "Only platform administrators can manage court stations" };
     }
 
     if (!validateId(id)) return { error: "Invalid ID" };

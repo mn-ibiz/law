@@ -3,6 +3,7 @@ import { organizations, platformAuditLog } from "@/lib/db/schema/organizations";
 import { firmSettings } from "@/lib/db/schema/settings";
 import { and, eq, lt, isNotNull } from "drizzle-orm";
 import type { CronJobResult } from "../runner";
+import { r2DeleteByPrefix } from "@/lib/storage/r2";
 
 const DEFAULT_RETENTION_DAYS = 90;
 
@@ -67,16 +68,21 @@ export default async function dataPurge(): Promise<CronJobResult> {
           }),
         });
 
+        // Delete R2 storage files for this org BEFORE cascading DB delete
+        try {
+          const filesDeleted = await r2DeleteByPrefix(`${org.id}/`);
+          if (filesDeleted > 0) {
+            console.log(`[cron:data-purge] Deleted ${filesDeleted} R2 files for org ${org.id}`);
+          }
+        } catch (storageErr) {
+          // Log but don't block DB purge — orphaned files are less critical than data retention compliance
+          console.error(`[cron:data-purge] Failed to delete R2 files for org ${org.id}:`, storageErr);
+        }
+
         // Cascading delete — removes all dependent records
         await db
           .delete(organizations)
           .where(eq(organizations.id, org.id));
-
-        // NOTE: R2/local storage files under prefix `{orgId}/` are NOT deleted here.
-        // File cleanup requires enumerating storage by key prefix, which is a separate
-        // concern. The orgId is preserved in the platformAuditLog entry above for
-        // any future cleanup job to reference.
-        console.warn(`[cron:data-purge] Storage files for org ${org.id} may still exist in R2/local storage.`);
 
         processed++;
         console.log(`[cron:data-purge] Purged org ${org.id} (${org.name})`);

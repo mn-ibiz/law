@@ -7,7 +7,7 @@ import { organizations, organizationMembers } from "@/lib/db/schema/organization
 import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import { loginSchema, registerSchema, forgotPasswordSchema } from "@/lib/validators/auth";
+import { loginSchema, registerSchema, forgotPasswordSchema, resetPasswordSchema } from "@/lib/validators/auth";
 import { AuthError } from "next-auth";
 import { headers } from "next/headers";
 import { rateLimit } from "@/lib/utils/rate-limit";
@@ -274,6 +274,71 @@ export async function forgotPasswordAction(formData: { email: string }) {
     return {
       success: true,
       message: "If an account exists with this email, you will receive a password reset link.",
+    };
+  });
+}
+
+export async function resetPasswordAction(formData: {
+  token: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}) {
+  return safeAction(async () => {
+    const validated = resetPasswordSchema.safeParse(formData);
+    if (!validated.success) {
+      return { error: validated.error.issues[0].message };
+    }
+
+    const { token, email, password } = validated.data;
+
+    // Hash the provided token to compare against stored hash
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(token)
+      .digest("hex");
+
+    // Look up user by email + hashed token
+    const [user] = await db
+      .select({ id: users.id, resetTokenExpiry: users.resetTokenExpiry })
+      .from(users)
+      .where(
+        sql`${users.email} = ${email} AND ${users.resetToken} = ${hashedToken} AND ${users.deletedAt} IS NULL`
+      )
+      .limit(1);
+
+    if (!user) {
+      return { error: "Invalid or expired reset link. Please request a new one." };
+    }
+
+    // Check expiry
+    if (!user.resetTokenExpiry || new Date(user.resetTokenExpiry) < new Date()) {
+      // Clear expired token
+      await db
+        .update(users)
+        .set({ resetToken: null, resetTokenExpiry: null, updatedAt: new Date() })
+        .where(eq(users.id, user.id));
+      return { error: "Reset link has expired. Please request a new one." };
+    }
+
+    // Hash new password and update
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await db
+      .update(users)
+      .set({
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpiry: null,
+        failedAttempts: 0,
+        lockedUntil: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, user.id));
+
+    return {
+      success: true,
+      message: "Password reset successfully. You can now sign in with your new password.",
     };
   });
 }

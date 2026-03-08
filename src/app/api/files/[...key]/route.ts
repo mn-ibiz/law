@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/auth";
 import { getFileUrl } from "@/lib/storage";
+import { rateLimit } from "@/lib/utils/rate-limit";
 
 // Valid storage key pattern: {uuid}/{category}/{uuid}.{ext}
 const VALID_KEY_PATTERN = /^[0-9a-f-]+\/(documents|avatars|logos)\/[0-9a-f-]+\.[a-z0-9]+$/;
@@ -12,6 +13,12 @@ export async function GET(
   const session = await auth();
   if (!session?.user?.id || !session.user.organizationId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Rate limit: 300 requests per hour per user
+  const rl = await rateLimit(`files:${session.user.id}`, { maxRequests: 300, windowMs: 60 * 60 * 1000 });
+  if (!rl.success) {
+    return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
   }
 
   const { key: keySegments } = await params;

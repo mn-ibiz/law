@@ -1,11 +1,17 @@
 import { auth } from "@/lib/auth/auth";
 import { NextResponse } from "next/server";
 import { extractTenantSlug } from "@/lib/utils/extract-tenant-slug";
+import crypto from "crypto";
 
-const publicRoutes = ["/", "/login", "/register", "/forgot-password", "/intake", "/forbidden", "/suspended", "/intake/success", "/signup", "/pricing", "/features"];
+const publicRoutes = ["/", "/login", "/register", "/forgot-password", "/reset-password", "/intake", "/forbidden", "/suspended", "/intake/success", "/signup", "/pricing", "/features"];
 const publicPrefixes = ["/api/auth", "/api/calendar/ical", "/api/check-slug", "/api/cron", "/api/webhooks", "/invite"];
 const adminOnlyPaths = ["/settings"];
 const superAdminPaths = ["/admin"]; // Super admin panel for managing all tenants
+
+function withRequestId(response: NextResponse): NextResponse {
+  response.headers.set("X-Request-Id", crypto.randomUUID());
+  return response;
+}
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
@@ -16,8 +22,8 @@ export default auth((req) => {
   const tenantSlug = extractTenantSlug(host);
 
   // Allow public routes
-  if (publicRoutes.includes(pathname)) return NextResponse.next();
-  if (publicPrefixes.some((prefix) => pathname.startsWith(prefix))) return NextResponse.next();
+  if (publicRoutes.includes(pathname)) return withRequestId(NextResponse.next());
+  if (publicPrefixes.some((prefix) => pathname.startsWith(prefix))) return withRequestId(NextResponse.next());
 
   // Redirect unauthenticated users to login
   if (!session?.user?.id) {
@@ -77,7 +83,7 @@ export default auth((req) => {
     }
   }
 
-  return NextResponse.next();
+  return withRequestId(NextResponse.next());
 });
 
 export const config = {

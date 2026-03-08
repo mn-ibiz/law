@@ -33,7 +33,7 @@ const MAGIC_BYTES: Record<string, number[][]> = {
   "application/pdf": [[0x25, 0x50, 0x44, 0x46]], // %PDF
   "image/jpeg": [[0xFF, 0xD8, 0xFF]],
   "image/png": [[0x89, 0x50, 0x4E, 0x47]],
-  "image/webp": [[0x52, 0x49, 0x46, 0x46]], // RIFF
+  "image/webp": [[0x52, 0x49, 0x46, 0x46, -1, -1, -1, -1, 0x57, 0x45, 0x42, 0x50]], // RIFF????WEBP
   "application/msword": [[0xD0, 0xCF, 0x11, 0xE0]], // OLE2
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [[0x50, 0x4B, 0x03, 0x04]], // PK (ZIP)
 };
@@ -42,7 +42,7 @@ function verifyMagicBytes(buffer: Buffer, mimeType: string): boolean {
   const signatures = MAGIC_BYTES[mimeType];
   if (!signatures) return true; // No signature to check (e.g., text/plain)
   return signatures.some((sig) =>
-    sig.every((byte, i) => buffer.length > i && buffer[i] === byte)
+    sig.every((byte, i) => buffer.length > i && (byte === -1 || buffer[i] === byte))
   );
 }
 

@@ -149,12 +149,20 @@ export default async function SubscriptionPage() {
       </div>
 
       {/* Actions */}
-      {stripeReady && (
+      {stripeReady ? (
         <SubscriptionActions
           hasSubscription={!!sub}
           currentPlanSlug={sub?.planSlug ?? null}
           availablePlans={availablePlans}
         />
+      ) : (
+        <div className="rounded-xl border border-dashed bg-muted/50 p-6 text-center">
+          <CreditCard className="mx-auto h-8 w-8 text-muted-foreground" />
+          <p className="mt-2 font-medium text-muted-foreground">Payment processing not configured</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Contact your platform administrator to enable billing.
+          </p>
+        </div>
       )}
     </div>
   );

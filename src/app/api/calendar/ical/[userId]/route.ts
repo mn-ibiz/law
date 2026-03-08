@@ -7,6 +7,7 @@ import { verifyIcalToken } from "@/lib/utils/ical";
 import { createEvents, type EventAttributes } from "ics";
 import { auth } from "@/lib/auth/auth";
 import { siteConfig } from "@/lib/config/site";
+import { rateLimit } from "@/lib/utils/rate-limit";
 
 export async function GET(
   request: NextRequest,
@@ -23,6 +24,12 @@ export async function GET(
 
   if (!token || !verifyIcalToken(userId, session.user.organizationId, token)) {
     return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+  }
+
+  // Rate limit: 60 requests per hour per user
+  const rl = await rateLimit(`ical:${userId}`, { maxRequests: 60, windowMs: 60 * 60 * 1000 });
+  if (!rl.success) {
+    return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
   }
 
   // Fetch events from 90 days ago to 1 year forward
