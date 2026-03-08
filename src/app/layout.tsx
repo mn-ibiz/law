@@ -15,12 +15,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+import { siteConfig } from "@/lib/config/site";
+
 export const metadata: Metadata = {
   title: {
-    default: "Law Firm Registry",
-    template: "%s | Law Firm Registry",
+    default: siteConfig.name,
+    template: `%s | ${siteConfig.name}`,
   },
-  description: "Comprehensive law firm management system for Kenya",
+  description: siteConfig.description,
 };
 
 export default async function RootLayout({

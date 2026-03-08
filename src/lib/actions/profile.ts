@@ -47,6 +47,9 @@ export async function changePassword(data: unknown) {
       return { error: "User not found" };
     }
 
+    if (!user.password) {
+      return { error: "Password not set. Please use the invite link to set up your account." };
+    }
     const isValid = await bcrypt.compare(currentPassword, user.password);
     if (!isValid) {
       return { error: "Current password is incorrect" };

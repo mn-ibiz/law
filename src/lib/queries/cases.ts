@@ -245,9 +245,9 @@ export async function getCasesByPipelineStage(organizationId: string, practiceAr
   }));
 }
 
-export async function generateCaseNumber(organizationId: string): Promise<string> {
+export async function generateCaseNumber(organizationId: string, casePrefix = "CASE"): Promise<string> {
   const year = new Date().getFullYear();
-  const prefix = `CASE-${year}-`;
+  const prefix = `${casePrefix}-${year}-`;
   const [result] = await db
     .select({ maxNum: sql<string>`MAX(${cases.caseNumber})` })
     .from(cases)

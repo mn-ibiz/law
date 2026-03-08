@@ -99,7 +99,7 @@ export async function assignUserToBranch(branchId: string, targetUserId: string,
 
     const result = await db
       .insert(branchUsers)
-      .values({ branchId: parsed.data.branchId, userId: parsed.data.userId, isPrimary: parsed.data.isPrimary })
+      .values({ organizationId, branchId: parsed.data.branchId, userId: parsed.data.userId, isPrimary: parsed.data.isPrimary })
       .returning();
 
     revalidatePath("/settings/branches");

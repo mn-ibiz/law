@@ -50,6 +50,48 @@
       "when": 1772918336205,
       "tag": "0006_dapper_zombie",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1772919571057,
+      "tag": "0007_unknown_katie_power",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1772921202541,
+      "tag": "0008_freezing_omega_red",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1772922072244,
+      "tag": "0009_cultured_doctor_spectrum",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1772922622471,
+      "tag": "0010_regular_blob",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1772923189981,
+      "tag": "0011_flawless_praxagora",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1772926254663,
+      "tag": "0012_quick_drax",
+      "breakpoints": true
     }
   ]
 }

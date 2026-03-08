@@ -20,6 +20,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { CASE_TYPES } from "@/lib/constants/case-types";
 import { formatEnum } from "@/lib/utils/format-enum";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 
 interface CaseFormProps {
   defaultValues?: Partial<CreateCaseInput>;
@@ -28,6 +29,7 @@ interface CaseFormProps {
 }
 
 export function CaseForm({ defaultValues, caseId, clients }: CaseFormProps) {
+  const { currency } = useOrgConfig();
   const router = useRouter();
   const isEditing = !!caseId;
 
@@ -176,13 +178,13 @@ export function CaseForm({ defaultValues, caseId, clients }: CaseFormProps) {
 
             {billingType === "hourly" && (
               <div className="space-y-2">
-                <Label htmlFor="hourlyRate">Hourly Rate (KES)</Label>
+                <Label htmlFor="hourlyRate">{`Hourly Rate (${currency})`}</Label>
                 <Input id="hourlyRate" type="number" step="100" {...form.register("hourlyRate", { valueAsNumber: true })} />
               </div>
             )}
             {billingType === "flat_fee" && (
               <div className="space-y-2">
-                <Label htmlFor="flatFeeAmount">Flat Fee (KES)</Label>
+                <Label htmlFor="flatFeeAmount">{`Flat Fee (${currency})`}</Label>
                 <Input id="flatFeeAmount" type="number" step="100" {...form.register("flatFeeAmount", { valueAsNumber: true })} />
               </div>
             )}
@@ -229,7 +231,7 @@ export function CaseForm({ defaultValues, caseId, clients }: CaseFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="estimatedValue">Estimated Value (KES)</Label>
+              <Label htmlFor="estimatedValue">{`Estimated Value (${currency})`}</Label>
               <Input id="estimatedValue" type="number" step="1000" {...form.register("estimatedValue", { valueAsNumber: true })} />
             </div>
           </div>

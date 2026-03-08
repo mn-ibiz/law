@@ -2,7 +2,8 @@ import { requireOrg } from "@/lib/auth/get-session";
 import { getInvoices } from "@/lib/queries/billing";
 import { Card, CardContent } from "@/components/ui/card";
 import { InvoiceDataTable } from "@/components/billing/invoice-data-table";
-import { formatKES } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils/format";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Plus, FileText, DollarSign, Clock, AlertTriangle } from "lucide-react";
@@ -15,7 +16,10 @@ export const metadata: Metadata = {
 
 export default async function BillingPage() {
   const { organizationId, session } = await requireOrg();
-  const invoiceList = await getInvoices(organizationId);
+  const [invoiceList, config] = await Promise.all([
+    getInvoices(organizationId),
+    getOrgConfig(organizationId),
+  ]);
   const userRole = session.user.role;
 
   const totalOutstanding = invoiceList
@@ -70,7 +74,7 @@ export default async function BillingPage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Outstanding</p>
-              <p className="text-2xl font-bold">{formatKES(totalOutstanding)}</p>
+              <p className="text-2xl font-bold">{formatCurrency(totalOutstanding, config.currency, config.locale)}</p>
             </div>
           </CardContent>
         </Card>
@@ -81,7 +85,7 @@ export default async function BillingPage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Total Paid</p>
-              <p className="text-2xl font-bold">{formatKES(totalPaid)}</p>
+              <p className="text-2xl font-bold">{formatCurrency(totalPaid, config.currency, config.locale)}</p>
             </div>
           </CardContent>
         </Card>

@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 
 interface ClientFormProps {
   defaultValues?: Partial<CreateClientInput>;
@@ -27,6 +28,8 @@ interface ClientFormProps {
 
 export function ClientForm({ defaultValues, clientId }: ClientFormProps) {
   const router = useRouter();
+  const { country } = useOrgConfig();
+  const isKenya = country === "KE";
   const isEditing = !!clientId;
 
   const form = useForm<CreateClientInput>({
@@ -167,14 +170,16 @@ export function ClientForm({ defaultValues, clientId }: ClientFormProps) {
               <Input id="passportNumber" {...form.register("passportNumber")} />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="kraPin">KRA PIN</Label>
-              <Input id="kraPin" {...form.register("kraPin")} />
-            </div>
+            {isKenya && (
+              <div className="space-y-2">
+                <Label htmlFor="kraPin">KRA PIN</Label>
+                <Input id="kraPin" {...form.register("kraPin")} />
+              </div>
+            )}
 
             <div className="space-y-2">
-              <Label htmlFor="county">County</Label>
-              <Input id="county" placeholder="e.g. Nairobi" {...form.register("county")} />
+              <Label htmlFor="county">{isKenya ? "County" : "State/Province"}</Label>
+              <Input id="county" placeholder={isKenya ? "e.g. Nairobi" : "e.g. Lagos"} {...form.register("county")} />
             </div>
 
             <div className="space-y-2">

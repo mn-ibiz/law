@@ -10,7 +10,7 @@ import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -31,7 +31,10 @@ export default async function MessageDetailPage({
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!uuidRegex.test(id)) notFound();
 
-  const message = await getMessageById(organizationId, id);
+  const [message, config] = await Promise.all([
+    getMessageById(organizationId, id),
+    getOrgConfig(organizationId),
+  ]);
   if (!message) notFound();
 
   // Only the sender or recipient can view the message
@@ -88,7 +91,7 @@ export default async function MessageDetailPage({
             </span>
             <span className="flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5" />
-              {new Date(message.createdAt).toLocaleString(APP_LOCALE)}
+              {new Date(message.createdAt).toLocaleString(config.locale)}
               {" "}
               ({formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })})
             </span>

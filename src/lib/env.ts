@@ -27,6 +27,21 @@ const envSchema = z.object({
   AT_API_KEY: z.string().optional(),
   AT_USERNAME: z.string().optional(),
   AT_SENDER_ID: z.string().optional(),
+  // Cloud Storage (Cloudflare R2 / S3-compatible)
+  R2_ACCOUNT_ID: z.string().optional(),
+  R2_ACCESS_KEY_ID: z.string().optional(),
+  R2_SECRET_ACCESS_KEY: z.string().optional(),
+  R2_BUCKET_NAME: z.string().optional(),
+  R2_PUBLIC_URL: z.string().url().optional(),
+  // Stripe
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().optional(),
+  // Upstash Redis (rate limiting)
+  UPSTASH_REDIS_REST_URL: z.string().url().optional(),
+  UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
+  // Cron jobs
+  CRON_SECRET: z.string().min(16).optional(),
 });
 
 function validateEnv() {

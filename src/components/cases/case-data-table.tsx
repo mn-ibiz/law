@@ -6,7 +6,8 @@ import {
   type DataTableFilterConfig,
   type ExportColumn,
 } from "@/components/shared/enhanced-data-table";
-import { caseColumns, type CaseRow } from "./case-columns";
+import { createCaseColumns, type CaseRow } from "./case-columns";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 import { Briefcase } from "lucide-react";
 
 const filters: DataTableFilterConfig[] = [
@@ -68,11 +69,13 @@ interface CaseDataTableProps {
 
 export function CaseDataTable({ data }: CaseDataTableProps) {
   const router = useRouter();
+  const { locale } = useOrgConfig();
+  const columns = createCaseColumns(locale);
 
   return (
     <EnhancedDataTable
       data={data}
-      columns={caseColumns}
+      columns={columns}
       searchPlaceholder="Search by case number, title, client..."
       filters={filters}
       exportFilename="cases.csv"

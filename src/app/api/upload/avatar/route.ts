@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/auth";
-import { randomUUID } from "crypto";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
+import { generateStorageKey, uploadFile } from "@/lib/storage";
 
 const ALLOWED_IMAGE_TYPES = new Set([
   "image/jpeg",
@@ -35,9 +33,11 @@ const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2MB
 
 export async function POST(request: NextRequest) {
   const session = await auth();
-  if (!session?.user?.id) {
+  if (!session?.user?.id || !session.user.organizationId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const organizationId = session.user.organizationId;
 
   const formData = await request.formData();
   const file = formData.get("file");
@@ -84,16 +84,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const uuid = randomUUID();
-  const safeFilename = `${uuid}${ext}`;
+  // Upload to tenant-isolated storage
+  const key = generateStorageKey(organizationId, "avatars", ext);
+  await uploadFile(key, buffer, file.type);
 
-  const avatarsDir = join(process.cwd(), "public", "uploads", "avatars");
-  await mkdir(avatarsDir, { recursive: true });
-
-  await writeFile(join(avatarsDir, safeFilename), buffer);
-
-  const origin = request.headers.get("origin") ?? request.nextUrl.origin;
-  const fileUrl = `${origin}/uploads/avatars/${safeFilename}`;
-
-  return NextResponse.json({ fileUrl });
+  return NextResponse.json({ fileUrl: key });
 }

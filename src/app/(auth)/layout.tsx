@@ -1,6 +1,7 @@
 import { Scale } from "lucide-react";
 import { getFirmBranding } from "@/lib/queries/settings";
 import { requireOrg } from "@/lib/auth/get-session";
+import { siteConfig } from "@/lib/config/site";
 import Image from "next/image";
 
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
@@ -33,10 +34,10 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
             </div>
           )}
           <h1 className="text-xl font-bold tracking-tight">
-            {branding.firmName ?? "Law Firm Registry"}
+            {branding.firmName ?? siteConfig.name}
           </h1>
           <p className="mt-1 text-xs text-muted-foreground">
-            Legal Practice Management System
+            {siteConfig.tagline}
           </p>
         </div>
         {children}

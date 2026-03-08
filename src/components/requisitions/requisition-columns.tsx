@@ -3,7 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { SortableHeader } from "@/components/shared/enhanced-data-table";
 import { RequisitionStatusBadge } from "@/components/shared/status-badges";
-import { formatKES } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils/format";
 
 export interface RequisitionRow {
   id: string;
@@ -18,7 +18,8 @@ export interface RequisitionRow {
   createdAt: Date;
 }
 
-export const requisitionColumns: ColumnDef<RequisitionRow>[] = [
+export function getRequisitionColumns(currency: string, locale: string): ColumnDef<RequisitionRow>[] {
+  return [
   {
     accessorKey: "requisitionNumber",
     header: ({ column }) => <SortableHeader column={column}>Number</SortableHeader>,
@@ -55,7 +56,7 @@ export const requisitionColumns: ColumnDef<RequisitionRow>[] = [
     accessorKey: "amount",
     header: ({ column }) => <SortableHeader column={column}>Amount</SortableHeader>,
     cell: ({ row }) => (
-      <span className="font-medium">{formatKES(Number(row.getValue("amount")))}</span>
+      <span className="font-medium">{formatCurrency(Number(row.getValue("amount")), currency, locale)}</span>
     ),
   },
   {
@@ -67,3 +68,4 @@ export const requisitionColumns: ColumnDef<RequisitionRow>[] = [
     },
   },
 ];
+}

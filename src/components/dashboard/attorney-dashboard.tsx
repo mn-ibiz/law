@@ -17,6 +17,7 @@ import {
   getAttorneyTasks,
 } from "@/lib/queries/dashboard-attorney";
 import { requireOrg } from "@/lib/auth/get-session";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 
 async function AttorneyStats({ userId }: { userId: string }) {
   const { organizationId } = await requireOrg();
@@ -67,11 +68,12 @@ async function AttorneyTimeTracker({ userId }: { userId: string }) {
 
 async function AttorneyWidgets({ userId }: { userId: string }) {
   const { organizationId } = await requireOrg();
-  const [myCases, deadlines, timeEntries, tasks] = await Promise.all([
+  const [myCases, deadlines, timeEntries, tasks, config] = await Promise.all([
     getAttorneyCases(organizationId, userId),
     getAttorneyDeadlines(organizationId, userId),
     getAttorneyRecentTimeEntries(organizationId, userId),
     getAttorneyTasks(organizationId, userId),
+    getOrgConfig(organizationId),
   ]);
 
   return (
@@ -81,7 +83,7 @@ async function AttorneyWidgets({ userId }: { userId: string }) {
         <AttorneyDeadlines data={deadlines} />
         <AttorneyTasks data={tasks} />
       </div>
-      <AttorneyTimeEntries data={timeEntries} />
+      <AttorneyTimeEntries data={timeEntries} locale={config.locale} />
     </>
   );
 }

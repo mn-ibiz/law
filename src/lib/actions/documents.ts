@@ -11,6 +11,8 @@ import { revalidatePath } from "next/cache";
 import { safeAction } from "@/lib/utils/safe-action";
 import { dispatchWorkflowEvent } from "@/lib/workflows/engine";
 import { createAuditLog } from "@/lib/utils/audit";
+import { deleteFile, isStorageKey } from "@/lib/storage";
+import { organizations } from "@/lib/db/schema/organizations";
 
 export async function createDocumentRecord(data: unknown) {
   return safeAction(async () => {
@@ -130,20 +132,36 @@ export async function deleteDocument(id: string) {
 
     const { organizationId, userId, role } = await getTenantContext();
 
+    // Fetch file info (also used for ownership check and cleanup)
+    const [docRecord] = await db
+      .select({ uploadedBy: documents.uploadedBy, fileUrl: documents.fileUrl, fileSize: documents.fileSize })
+      .from(documents)
+      .where(and(eq(documents.id, idParsed.data), eq(documents.organizationId, organizationId)))
+      .limit(1);
+
+    if (!docRecord) return { error: "Document not found" };
+
     // Only allow deletion of own uploads (unless admin)
-    if (role !== "admin") {
-      const [doc] = await db
-        .select({ uploadedBy: documents.uploadedBy })
-        .from(documents)
-        .where(and(eq(documents.id, idParsed.data), eq(documents.organizationId, organizationId)))
-        .limit(1);
-      if (!doc) return { error: "Document not found" };
-      if (doc.uploadedBy !== userId) {
-        return { error: "You can only delete your own documents" };
-      }
+    if (role !== "admin" && docRecord.uploadedBy !== userId) {
+      return { error: "You can only delete your own documents" };
     }
 
     await db.delete(documents).where(and(eq(documents.id, idParsed.data), eq(documents.organizationId, organizationId)));
+
+    // Clean up cloud storage and decrement usage
+    if (docRecord.fileUrl && isStorageKey(docRecord.fileUrl)) {
+      deleteFile(docRecord.fileUrl).catch(console.error);
+      if (docRecord.fileSize && docRecord.fileSize > 0) {
+        await db
+          .update(organizations)
+          .set({
+            storageUsedBytes: sql`GREATEST(${organizations.storageUsedBytes} - ${docRecord.fileSize}, 0)`,
+            updatedAt: new Date(),
+          })
+          .where(eq(organizations.id, organizationId));
+      }
+    }
+
     revalidatePath("/documents");
     return { success: true };
   });

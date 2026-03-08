@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createInvoiceSchema, type CreateInvoiceInput } from "@/lib/validators/billing";
 import { createInvoice, updateInvoice } from "@/lib/actions/billing";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,6 +35,7 @@ interface InvoiceFormProps {
 }
 
 export function InvoiceForm({ cases, clients, invoiceId, defaultValues }: InvoiceFormProps) {
+  const { currency, locale } = useOrgConfig();
   const router = useRouter();
   const isEditing = !!invoiceId;
 
@@ -218,7 +219,7 @@ export function InvoiceForm({ cases, clients, invoiceId, defaultValues }: Invoic
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor={`lineItems.${index}.unitPrice`}>Unit Price (KES)</Label>
+                    <Label htmlFor={`lineItems.${index}.unitPrice`}>{`Unit Price (${currency})`}</Label>
                     <Input
                       id={`lineItems.${index}.unitPrice`}
                       type="number"
@@ -232,10 +233,10 @@ export function InvoiceForm({ cases, clients, invoiceId, defaultValues }: Invoic
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Amount (KES)</Label>
+                    <Label>{`Amount (${currency})`}</Label>
                     <Input
                       readOnly
-                      value={(watchLineItems[index]?.amount || 0).toLocaleString(APP_LOCALE, {
+                      value={(watchLineItems[index]?.amount || 0).toLocaleString(locale, {
                         minimumFractionDigits: 2,
                       })}
                       className="bg-muted"
@@ -250,15 +251,15 @@ export function InvoiceForm({ cases, clients, invoiceId, defaultValues }: Invoic
           <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
             <div className="flex justify-between text-sm">
               <span>Subtotal</span>
-              <span>KES {subtotal.toLocaleString(APP_LOCALE, { minimumFractionDigits: 2 })}</span>
+              <span>{currency} {subtotal.toLocaleString(locale, { minimumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span>VAT (16%)</span>
-              <span>KES {vatAmount.toLocaleString(APP_LOCALE, { minimumFractionDigits: 2 })}</span>
+              <span>{currency} {vatAmount.toLocaleString(locale, { minimumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between font-semibold border-t pt-2">
               <span>Total</span>
-              <span>KES {total.toLocaleString(APP_LOCALE, { minimumFractionDigits: 2 })}</span>
+              <span>{currency} {total.toLocaleString(locale, { minimumFractionDigits: 2 })}</span>
             </div>
           </div>
 

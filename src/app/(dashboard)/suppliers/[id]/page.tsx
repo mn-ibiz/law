@@ -4,8 +4,8 @@ import { getSupplierById, getSupplierInvoices } from "@/lib/queries/suppliers";
 import { notFound } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatKES } from "@/lib/utils/format";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { formatCurrency } from "@/lib/utils/format";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import {
   Table,
   TableBody,
@@ -39,9 +39,10 @@ export default async function SupplierDetailPage({
 }) {
   const { organizationId } = await requireOrg();
   const { id } = await params;
-  const [supplier, invoices] = await Promise.all([
+  const [supplier, invoices, config] = await Promise.all([
     getSupplierById(organizationId, id),
     getSupplierInvoices(organizationId, id),
+    getOrgConfig(organizationId),
   ]);
 
   if (!supplier) notFound();
@@ -167,10 +168,10 @@ export default async function SupplierDetailPage({
                   <TableRow key={inv.id}>
                     <TableCell className="font-mono text-xs">{inv.invoiceNumber}</TableCell>
                     <TableCell className="max-w-[200px] truncate">{inv.description ?? "—"}</TableCell>
-                    <TableCell>{new Date(inv.invoiceDate).toLocaleDateString(APP_LOCALE)}</TableCell>
-                    <TableCell>{formatKES(Number(inv.amount))}</TableCell>
-                    <TableCell>{formatKES(Number(inv.vatAmount))}</TableCell>
-                    <TableCell className="font-medium">{formatKES(Number(inv.totalAmount))}</TableCell>
+                    <TableCell>{new Date(inv.invoiceDate).toLocaleDateString(config.locale)}</TableCell>
+                    <TableCell>{formatCurrency(Number(inv.amount), config.currency, config.locale)}</TableCell>
+                    <TableCell>{formatCurrency(Number(inv.vatAmount), config.currency, config.locale)}</TableCell>
+                    <TableCell className="font-medium">{formatCurrency(Number(inv.totalAmount), config.currency, config.locale)}</TableCell>
                     <TableCell>
                       <Badge variant={inv.status === "paid" ? "secondary" : inv.status === "pending" ? "outline" : "default"}>
                         {inv.status}

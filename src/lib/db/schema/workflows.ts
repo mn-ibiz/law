@@ -25,29 +25,47 @@ export const workflowTemplates = pgTable(
   ]
 );
 
-export const workflowRules = pgTable("workflow_rules", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  templateId: uuid("template_id")
-    .notNull()
-    .references(() => workflowTemplates.id, { onDelete: "cascade" }),
-  actionType: workflowActionType("action_type").notNull(),
-  actionConfig: text("action_config"),
-  conditionConfig: text("condition_config"),
-  order: integer("order").notNull().default(1),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const workflowRules = pgTable(
+  "workflow_rules",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    templateId: uuid("template_id")
+      .notNull()
+      .references(() => workflowTemplates.id, { onDelete: "cascade" }),
+    actionType: workflowActionType("action_type").notNull(),
+    actionConfig: text("action_config"),
+    conditionConfig: text("condition_config"),
+    order: integer("order").notNull().default(1),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("workflow_rules_organization_id_idx").on(table.organizationId),
+  ]
+);
 
-export const workflowExecutionLog = pgTable("workflow_execution_log", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  templateId: uuid("template_id")
-    .notNull()
-    .references(() => workflowTemplates.id, { onDelete: "cascade" }),
-  ruleId: uuid("rule_id").references(() => workflowRules.id, { onDelete: "set null" }),
-  triggeredBy: text("triggered_by"),
-  status: text("status").notNull().default("success"),
-  details: text("details"),
-  executedAt: timestamp("executed_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const workflowExecutionLog = pgTable(
+  "workflow_execution_log",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    templateId: uuid("template_id")
+      .notNull()
+      .references(() => workflowTemplates.id, { onDelete: "cascade" }),
+    ruleId: uuid("rule_id").references(() => workflowRules.id, { onDelete: "set null" }),
+    triggeredBy: text("triggered_by"),
+    status: text("status").notNull().default("success"),
+    details: text("details"),
+    executedAt: timestamp("executed_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("workflow_execution_log_organization_id_idx").on(table.organizationId),
+  ]
+);
 
 export const workflowTemplatesRelations = relations(workflowTemplates, ({ one, many }) => ({
   createdByUser: one(users, {
@@ -59,6 +77,10 @@ export const workflowTemplatesRelations = relations(workflowTemplates, ({ one, m
 }));
 
 export const workflowRulesRelations = relations(workflowRules, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [workflowRules.organizationId],
+    references: [organizations.id],
+  }),
   template: one(workflowTemplates, {
     fields: [workflowRules.templateId],
     references: [workflowTemplates.id],
@@ -66,6 +88,10 @@ export const workflowRulesRelations = relations(workflowRules, ({ one }) => ({
 }));
 
 export const workflowExecutionLogRelations = relations(workflowExecutionLog, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [workflowExecutionLog.organizationId],
+    references: [organizations.id],
+  }),
   template: one(workflowTemplates, {
     fields: [workflowExecutionLog.templateId],
     references: [workflowTemplates.id],

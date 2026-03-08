@@ -2,9 +2,9 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { requireOrg } from "@/lib/auth/get-session";
 import { getTrustAccountById, getTrustTransactions } from "@/lib/queries/trust";
-import { formatKES } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils/format";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import { formatEnum } from "@/lib/utils/format-enum";
-import { APP_LOCALE } from "@/lib/constants/locale";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -57,7 +57,10 @@ export default async function TrustAccountDetailPage({ params }: PageProps) {
 
   if (!UUID_RE.test(id)) notFound();
 
-  const account = await getTrustAccountById(organizationId, id);
+  const [account, config] = await Promise.all([
+    getTrustAccountById(organizationId, id),
+    getOrgConfig(organizationId),
+  ]);
   if (!account) notFound();
 
   const transactions = await getTrustTransactions(organizationId, id);
@@ -142,7 +145,7 @@ export default async function TrustAccountDetailPage({ params }: PageProps) {
           <CardContent className="pt-6">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Balance</p>
             <p className={cn("mt-1 text-2xl font-bold", balance >= 0 ? "text-emerald-700" : "text-destructive")}>
-              {formatKES(balance)}
+              {formatCurrency(balance, config.currency, config.locale)}
             </p>
           </CardContent>
         </Card>
@@ -212,7 +215,7 @@ export default async function TrustAccountDetailPage({ params }: PageProps) {
                     return (
                       <TableRow key={t.id} className="transition-colors hover:bg-muted/50">
                         <TableCell className="whitespace-nowrap">
-                          {new Date(t.createdAt).toLocaleDateString(APP_LOCALE, {
+                          {new Date(t.createdAt).toLocaleDateString(config.locale, {
                             year: "numeric",
                             month: "short",
                             day: "numeric",
@@ -223,10 +226,10 @@ export default async function TrustAccountDetailPage({ params }: PageProps) {
                         </TableCell>
                         <TableCell className="max-w-[200px] truncate">{t.description}</TableCell>
                         <TableCell className={cn("text-right font-medium whitespace-nowrap", isCredit ? "text-emerald-700" : "text-destructive")}>
-                          {isCredit ? "+" : "-"}{formatKES(amount)}
+                          {isCredit ? "+" : "-"}{formatCurrency(amount, config.currency, config.locale)}
                         </TableCell>
                         <TableCell className="text-right font-medium whitespace-nowrap">
-                          {formatKES(t.runningBalance)}
+                          {formatCurrency(t.runningBalance, config.currency, config.locale)}
                         </TableCell>
                         <TableCell className="font-mono text-xs">{t.reference ?? "\u2014"}</TableCell>
                         <TableCell>{t.performedByName}</TableCell>

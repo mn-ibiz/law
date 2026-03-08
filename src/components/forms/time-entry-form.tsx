@@ -22,12 +22,14 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 
 interface TimeEntryFormProps {
   cases: { id: string; caseNumber: string; title: string }[];
 }
 
 export function TimeEntryForm({ cases }: TimeEntryFormProps) {
+  const { currency } = useOrgConfig();
   const router = useRouter();
 
   const form = useForm<CreateTimeEntryInput>({
@@ -115,7 +117,7 @@ export function TimeEntryForm({ cases }: TimeEntryFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="hourlyRate">Hourly Rate (KES)</Label>
+              <Label htmlFor="hourlyRate">{`Hourly Rate (${currency})`}</Label>
               <Input
                 id="hourlyRate"
                 type="number"

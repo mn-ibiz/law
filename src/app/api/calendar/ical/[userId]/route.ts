@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { calendarEvents, deadlines } from "@/lib/db/schema/calendar";
+import { organizations } from "@/lib/db/schema/organizations";
 import { sql, eq, and } from "drizzle-orm";
 import { verifyIcalToken } from "@/lib/utils/ical";
 import { createEvents, type EventAttributes } from "ics";
 import { auth } from "@/lib/auth/auth";
+import { siteConfig } from "@/lib/config/site";
 
 export async function GET(
   request: NextRequest,
@@ -13,14 +15,14 @@ export async function GET(
   const { userId } = await params;
   const token = request.nextUrl.searchParams.get("token");
 
-  if (!token || !verifyIcalToken(userId, token)) {
-    return NextResponse.json({ error: "Invalid token" }, { status: 401 });
-  }
-
   // Verify the requesting user owns this calendar
   const session = await auth();
-  if (!session?.user?.id || session.user.id !== userId) {
+  if (!session?.user?.id || session.user.id !== userId || !session.user.organizationId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  if (!token || !verifyIcalToken(userId, session.user.organizationId, token)) {
+    return NextResponse.json({ error: "Invalid token" }, { status: 401 });
   }
 
   // Fetch events from 90 days ago to 1 year forward
@@ -30,34 +32,45 @@ export async function GET(
   const futureDate = new Date(now);
   futureDate.setFullYear(futureDate.getFullYear() + 1);
 
-  const userEvents = await db
-    .select({
-      id: calendarEvents.id,
-      title: calendarEvents.title,
-      description: calendarEvents.description,
-      startTime: calendarEvents.startTime,
-      endTime: calendarEvents.endTime,
-      location: calendarEvents.location,
-      type: calendarEvents.type,
-    })
-    .from(calendarEvents)
-    .where(
-      and(
-        eq(calendarEvents.createdBy, userId),
-        sql`${calendarEvents.startTime} >= ${pastDate.toISOString()}::timestamptz`,
-        sql`${calendarEvents.startTime} <= ${futureDate.toISOString()}::timestamptz`
-      )
-    );
+  const orgId = session.user.organizationId;
 
-  const userDeadlines = await db
-    .select({
-      id: deadlines.id,
-      title: deadlines.title,
-      description: deadlines.description,
-      dueDate: deadlines.dueDate,
-    })
-    .from(deadlines)
-    .where(eq(deadlines.assignedTo, userId));
+  // Fetch org name, events, and deadlines in parallel
+  const [orgResult, userEvents, userDeadlines] = await Promise.all([
+    db
+      .select({ name: organizations.name })
+      .from(organizations)
+      .where(eq(organizations.id, orgId))
+      .limit(1),
+    db
+      .select({
+        id: calendarEvents.id,
+        title: calendarEvents.title,
+        description: calendarEvents.description,
+        startTime: calendarEvents.startTime,
+        endTime: calendarEvents.endTime,
+        location: calendarEvents.location,
+        type: calendarEvents.type,
+      })
+      .from(calendarEvents)
+      .where(
+        and(
+          eq(calendarEvents.organizationId, orgId),
+          eq(calendarEvents.createdBy, userId),
+          sql`${calendarEvents.startTime} >= ${pastDate.toISOString()}::timestamptz`,
+          sql`${calendarEvents.startTime} <= ${futureDate.toISOString()}::timestamptz`
+        )
+      ),
+    db
+      .select({
+        id: deadlines.id,
+        title: deadlines.title,
+        description: deadlines.description,
+        dueDate: deadlines.dueDate,
+      })
+      .from(deadlines)
+      .where(and(eq(deadlines.organizationId, orgId), eq(deadlines.assignedTo, userId))),
+  ]);
+  const calName = orgResult[0]?.name ?? siteConfig.name;
 
   const icsEvents: EventAttributes[] = [];
 
@@ -72,7 +85,7 @@ export async function GET(
       start: [start.getFullYear(), start.getMonth() + 1, start.getDate(), start.getHours(), start.getMinutes()],
       end: [end.getFullYear(), end.getMonth() + 1, end.getDate(), end.getHours(), end.getMinutes()],
       status: "CONFIRMED",
-      calName: "Law Firm Registry",
+      calName,
     });
   }
 
@@ -85,7 +98,7 @@ export async function GET(
       start: [due.getFullYear(), due.getMonth() + 1, due.getDate()],
       duration: { hours: 0, minutes: 30 },
       status: "CONFIRMED",
-      calName: "Law Firm Registry",
+      calName,
       alarms: [{ action: "display", trigger: { hours: 24, before: true }, description: "Deadline tomorrow" }],
     });
   }
@@ -95,7 +108,7 @@ export async function GET(
     const emptyIcs = [
       "BEGIN:VCALENDAR",
       "VERSION:2.0",
-      "PRODID:-//Law Firm Registry//EN",
+      `PRODID:-//${calName}//EN`,
       "CALSCALE:GREGORIAN",
       "END:VCALENDAR",
     ].join("\r\n");

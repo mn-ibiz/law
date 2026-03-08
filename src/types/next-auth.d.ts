@@ -11,6 +11,12 @@ declare module "next-auth" {
       image?: string | null;
       organizationId: string;
       organizationSlug: string;
+      /** Set when a super_admin is impersonating an org */
+      impersonating?: {
+        superAdminId: string;
+        superAdminName: string;
+        targetOrgName: string;
+      } | null;
     } & DefaultSession["user"];
   }
 

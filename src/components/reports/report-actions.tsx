@@ -31,6 +31,7 @@ import {
 } from "@/lib/utils/generate-pdf";
 import { emailReport } from "@/lib/actions/reports";
 import { toast } from "sonner";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 
 interface ReportActionsProps {
   title: string;
@@ -53,6 +54,7 @@ export function ReportActions({
   filename,
   summary,
 }: ReportActionsProps) {
+  const { currency, locale } = useOrgConfig();
   const [emailOpen, setEmailOpen] = useState(false);
   const [emailTo, setEmailTo] = useState("");
   const [emailSubject, setEmailSubject] = useState(`${title} Report`);
@@ -65,6 +67,8 @@ export function ReportActions({
     columns,
     data,
     summary,
+    currency,
+    locale,
   };
 
   const handleDownloadPDF = () => {

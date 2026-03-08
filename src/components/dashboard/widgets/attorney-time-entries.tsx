@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Timer, ArrowRight } from "lucide-react";
-import { APP_LOCALE } from "@/lib/constants/locale";
+
 import { Button } from "@/components/ui/button";
 
 interface TimeEntry {
@@ -13,7 +13,7 @@ interface TimeEntry {
   caseNumber: string | null;
 }
 
-export function AttorneyTimeEntries({ data }: { data: TimeEntry[] }) {
+export function AttorneyTimeEntries({ data, locale }: { data: TimeEntry[]; locale: string }) {
   return (
     <Card className="shadow-sm">
       <CardHeader className="pb-3">
@@ -74,7 +74,7 @@ export function AttorneyTimeEntries({ data }: { data: TimeEntry[] }) {
                       </span>
                     </td>
                     <td className="py-2.5 text-muted-foreground">
-                      {new Date(entry.date).toLocaleDateString(APP_LOCALE, {
+                      {new Date(entry.date).toLocaleDateString(locale, {
                         month: "short",
                         day: "numeric",
                       })}

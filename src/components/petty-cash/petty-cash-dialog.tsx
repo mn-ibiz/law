@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Upload } from "lucide-react";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 
 const CATEGORIES = [
   "Office Supplies",
@@ -40,6 +41,7 @@ const CATEGORIES = [
 ];
 
 export function PettyCashDialog() {
+  const { currency } = useOrgConfig();
   const [open, setOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [receiptUrl, setReceiptUrl] = useState("");
@@ -130,7 +132,7 @@ export function PettyCashDialog() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="pc-amount">Amount (KES) *</Label>
+            <Label htmlFor="pc-amount">{`Amount (${currency}) *`}</Label>
             <Input
               id="pc-amount"
               type="number"

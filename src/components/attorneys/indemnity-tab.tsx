@@ -31,10 +31,10 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus } from "lucide-react";
-import { formatKES } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils/format";
 import { formatEnum } from "@/lib/utils/format-enum";
-import { APP_LOCALE } from "@/lib/constants/locale";
 import { addProfessionalIndemnity } from "@/lib/actions/attorneys";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 
 interface IndemnityRecord {
   id: string;
@@ -67,6 +67,7 @@ export function IndemnityTab({
   attorneyId: string;
   records: IndemnityRecord[];
 }) {
+  const { currency, locale } = useOrgConfig();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -160,7 +161,7 @@ export function IndemnityTab({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="coverageAmount">Coverage Amount (KES) *</Label>
+                    <Label htmlFor="coverageAmount">{`Coverage Amount (${currency}) *`}</Label>
                     <Input
                       id="coverageAmount"
                       type="number"
@@ -172,7 +173,7 @@ export function IndemnityTab({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="premium">Premium (KES)</Label>
+                    <Label htmlFor="premium">{`Premium (${currency})`}</Label>
                     <Input
                       id="premium"
                       type="number"
@@ -265,13 +266,13 @@ export function IndemnityTab({
                   <TableRow key={record.id}>
                     <TableCell className="font-medium">{record.insurer}</TableCell>
                     <TableCell>{record.policyNumber}</TableCell>
-                    <TableCell>{formatKES(Number(record.coverageAmount))}</TableCell>
+                    <TableCell>{formatCurrency(Number(record.coverageAmount), currency, locale)}</TableCell>
                     <TableCell>
-                      {record.premium ? formatKES(Number(record.premium)) : "\u2014"}
+                      {record.premium ? formatCurrency(Number(record.premium), currency, locale) : "\u2014"}
                     </TableCell>
                     <TableCell>
-                      {new Date(record.startDate).toLocaleDateString(APP_LOCALE)} &ndash;{" "}
-                      {new Date(record.expiryDate).toLocaleDateString(APP_LOCALE)}
+                      {new Date(record.startDate).toLocaleDateString(locale)} &ndash;{" "}
+                      {new Date(record.expiryDate).toLocaleDateString(locale)}
                     </TableCell>
                     <TableCell>
                       <span

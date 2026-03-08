@@ -1,4 +1,4 @@
-import { requireOrg } from "@/lib/auth/get-session";
+import { requireRole, getTenantContext } from "@/lib/auth/get-session";
 import { getRecentDataOperations } from "@/lib/queries/settings";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,7 +7,8 @@ import {
 } from "@/components/ui/table";
 import { Upload, Download, Database } from "lucide-react";
 import { formatEnum } from "@/lib/utils/format-enum";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
+import { DataExportButton } from "@/components/settings/data-export-button";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -16,9 +17,13 @@ export const metadata: Metadata = {
 };
 
 export default async function DataManagementPage() {
-  const { organizationId } = await requireOrg();
+  await requireRole("admin");
+  const { organizationId } = await getTenantContext();
 
-  const recentDataOps = await getRecentDataOperations(organizationId);
+  const [recentDataOps, config] = await Promise.all([
+    getRecentDataOperations(organizationId),
+    getOrgConfig(organizationId),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -53,10 +58,11 @@ export default async function DataManagementPage() {
             <CardDescription>Export your firm data for reporting or migration.</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Export clients, cases, invoices, time entries, and more to CSV format.
-              Compliant with Kenya Data Protection Act requirements.
+            <p className="text-sm text-muted-foreground mb-3">
+              Export all organization data as JSON. Compliant with Kenya Data Protection Act requirements.
+              Rate limited to 1 export per hour.
             </p>
+            <DataExportButton />
           </CardContent>
         </Card>
 
@@ -96,7 +102,7 @@ export default async function DataManagementPage() {
                 {recentDataOps.map((op) => (
                   <TableRow key={op.id}>
                     <TableCell className="text-xs">
-                      {new Date(op.createdAt).toLocaleString(APP_LOCALE)}
+                      {new Date(op.createdAt).toLocaleString(config.locale)}
                     </TableCell>
                     <TableCell className="font-mono text-xs">{op.id.slice(0, 8)}</TableCell>
                     <TableCell>

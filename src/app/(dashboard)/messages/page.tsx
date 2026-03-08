@@ -8,7 +8,7 @@ import { Plus, Mail } from "lucide-react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import { EmptyState } from "@/components/shared/empty-state";
 import { DeleteMessageButton } from "@/components/messages/delete-message-button";
 import type { Metadata } from "next";
@@ -30,9 +30,10 @@ const messageStatusStyles: Record<string, string> = {
 export default async function MessagesPage() {
   const { session, organizationId } = await requireOrg();
   const userId = session.user.id as string;
-  const [inbox, sent] = await Promise.all([
+  const [inbox, sent, config] = await Promise.all([
     getMessages(organizationId, userId),
     getSentMessages(organizationId, userId),
+    getOrgConfig(organizationId),
   ]);
 
   return (
@@ -100,7 +101,7 @@ export default async function MessagesPage() {
                             </span>
                           </TableCell>
                           <TableCell className="text-muted-foreground">
-                            {new Date(m.createdAt).toLocaleString(APP_LOCALE)}
+                            {new Date(m.createdAt).toLocaleString(config.locale)}
                           </TableCell>
                           <TableCell>
                             <DeleteMessageButton messageId={m.id} />
@@ -149,7 +150,7 @@ export default async function MessagesPage() {
                           </Link>
                         </TableCell>
                         <TableCell className="text-muted-foreground">
-                          {new Date(m.createdAt).toLocaleString(APP_LOCALE)}
+                          {new Date(m.createdAt).toLocaleString(config.locale)}
                         </TableCell>
                         <TableCell>
                           <DeleteMessageButton messageId={m.id} />

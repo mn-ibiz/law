@@ -1,39 +1,11 @@
 import { auth } from "@/lib/auth/auth";
 import { NextResponse } from "next/server";
+import { extractTenantSlug } from "@/lib/utils/extract-tenant-slug";
 
-const publicRoutes = ["/", "/login", "/register", "/forgot-password", "/intake", "/forbidden", "/intake/success"];
-const publicPrefixes = ["/api/auth", "/api/calendar/ical"];
+const publicRoutes = ["/", "/login", "/register", "/forgot-password", "/intake", "/forbidden", "/suspended", "/intake/success", "/signup", "/pricing", "/features"];
+const publicPrefixes = ["/api/auth", "/api/calendar/ical", "/api/check-slug", "/api/cron", "/api/webhooks", "/invite"];
 const adminOnlyPaths = ["/settings"];
 const superAdminPaths = ["/admin"]; // Super admin panel for managing all tenants
-
-/**
- * Extracts the organization slug from a subdomain.
- * e.g., "acme.lawfirmregistry.co.ke" → "acme"
- * Returns null for bare domain or localhost.
- */
-function extractTenantSlug(host: string): string | null {
-  // Strip port for local dev
-  const hostname = host.split(":")[0];
-
-  // Skip for localhost / IP addresses in development
-  if (hostname === "localhost" || hostname === "127.0.0.1" || hostname.startsWith("192.168.")) {
-    return null;
-  }
-
-  // Production: expect <slug>.lawfirmregistry.co.ke or <slug>.<custom-domain>
-  const parts = hostname.split(".");
-
-  // If we have at least 3 parts for co.ke TLD (slug.lawfirmregistry.co.ke = 4 parts)
-  // or 3 parts for .com TLD (slug.lawfirmregistry.com = 3 parts)
-  if (parts.length >= 3) {
-    const subdomain = parts[0];
-    // Ignore www and app subdomains
-    if (subdomain === "www" || subdomain === "app") return null;
-    return subdomain;
-  }
-
-  return null;
-}
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
@@ -56,9 +28,17 @@ export default auth((req) => {
 
   const role = session.user.role;
 
-  // Super admin panel routes
-  if (superAdminPaths.some((path) => pathname.startsWith(path)) && role !== "super_admin") {
-    return NextResponse.redirect(new URL("/forbidden", req.url));
+  // Super admin panel routes — must be on root domain (no tenant subdomain)
+  if (superAdminPaths.some((path) => pathname.startsWith(path))) {
+    if (role !== "super_admin") {
+      return NextResponse.redirect(new URL("/forbidden", req.url));
+    }
+    if (tenantSlug) {
+      // Redirect to root domain /admin (strip subdomain)
+      const rootUrl = new URL(req.url);
+      rootUrl.hostname = rootUrl.hostname.replace(`${tenantSlug}.`, "");
+      return NextResponse.redirect(rootUrl);
+    }
   }
 
   // If tenant slug is present in subdomain, verify it matches the user's organization

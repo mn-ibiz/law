@@ -12,6 +12,8 @@ interface SendEmailOptions {
   html: string;
   cc?: string[];
   attachments?: EmailAttachment[];
+  /** Per-org FROM address. Falls back to EMAIL_FROM env var, then default. */
+  from?: string;
 }
 
 export async function sendEmail({
@@ -20,6 +22,7 @@ export async function sendEmail({
   html,
   cc,
   attachments,
+  from: overrideFrom,
 }: SendEmailOptions): Promise<{ success: boolean; error?: string }> {
   const resend = getResendClient();
   if (!resend) {
@@ -27,7 +30,7 @@ export async function sendEmail({
     return { success: false, error: "Email not configured" };
   }
 
-  const from = env.EMAIL_FROM ?? "noreply@example.com";
+  const from = overrideFrom ?? env.EMAIL_FROM ?? "noreply@example.com";
 
   try {
     await resend.emails.send({

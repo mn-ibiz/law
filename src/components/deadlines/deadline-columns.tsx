@@ -5,7 +5,7 @@ import Link from "next/link";
 import { SortableHeader } from "@/components/shared/enhanced-data-table";
 import { TaskStatusBadge, PriorityBadge } from "@/components/shared/status-badges";
 import { PersonAvatar } from "@/components/shared/person-avatar";
-import { APP_LOCALE } from "@/lib/constants/locale";
+
 
 export interface DeadlineRow {
   id: string;
@@ -21,7 +21,8 @@ export interface DeadlineRow {
   assignedToAvatar: string | null;
 }
 
-export const deadlineColumns: ColumnDef<DeadlineRow>[] = [
+export function getDeadlineColumns(locale: string): ColumnDef<DeadlineRow>[] {
+  return [
   {
     accessorKey: "title",
     header: ({ column }) => <SortableHeader column={column}>Title</SortableHeader>,
@@ -82,7 +83,7 @@ export const deadlineColumns: ColumnDef<DeadlineRow>[] = [
       const isOverdue = !row.original.completedAt && dueDate < new Date();
       return (
         <span className={isOverdue ? "text-destructive font-medium" : "text-sm"}>
-          {dueDate.toLocaleDateString(APP_LOCALE)}
+          {dueDate.toLocaleDateString(locale)}
         </span>
       );
     },
@@ -107,3 +108,4 @@ export const deadlineColumns: ColumnDef<DeadlineRow>[] = [
     },
   },
 ];
+}

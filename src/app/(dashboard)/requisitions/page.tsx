@@ -4,7 +4,8 @@ import { getCasesForSelect } from "@/lib/queries/trust";
 import { Card, CardContent } from "@/components/ui/card";
 import { RequisitionDataTable } from "@/components/requisitions/requisition-data-table";
 import { Button } from "@/components/ui/button";
-import { formatKES } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils/format";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import { Plus, ClipboardList, CheckCircle2, Clock, DollarSign } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
 
 export default async function RequisitionsPage() {
   const { session, organizationId } = await requireOrg();
-  const [reqs, cases] = await Promise.all([getRequisitions(organizationId), getCasesForSelect(organizationId)]);
+  const [reqs, cases, config] = await Promise.all([getRequisitions(organizationId), getCasesForSelect(organizationId), getOrgConfig(organizationId)]);
   const userRole = session.user.role;
 
   const pendingCount = reqs.filter((r) => r.status === "pending_approval").length;
@@ -86,7 +87,7 @@ export default async function RequisitionsPage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Total Amount</p>
-              <p className="text-2xl font-bold">{formatKES(totalAmount)}</p>
+              <p className="text-2xl font-bold">{formatCurrency(totalAmount, config.currency, config.locale)}</p>
             </div>
           </CardContent>
         </Card>

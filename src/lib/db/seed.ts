@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 import * as schema from "./schema";
@@ -24,34 +24,134 @@ async function main() {
 
   console.log("Starting seed...\n");
 
-  // 0. Seed Default Organization & Plan
-  console.log("Seeding default organization...");
-  const [defaultPlan] = await db
-    .insert(schema.plans)
-    .values({
-      name: "Professional",
-      slug: "professional",
-      description: "Full-featured plan for law firms",
-      maxUsers: 25,
-      maxCases: 1000,
-      maxStorageMb: 51200, // 50 GB
-      features: JSON.stringify({
-        trust_accounting: true,
-        workflow_automation: true,
-        custom_branding: true,
-        reports: "full",
-        client_portal: true,
-      }),
-      monthlyPrice: "5000",
-      annualPrice: "50000",
-      currency: "KES",
-      trialDays: 14,
-      isActive: true,
-    })
-    .onConflictDoNothing({ target: schema.plans.slug })
-    .returning();
+  // 0a. Seed Platform Organization (for super_admin users)
+  console.log("Seeding platform organization...");
+  const existingPlatformOrg = await db
+    .select()
+    .from(schema.organizations)
+    .where(eq(schema.organizations.slug, "_platform"))
+    .limit(1);
+  let platformOrgId: string;
+  if (existingPlatformOrg.length === 0) {
+    const [platformOrg] = await db
+      .insert(schema.organizations)
+      .values({
+        name: "Platform Administration",
+        slug: "_platform",
+        status: "active",
+        country: "KE",
+        timezone: "UTC",
+        locale: "en",
+        currency: "USD",
+      })
+      .returning();
+    platformOrgId = platformOrg.id;
+  } else {
+    platformOrgId = existingPlatformOrg[0].id;
+  }
+  console.log("  ✓ Platform organization seeded");
 
-  const planId = defaultPlan?.id ?? (await db.select().from(schema.plans).where(eq(schema.plans.slug, "professional")).limit(1))[0].id;
+  // 0b. Seed Super Admin user
+  const superAdminEmail = process.env.SUPER_ADMIN_EMAIL || "superadmin@lawfirmregistry.co.ke";
+  console.log("Seeding super admin user...");
+  const existingSuperAdmin = await db
+    .select()
+    .from(schema.users)
+    .where(
+      and(
+        eq(schema.users.email, superAdminEmail),
+        eq(schema.users.organizationId, platformOrgId)
+      )
+    );
+  if (existingSuperAdmin.length === 0) {
+    const hashedSuperPw = await bcrypt.hash(process.env.SEED_PASSWORD || "Password123!", SALT_ROUNDS);
+    await db.insert(schema.users).values({
+      name: "Super Admin",
+      email: superAdminEmail,
+      password: hashedSuperPw,
+      role: "super_admin",
+      organizationId: platformOrgId,
+      isActive: true,
+    });
+  }
+  console.log(`  ✓ Super admin: ${superAdminEmail}`);
+
+  // 0c. Seed Default Organization & Plan
+  console.log("Seeding default organization...");
+  // Seed all plan tiers
+  await db
+    .insert(schema.plans)
+    .values([
+      {
+        name: "Starter",
+        slug: "starter",
+        description: "Essential tools for small law practices",
+        maxUsers: 5,
+        maxCases: 100,
+        maxStorageMb: 5120, // 5 GB
+        features: JSON.stringify({
+          trust_accounting: false,
+          workflow_automation: false,
+          custom_branding: false,
+          client_portal: true,
+          api_access: false,
+          reports: "basic",
+          priority_support: false,
+        }),
+        monthlyPrice: "2000",
+        annualPrice: "20000",
+        currency: "KES",
+        trialDays: 14,
+        isActive: true,
+      },
+      {
+        name: "Professional",
+        slug: "professional",
+        description: "Full-featured plan for growing firms",
+        maxUsers: 25,
+        maxCases: 1000,
+        maxStorageMb: 51200, // 50 GB
+        features: JSON.stringify({
+          trust_accounting: true,
+          workflow_automation: true,
+          custom_branding: true,
+          client_portal: true,
+          api_access: false,
+          reports: "full",
+          priority_support: false,
+        }),
+        monthlyPrice: "5000",
+        annualPrice: "50000",
+        currency: "KES",
+        trialDays: 14,
+        isActive: true,
+      },
+      {
+        name: "Enterprise",
+        slug: "enterprise",
+        description: "Unlimited access for large firms",
+        maxUsers: null, // Unlimited
+        maxCases: null, // Unlimited
+        maxStorageMb: 512000, // 500 GB
+        features: JSON.stringify({
+          trust_accounting: true,
+          workflow_automation: true,
+          custom_branding: true,
+          client_portal: true,
+          api_access: true,
+          reports: "custom",
+          priority_support: true,
+        }),
+        monthlyPrice: "15000",
+        annualPrice: "150000",
+        currency: "KES",
+        trialDays: 14,
+        isActive: true,
+      },
+    ])
+    .onConflictDoNothing({ target: schema.plans.slug });
+
+  const planId = (await db.select().from(schema.plans).where(eq(schema.plans.slug, "professional")).limit(1))[0].id;
 
   const existingOrg = await db
     .select()

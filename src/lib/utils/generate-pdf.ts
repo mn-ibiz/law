@@ -4,7 +4,8 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { formatCurrency } from "@/lib/utils/format";
+import { siteConfig } from "@/lib/config/site";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -26,17 +27,21 @@ export interface PDFReportOptions {
   firmName?: string;
   /** Filename used by downloadReportPDF (without .pdf extension). */
   filename?: string;
+  /** Currency code for formatting monetary values (default: "KES") */
+  currency?: string;
+  /** Locale for formatting dates and numbers (default: "en-KE") */
+  locale?: string;
 }
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-const DEFAULT_FIRM_NAME = "Law Firm Registry";
+const DEFAULT_FIRM_NAME = siteConfig.name;
 
 /** Format the current date/time for the "Generated on" line. */
-function generatedTimestamp(): string {
-  return new Date().toLocaleString(APP_LOCALE, {
+function generatedTimestamp(locale: string): string {
+  return new Date().toLocaleString(locale, {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -47,16 +52,16 @@ function generatedTimestamp(): string {
 
 /**
  * Attempt to detect currency-like numbers (contain a decimal point and parse
- * as a finite number) and format them with a KES prefix.
+ * as a finite number) and format them with the org's currency prefix.
  */
-function formatCellValue(value: unknown): string {
+function formatCellValue(value: unknown, currency: string, locale: string): string {
   if (value == null) return "";
   const str = String(value);
   // Match values that look like decimal numbers (e.g. 1200.00, 50000.50)
   if (/^-?\d[\d,]*\.\d+$/.test(str.replace(/,/g, ""))) {
     const num = parseFloat(str.replace(/,/g, ""));
     if (Number.isFinite(num)) {
-      return `KES ${num.toLocaleString(APP_LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      return formatCurrency(num, currency, locale);
     }
   }
   return str;
@@ -78,6 +83,8 @@ export function generateReportPDF(options: PDFReportOptions): Blob {
     data,
     summary,
     firmName = DEFAULT_FIRM_NAME,
+    currency = "KES",
+    locale = "en-KE",
   } = options;
 
   // A4 landscape for wider reports
@@ -106,7 +113,7 @@ export function generateReportPDF(options: PDFReportOptions): Blob {
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(120, 120, 120);
-  doc.text(`Generated on: ${generatedTimestamp()}`, pageWidth - margin, cursorY + 5, {
+  doc.text(`Generated on: ${generatedTimestamp(locale)}`, pageWidth - margin, cursorY + 5, {
     align: "right",
   });
 
@@ -148,7 +155,7 @@ export function generateReportPDF(options: PDFReportOptions): Blob {
   // ---- Table ----
   const headLabels = columns.map((col) => col.label);
   const bodyRows = data.map((row) =>
-    columns.map((col) => formatCellValue(row[col.key]))
+    columns.map((col) => formatCellValue(row[col.key], currency, locale))
   );
 
   // Build column styles for alignment

@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import { CauseListActions } from "@/components/courts/cause-list-actions";
 import { CauseListRowActions } from "@/components/courts/cause-list-row-actions";
 import type { Metadata } from "next";
@@ -24,7 +24,10 @@ export const metadata: Metadata = {
 
 export default async function CauseListsPage() {
   const { organizationId } = await requireOrg();
-  const causeListData = await getCauseLists(organizationId);
+  const [causeListData, config] = await Promise.all([
+    getCauseLists(organizationId),
+    getOrgConfig(organizationId),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -75,7 +78,7 @@ export default async function CauseListsPage() {
                         href={`/cause-lists/${cl.id}`}
                         className="text-primary hover:underline"
                       >
-                        {new Date(cl.date).toLocaleDateString(APP_LOCALE, {
+                        {new Date(cl.date).toLocaleDateString(config.locale, {
                           weekday: "short",
                           year: "numeric",
                           month: "short",
@@ -90,7 +93,7 @@ export default async function CauseListsPage() {
                       {cl.notes ?? "\u2014"}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {new Date(cl.createdAt).toLocaleDateString(APP_LOCALE)}
+                      {new Date(cl.createdAt).toLocaleDateString(config.locale)}
                     </TableCell>
                     <TableCell>
                       <CauseListRowActions

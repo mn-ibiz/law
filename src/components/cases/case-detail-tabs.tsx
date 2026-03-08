@@ -7,11 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { formatKES } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils/format";
 import { formatEnum } from "@/lib/utils/format-enum";
 import { formatRelativeDate } from "@/lib/utils/format";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 import { Clock, Users, MessageSquare, FileText, Scale, Receipt, ListTodo, CalendarClock, CircleDollarSign, AlertCircle, CheckCircle2, Timer, ArrowUpRight } from "lucide-react";
-import { APP_LOCALE } from "@/lib/constants/locale";
 import { CaseDocumentsTab } from "./case-documents-tab";
 import { PersonAvatar } from "@/components/shared/person-avatar";
 import { InvoiceStatusBadge, TaskStatusBadge, PriorityBadge, BillableBadge } from "@/components/shared/status-badges";
@@ -216,6 +216,7 @@ export function CaseDetailTabs({
   users,
   sidebar,
 }: CaseDetailTabsProps) {
+  const { currency, locale } = useOrgConfig();
   return (
     <Tabs defaultValue="details">
       {/* Tab bar spans full width */}
@@ -277,18 +278,18 @@ export function CaseDetailTabs({
                 )}
                 {caseData.dateFiled && (
                   <DL label="Date Filed">
-                    {new Date(caseData.dateFiled).toLocaleDateString(APP_LOCALE)}
+                    {new Date(caseData.dateFiled).toLocaleDateString(locale)}
                   </DL>
                 )}
                 {caseData.statuteOfLimitations && (
                   <DL label="Statute of Limitations">
                     <span className={new Date(caseData.statuteOfLimitations) < new Date() ? "text-destructive" : ""}>
-                      {new Date(caseData.statuteOfLimitations).toLocaleDateString(APP_LOCALE)}
+                      {new Date(caseData.statuteOfLimitations).toLocaleDateString(locale)}
                     </span>
                   </DL>
                 )}
                 {caseData.estimatedValue && (
-                  <DL label="Estimated Value">{formatKES(Number(caseData.estimatedValue))}</DL>
+                  <DL label="Estimated Value">{formatCurrency(Number(caseData.estimatedValue), currency, locale)}</DL>
                 )}
               </dl>
               {caseData.description && (
@@ -323,10 +324,10 @@ export function CaseDetailTabs({
               <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <DL label="Billing Type">{formatEnum(caseData.billingType)}</DL>
                 {caseData.hourlyRate && (
-                  <DL label="Hourly Rate">{formatKES(Number(caseData.hourlyRate))}/hr</DL>
+                  <DL label="Hourly Rate">{formatCurrency(Number(caseData.hourlyRate), currency, locale)}/hr</DL>
                 )}
                 {caseData.flatFeeAmount && (
-                  <DL label="Flat Fee">{formatKES(Number(caseData.flatFeeAmount))}</DL>
+                  <DL label="Flat Fee">{formatCurrency(Number(caseData.flatFeeAmount), currency, locale)}</DL>
                 )}
                 {caseData.contingencyPercentage && (
                   <DL label="Contingency">{caseData.contingencyPercentage}%</DL>
@@ -386,17 +387,17 @@ export function CaseDetailTabs({
                                 </div>
                               </TooltipTrigger>
                               <TooltipContent>
-                                {formatKES(paid)} of {formatKES(total)} paid ({Math.round(pctPaid)}%)
+                                {formatCurrency(paid, currency, locale)} of {formatCurrency(total, currency, locale)} paid ({Math.round(pctPaid)}%)
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
                           <span className="text-[10px] text-muted-foreground shrink-0">
-                            {formatKES(paid)} / {formatKES(total)}
+                            {formatCurrency(paid, currency, locale)} / {formatCurrency(total, currency, locale)}
                           </span>
                         </div>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="text-sm font-semibold">{formatKES(total)}</p>
+                        <p className="text-sm font-semibold">{formatCurrency(total, currency, locale)}</p>
                         {inv.dueDate && (
                           <p className="text-[10px] text-muted-foreground">
                             Due {formatRelativeDate(new Date(inv.dueDate))}
@@ -444,7 +445,7 @@ export function CaseDetailTabs({
                       <p className="text-sm truncate">{entry.description || "Time entry"}</p>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-[10px] text-muted-foreground">
-                          {new Date(entry.date).toLocaleDateString(APP_LOCALE)}
+                          {new Date(entry.date).toLocaleDateString(locale)}
                         </span>
                         <BillableBadge billable={entry.isBillable} />
                       </div>
@@ -452,7 +453,7 @@ export function CaseDetailTabs({
                     <div className="text-right shrink-0">
                       <p className="text-sm font-semibold tabular-nums">{Number(entry.hours || 0).toFixed(1)}h</p>
                       {entry.amount && (
-                        <p className="text-[10px] text-muted-foreground">{formatKES(Number(entry.amount))}</p>
+                        <p className="text-[10px] text-muted-foreground">{formatCurrency(Number(entry.amount), currency, locale)}</p>
                       )}
                     </div>
                   </div>
@@ -500,14 +501,14 @@ export function CaseDetailTabs({
                       <p className="text-sm truncate">{exp.description || formatEnum(exp.category)}</p>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-[10px] text-muted-foreground">
-                          {new Date(exp.date).toLocaleDateString(APP_LOCALE)}
+                          {new Date(exp.date).toLocaleDateString(locale)}
                         </span>
                         <Badge variant="outline" className="text-[10px]">
                           {formatEnum(exp.category)}
                         </Badge>
                       </div>
                     </div>
-                    <p className="text-sm font-semibold shrink-0">{formatKES(Number(exp.amount || 0))}</p>
+                    <p className="text-sm font-semibold shrink-0">{formatCurrency(Number(exp.amount || 0), currency, locale)}</p>
                   </div>
                 ))}
                 {expenses.length > 10 && (
@@ -724,7 +725,7 @@ export function CaseDetailTabs({
                         {formatEnum(a.role)}
                       </Badge>
                       <span className="text-[10px] text-muted-foreground">
-                        {new Date(a.assignedAt).toLocaleDateString(APP_LOCALE)}
+                        {new Date(a.assignedAt).toLocaleDateString(locale)}
                       </span>
                     </div>
                   </div>
@@ -807,7 +808,7 @@ export function CaseDetailTabs({
                         </Badge>
                       )}
                       <span className="text-[10px] text-muted-foreground">
-                        {new Date(n.createdAt).toLocaleString(APP_LOCALE)}
+                        {new Date(n.createdAt).toLocaleString(locale)}
                       </span>
                       <AddNoteDialog
                         caseId={caseData.id}
@@ -857,7 +858,7 @@ export function CaseDetailTabs({
                     )}
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-[10px] text-muted-foreground">
-                        {new Date(e.createdAt).toLocaleString(APP_LOCALE)}
+                        {new Date(e.createdAt).toLocaleString(locale)}
                       </span>
                       {e.userName && (
                         <span className="text-[10px] text-muted-foreground">

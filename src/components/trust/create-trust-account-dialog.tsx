@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 
 interface CreateTrustAccountDialogProps {
   clients: { id: string; name: string }[];
@@ -37,6 +38,7 @@ export function CreateTrustAccountDialog({
   clients,
   cases,
 }: CreateTrustAccountDialogProps) {
+  const { currency } = useOrgConfig();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [accountName, setAccountName] = useState("");
@@ -161,7 +163,7 @@ export function CreateTrustAccountDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="ta-balance">Initial Balance (KES)</Label>
+              <Label htmlFor="ta-balance">{`Initial Balance (${currency})`}</Label>
               <Input
                 id="ta-balance"
                 type="number"

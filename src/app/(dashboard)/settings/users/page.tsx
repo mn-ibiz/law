@@ -6,7 +6,7 @@ import { UserActions } from "@/components/settings/user-actions";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -16,7 +16,10 @@ export const metadata: Metadata = {
 
 export default async function UsersPage() {
   const { session, organizationId } = await requireOrg();
-  const userList = await getUsers(organizationId);
+  const [userList, config] = await Promise.all([
+    getUsers(organizationId),
+    getOrgConfig(organizationId),
+  ]);
   const currentUserId = session.user.id;
 
   return (
@@ -55,7 +58,7 @@ export default async function UsersPage() {
                   <TableCell>
                     <ActiveBadge active={u.isActive} />
                   </TableCell>
-                  <TableCell>{new Date(u.createdAt).toLocaleDateString(APP_LOCALE)}</TableCell>
+                  <TableCell>{new Date(u.createdAt).toLocaleDateString(config.locale)}</TableCell>
                   <TableCell>
                     <UserActions
                       userId={u.id}

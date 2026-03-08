@@ -3,7 +3,7 @@
 import { signIn } from "@/lib/auth/auth";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
-import { organizations } from "@/lib/db/schema/organizations";
+import { organizations, organizationMembers } from "@/lib/db/schema/organizations";
 import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
@@ -13,19 +13,10 @@ import { headers } from "next/headers";
 import { rateLimit } from "@/lib/utils/rate-limit";
 import { safeAction } from "@/lib/utils/safe-action";
 import { sendEmail } from "@/lib/email/send-email";
+import { checkPlanLimit } from "@/lib/utils/plan-limits";
 import { passwordResetEmailHtml } from "@/lib/email/templates/password-reset";
 import { env } from "@/lib/env";
-
-function extractSlugFromHost(host: string): string {
-  const hostname = host.split(":")[0];
-  if (hostname === "localhost" || hostname === "127.0.0.1") return "";
-  const parts = hostname.split(".");
-  if (parts.length >= 3) {
-    const subdomain = parts[0];
-    if (subdomain !== "www" && subdomain !== "app") return subdomain;
-  }
-  return "";
-}
+import { extractTenantSlug } from "@/lib/utils/extract-tenant-slug";
 
 export async function loginAction(formData: {
   email: string;
@@ -38,16 +29,28 @@ export async function loginAction(formData: {
       return { error: validated.error.issues[0].message };
     }
 
-    // Rate limit login attempts per email
-    const rl = rateLimit(`login:${validated.data.email}`);
+    // Resolve organization from subdomain for scoped login
+    const headersList = await headers();
+    const host = headersList.get("host") ?? "";
+    const slug = extractTenantSlug(host) ?? "";
+
+    // Rate limit login attempts per email, scoped by subdomain
+    const rlKey = slug ? `login:${slug}:${validated.data.email}` : `login:${validated.data.email}`;
+    const rl = await rateLimit(rlKey);
     if (!rl.success) {
       return { error: "Too many login attempts. Please try again later." };
     }
 
-    // Resolve organization from subdomain for scoped login
-    const headersList = await headers();
-    const host = headersList.get("host") ?? "";
-    const slug = extractSlugFromHost(host);
+    // Pre-resolve org ID for post-login scoping
+    let loginOrgId: string | null = null;
+    if (slug) {
+      const [org] = await db
+        .select({ id: organizations.id })
+        .from(organizations)
+        .where(eq(organizations.slug, slug))
+        .limit(1);
+      loginOrgId = org?.id ?? null;
+    }
 
     try {
       await signIn("credentials", {
@@ -57,12 +60,15 @@ export async function loginAction(formData: {
         redirect: false,
       });
 
-      // Determine redirect based on user role
-      const [user] = await db
-        .select({ id: users.id, role: users.role })
-        .from(users)
-        .where(eq(users.email, validated.data.email))
-        .limit(1);
+      // Determine redirect based on user role (scoped by org to avoid cross-tenant mismatch)
+      const userQuery = loginOrgId
+        ? db.select({ id: users.id, role: users.role }).from(users)
+            .where(sql`${users.email} = ${validated.data.email} AND ${users.organizationId} = ${loginOrgId} AND ${users.deletedAt} IS NULL`)
+            .limit(1)
+        : db.select({ id: users.id, role: users.role }).from(users)
+            .where(sql`${users.email} = ${validated.data.email} AND ${users.deletedAt} IS NULL`)
+            .limit(1);
+      const [user] = await userQuery;
 
       const redirectTo = user?.role === "client" ? "/portal" : "/dashboard";
       return { success: true, redirectTo };
@@ -93,8 +99,8 @@ export async function registerAction(formData: {
       return { error: validated.error.issues[0].message };
     }
 
-    // Rate limit registration attempts per email
-    const rl = rateLimit(`register:${validated.data.email}`);
+    // Rate limit registration attempts per email (global — pre-org)
+    const rl = await rateLimit(`register:${validated.data.email}`);
     if (!rl.success) {
       return { error: "Too many attempts. Please try again later." };
     }
@@ -102,25 +108,35 @@ export async function registerAction(formData: {
     // Resolve organization from subdomain
     const headersList = await headers();
     const host = headersList.get("host") ?? "";
-    const slug = extractSlugFromHost(host);
+    const slug = extractTenantSlug(host) ?? "";
     if (!slug) {
       return { error: "Unable to determine organization. Please access from your organization's domain." };
     }
     const [org] = await db
-      .select({ id: organizations.id })
+      .select({ id: organizations.id, status: organizations.status })
       .from(organizations)
       .where(eq(organizations.slug, slug))
       .limit(1);
     if (!org) {
       return { error: "Organization not found." };
     }
+    if (org.status !== "active") {
+      return { error: "This organization is not currently accepting registrations." };
+    }
+
+    // Check plan limit for users
+    const userLimit = await checkPlanLimit(org.id, "users");
+    if (!userLimit.allowed) {
+      return { error: userLimit.error };
+    }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(validated.data.password, 10);
 
     // Insert user directly — catch unique violation to handle race condition
+    let newUserId: string;
     try {
-      await db.insert(users).values({
+      const [newUser] = await db.insert(users).values({
         name: validated.data.name,
         email: validated.data.email,
         password: hashedPassword,
@@ -128,7 +144,8 @@ export async function registerAction(formData: {
         organizationId: org.id,
         role: "client",
         isActive: false,
-      });
+      }).returning({ id: users.id });
+      newUserId = newUser.id;
     } catch (err: unknown) {
       // Postgres unique violation error code
       if (err && typeof err === "object" && "code" in err && err.code === "23505") {
@@ -136,6 +153,12 @@ export async function registerAction(formData: {
       }
       throw err;
     }
+
+    // Add to organization members
+    await db
+      .insert(organizationMembers)
+      .values({ organizationId: org.id, userId: newUserId, role: "member" })
+      .onConflictDoNothing();
 
     return {
       success: true,
@@ -151,19 +174,20 @@ export async function forgotPasswordAction(formData: { email: string }) {
       return { error: validated.error.issues[0].message };
     }
 
-    // Rate limit password reset requests
-    const rl = rateLimit(`reset:${validated.data.email}`);
+    // Scope password reset to organization from subdomain
+    const headersList2 = await headers();
+    const host2 = headersList2.get("host") ?? "";
+    const resetSlug = extractTenantSlug(host2) ?? "";
+
+    // Rate limit password reset requests, scoped by subdomain
+    const resetRlKey = resetSlug ? `reset:${resetSlug}:${validated.data.email}` : `reset:${validated.data.email}`;
+    const rl = await rateLimit(resetRlKey);
     if (!rl.success) {
       return {
         success: true,
         message: "If an account exists with this email, you will receive a password reset link.",
       };
     }
-
-    // Scope password reset to organization from subdomain
-    const headersList2 = await headers();
-    const host2 = headersList2.get("host") ?? "";
-    const resetSlug = extractSlugFromHost(host2);
 
     let resetOrg: { id: string } | undefined;
     if (resetSlug) {
@@ -175,16 +199,26 @@ export async function forgotPasswordAction(formData: { email: string }) {
       resetOrg = org;
     }
 
+    // In multi-tenant mode, require subdomain scoping to prevent cross-tenant enumeration
+    // Without a slug, only super_admin can reset (handled by no-org fallback that checks role)
+    if (!resetOrg && resetSlug) {
+      // Slug was provided but org doesn't exist — return generic to prevent enumeration
+      return {
+        success: true,
+        message: "If an account exists with this email, you will receive a password reset link.",
+      };
+    }
+
     const userResults = resetOrg
       ? await db
-          .select({ id: users.id, name: users.name })
+          .select({ id: users.id, name: users.name, role: users.role })
           .from(users)
           .where(sql`${users.email} = ${validated.data.email} AND ${users.organizationId} = ${resetOrg.id} AND ${users.deletedAt} IS NULL`)
           .limit(1)
       : await db
-          .select({ id: users.id, name: users.name })
+          .select({ id: users.id, name: users.name, role: users.role })
           .from(users)
-          .where(eq(users.email, validated.data.email))
+          .where(sql`${users.email} = ${validated.data.email} AND ${users.role} = 'super_admin' AND ${users.deletedAt} IS NULL`)
           .limit(1);
 
     const [user] = userResults;
@@ -209,8 +243,25 @@ export async function forgotPasswordAction(formData: { email: string }) {
         })
         .where(eq(users.id, user.id));
 
-      // Build the reset link and send the email (fire-and-forget)
-      const baseUrl = env.AUTH_URL ?? "http://localhost:3000";
+      // Build the reset link using org subdomain when available
+      const defaultBaseUrl = env.AUTH_URL ?? "http://localhost:3000";
+      const baseUrl = resetSlug
+        ? (() => {
+            try {
+              const parsed = new URL(defaultBaseUrl);
+              // Strip any existing subdomain (www, app) to get the root domain
+              const hostParts = parsed.hostname.split(".");
+              // For co.ke TLD: root is last 3 parts; for .com: last 2 parts
+              const rootDomain = hostParts.length > 3
+                ? hostParts.slice(-3).join(".")  // e.g., lawfirmregistry.co.ke
+                : hostParts.length > 2
+                  ? hostParts.slice(-2).join(".")  // e.g., lawfirmregistry.com
+                  : parsed.hostname;              // e.g., localhost
+              const port = parsed.port ? `:${parsed.port}` : "";
+              return `${parsed.protocol}//${resetSlug}.${rootDomain}${port}`;
+            } catch { return defaultBaseUrl; }
+          })()
+        : defaultBaseUrl;
       const resetUrl = `${baseUrl}/reset-password?token=${resetToken}&email=${encodeURIComponent(validated.data.email)}`;
       sendEmail({
         to: validated.data.email,

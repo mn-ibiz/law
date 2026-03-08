@@ -10,6 +10,8 @@ interface SendSMSOptions {
   message: string;
   userId?: string;
   caseId?: string;
+  /** Per-org sender ID override. Falls back to AT_SENDER_ID env var. */
+  senderId?: string;
 }
 
 export async function sendSMS({
@@ -18,6 +20,7 @@ export async function sendSMS({
   message,
   userId,
   caseId,
+  senderId,
 }: SendSMSOptions): Promise<{ success: boolean; error?: string }> {
   // Always log the attempt
   const [logEntry] = await db
@@ -47,7 +50,7 @@ export async function sendSMS({
     const result = await client.SMS.send({
       to: [to],
       message,
-      from: env.AT_SENDER_ID ?? undefined,
+      from: senderId ?? env.AT_SENDER_ID ?? undefined,
     });
 
     await db

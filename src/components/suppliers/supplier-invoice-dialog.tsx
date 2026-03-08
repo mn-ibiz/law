@@ -22,12 +22,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Plus, Upload } from "lucide-react";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 
 interface SupplierInvoiceDialogProps {
   supplierId: string;
 }
 
 export function SupplierInvoiceDialog({ supplierId }: SupplierInvoiceDialogProps) {
+  const { currency } = useOrgConfig();
   const [open, setOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [fileUrl, setFileUrl] = useState("");
@@ -121,7 +123,7 @@ export function SupplierInvoiceDialog({ supplierId }: SupplierInvoiceDialogProps
 
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
-              <Label htmlFor="inv-amount">Amount (KES) *</Label>
+              <Label htmlFor="inv-amount">{`Amount (${currency}) *`}</Label>
               <Input
                 id="inv-amount"
                 type="number"

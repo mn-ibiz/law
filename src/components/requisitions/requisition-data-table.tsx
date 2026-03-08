@@ -7,8 +7,9 @@ import {
   type DataTableFilterConfig,
   type ExportColumn,
 } from "@/components/shared/enhanced-data-table";
-import { requisitionColumns, type RequisitionRow } from "./requisition-columns";
+import { getRequisitionColumns, type RequisitionRow } from "./requisition-columns";
 import { RequisitionRowActions } from "./requisition-row-actions";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 import { ClipboardList } from "lucide-react";
 
 const filters: DataTableFilterConfig[] = [
@@ -40,6 +41,7 @@ interface RequisitionDataTableProps {
 }
 
 export function RequisitionDataTable({ data, userRole, cases = [] }: RequisitionDataTableProps) {
+  const { currency, locale } = useOrgConfig();
   const columns = useMemo(() => {
     const actionsColumn: ColumnDef<RequisitionRow> = {
       id: "actions",
@@ -64,8 +66,8 @@ export function RequisitionDataTable({ data, userRole, cases = [] }: Requisition
         />
       ),
     };
-    return [...requisitionColumns, actionsColumn];
-  }, [userRole, cases]);
+    return [...getRequisitionColumns(currency, locale), actionsColumn];
+  }, [userRole, cases, currency, locale]);
 
   return (
     <EnhancedDataTable

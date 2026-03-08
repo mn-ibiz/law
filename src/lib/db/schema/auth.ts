@@ -8,7 +8,7 @@ export const users = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     name: text("name").notNull(),
     email: text("email").notNull(),
-    password: text("password").notNull(),
+    password: text("password"), // nullable for pending invitations
     role: userRole("role").notNull().default("client"),
     phone: text("phone"),
     avatar: text("avatar"),
@@ -20,6 +20,9 @@ export const users = pgTable(
     emailVerified: timestamp("email_verified", { withTimezone: true }),
     resetToken: text("reset_token"),
     resetTokenExpiry: timestamp("reset_token_expiry", { withTimezone: true }),
+    inviteToken: text("invite_token"),
+    inviteExpiresAt: timestamp("invite_expires_at", { withTimezone: true }),
+    invitedBy: uuid("invited_by"),
     failedAttempts: integer("failed_attempts").notNull().default(0),
     lockedUntil: timestamp("locked_until", { withTimezone: true }),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),

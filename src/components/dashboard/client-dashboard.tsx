@@ -2,13 +2,17 @@ import { Suspense } from "react";
 import { Briefcase, FileText, CreditCard } from "lucide-react";
 import { StatCard } from "@/components/shared/stat-card";
 import { DashboardSkeleton } from "./dashboard-skeleton";
-import { formatKES, formatNumber } from "@/lib/utils/format";
+import { formatCurrency, formatNumber } from "@/lib/utils/format";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import { getClientDashboardStats } from "@/lib/queries/dashboard";
 import { requireOrg } from "@/lib/auth/get-session";
 
 async function ClientStats({ userId }: { userId: string }) {
   const { organizationId } = await requireOrg();
-  const stats = await getClientDashboardStats(organizationId, userId);
+  const [stats, config] = await Promise.all([
+    getClientDashboardStats(organizationId, userId),
+    getOrgConfig(organizationId),
+  ]);
 
   return (
     <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
@@ -24,7 +28,7 @@ async function ClientStats({ userId }: { userId: string }) {
       />
       <StatCard
         label="Outstanding Balance"
-        value={formatKES(stats.outstandingBalance)}
+        value={formatCurrency(stats.outstandingBalance, config.currency, config.locale)}
         icon={CreditCard}
       />
     </div>

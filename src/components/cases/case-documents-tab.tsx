@@ -5,7 +5,7 @@ import { FileUploadDropzone } from "@/components/documents/file-upload-dropzone"
 import { FileTypeIcon } from "@/components/documents/file-type-icon";
 import { formatFileSize } from "@/lib/utils/format-file-size";
 import { formatEnum } from "@/lib/utils/format-enum";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 import { FileText } from "lucide-react";
 
 interface Doc {
@@ -28,6 +28,7 @@ interface CaseDocumentsTabProps {
 
 export function CaseDocumentsTab({ caseId, documents }: CaseDocumentsTabProps) {
   const router = useRouter();
+  const { locale } = useOrgConfig();
 
   return (
     <div className="space-y-6">
@@ -65,7 +66,7 @@ export function CaseDocumentsTab({ caseId, documents }: CaseDocumentsTabProps) {
               </div>
               <div className="text-right shrink-0">
                 <p className="text-xs text-muted-foreground">
-                  {new Date(doc.createdAt).toLocaleDateString(APP_LOCALE)}
+                  {new Date(doc.createdAt).toLocaleDateString(locale)}
                 </p>
                 {doc.uploadedByName && (
                   <p className="text-xs text-muted-foreground">{doc.uploadedByName}</p>

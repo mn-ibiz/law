@@ -18,7 +18,8 @@ import {
   getDeadlineComplianceReport,
   getPEPReport,
 } from "@/lib/queries/reports";
-import { formatKES } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils/format";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import { ReportFilters } from "@/components/reports/report-filters";
 import { ReportCard } from "@/components/reports/report-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -53,8 +54,8 @@ function parseDateParam(value: string | undefined): Date | undefined {
   return isNaN(d.getTime()) ? undefined : d;
 }
 
-function fmt(n: unknown): string {
-  return formatKES(Number(n ?? 0));
+function fmt(n: unknown, currency: string, locale: string): string {
+  return formatCurrency(Number(n ?? 0), currency, locale);
 }
 
 function fmtNum(n: unknown): string {
@@ -95,6 +96,7 @@ async function FinancialReports({
     collection,
     expenseSummary,
     billing,
+    config,
   ] = await Promise.all([
     getRevenueReport(organizationId, dateRange),
     getAccountsReceivableAgingReport(organizationId),
@@ -104,7 +106,9 @@ async function FinancialReports({
     getCollectionReport(organizationId, dateRange),
     getExpenseSummaryReport(organizationId, dateRange),
     getBillingReport(organizationId, dateRange),
+    getOrgConfig(organizationId),
   ]);
+  const { currency, locale } = config;
 
   const totalRevenue = revenue.reduce(
     (sum, r) => sum + Number(r.totalRevenue),
@@ -123,25 +127,25 @@ async function FinancialReports({
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryCard
           label="Total Revenue"
-          value={fmt(totalRevenue)}
+          value={fmt(totalRevenue, currency, locale)}
           icon={<DollarSign className="h-4 w-4 text-emerald-600" />}
           bg="bg-emerald-500/10"
         />
         <SummaryCard
           label="Accounts Receivable"
-          value={fmt(totalAR)}
+          value={fmt(totalAR, currency, locale)}
           icon={<CreditCard className="h-4 w-4 text-amber-600" />}
           bg="bg-amber-500/10"
         />
         <SummaryCard
           label="Work In Progress"
-          value={fmt(totalWIP)}
+          value={fmt(totalWIP, currency, locale)}
           icon={<Clock className="h-4 w-4 text-blue-600" />}
           bg="bg-blue-500/10"
         />
         <SummaryCard
           label="Trust Balances"
-          value={fmt(totalTrustBalance)}
+          value={fmt(totalTrustBalance, currency, locale)}
           icon={<Landmark className="h-4 w-4 text-purple-600" />}
           bg="bg-purple-500/10"
         />
@@ -171,7 +175,7 @@ async function FinancialReports({
         filename="revenue-report"
         dateRange={dateRangeLabel}
         summary={[
-          { label: "Total Revenue", value: fmt(totalRevenue) },
+          { label: "Total Revenue", value: fmt(totalRevenue, currency, locale) },
           {
             label: "Total Payments",
             value: String(
@@ -212,7 +216,7 @@ async function FinancialReports({
         }))}
         filename="ar-aging-report"
         summary={[
-          { label: "Total Outstanding", value: fmt(totalAR) },
+          { label: "Total Outstanding", value: fmt(totalAR, currency, locale) },
           { label: "Invoices", value: String(arAging.length) },
         ]}
         emptyMessage="No outstanding receivables."
@@ -335,7 +339,7 @@ async function FinancialReports({
         data={wip}
         filename="wip-report"
         summary={[
-          { label: "Total WIP", value: fmt(totalWIP) },
+          { label: "Total WIP", value: fmt(totalWIP, currency, locale) },
           { label: "Matters", value: String(wip.length) },
         ]}
         emptyMessage="No unbilled work in progress."
@@ -370,7 +374,7 @@ async function FinancialReports({
         }))}
         filename="trust-account-summary"
         summary={[
-          { label: "Total Trust Balance", value: fmt(totalTrustBalance) },
+          { label: "Total Trust Balance", value: fmt(totalTrustBalance, currency, locale) },
           { label: "Accounts", value: String(trustSummary.length) },
         ]}
         emptyMessage="No trust accounts found."
@@ -457,7 +461,9 @@ async function FinancialReports({
           {
             label: "Total Expenses",
             value: fmt(
-              expenseSummary.reduce((s, r) => s + Number(r.totalAmount), 0)
+              expenseSummary.reduce((s, r) => s + Number(r.totalAmount), 0),
+              currency,
+              locale,
             ),
           },
         ]}

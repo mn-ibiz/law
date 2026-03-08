@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { updateProfile } from "@/lib/actions/profile";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 
 interface ProfileFormProps {
   user: {
@@ -23,6 +23,7 @@ interface ProfileFormProps {
 }
 
 export function ProfileForm({ user }: ProfileFormProps) {
+  const { locale } = useOrgConfig();
   const router = useRouter();
   const [name, setName] = useState(user.name);
   const [phone, setPhone] = useState(user.phone ?? "");
@@ -121,7 +122,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
       <div className="rounded-xl border bg-card p-6">
         <h3 className="font-semibold mb-1">Account Details</h3>
         <p className="text-sm text-muted-foreground">
-          Member since {user.createdAt.toLocaleDateString(APP_LOCALE, { year: "numeric", month: "long", day: "numeric" })}
+          Member since {user.createdAt.toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric" })}
         </p>
       </div>
     </div>

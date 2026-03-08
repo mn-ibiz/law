@@ -22,8 +22,8 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { globalSearch, type SearchResult } from "@/lib/actions/search";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 
-const RECENT_KEY = "recent-searches";
 const MAX_RECENT = 5;
 
 const typeIcons: Record<string, typeof Briefcase> = {
@@ -42,22 +42,22 @@ const typeLabels: Record<string, string> = {
   invoice: "Invoices",
 };
 
-function getRecentSearches(): string[] {
+function getRecentSearches(key: string): string[] {
   if (typeof window === "undefined") return [];
   try {
-    return JSON.parse(localStorage.getItem(RECENT_KEY) || "[]");
+    return JSON.parse(localStorage.getItem(key) || "[]");
   } catch {
     return [];
   }
 }
 
-function addRecentSearch(query: string) {
-  const recent = getRecentSearches();
+function addRecentSearch(key: string, query: string) {
+  const recent = getRecentSearches(key);
   const updated = [query, ...recent.filter((q) => q !== query)].slice(
     0,
     MAX_RECENT
   );
-  localStorage.setItem(RECENT_KEY, JSON.stringify(updated));
+  localStorage.setItem(key, JSON.stringify(updated));
 }
 
 export function CommandSearch() {
@@ -67,6 +67,8 @@ export function CommandSearch() {
   const [loading, setLoading] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const router = useRouter();
+  const { organizationId } = useOrgConfig();
+  const recentKey = `${organizationId}:recent-searches`;
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -81,9 +83,9 @@ export function CommandSearch() {
 
   useEffect(() => {
     if (open) {
-      setRecentSearches(getRecentSearches());
+      setRecentSearches(getRecentSearches(recentKey));
     }
-  }, [open]);
+  }, [open, recentKey]);
 
   const search = useCallback(async (q: string) => {
     if (q.length < 2) {
@@ -105,7 +107,7 @@ export function CommandSearch() {
   }, [query, search]);
 
   function handleSelect(result: SearchResult) {
-    addRecentSearch(query);
+    addRecentSearch(recentKey, query);
     setOpen(false);
     setQuery("");
     router.push(result.href);
@@ -117,7 +119,7 @@ export function CommandSearch() {
 
   function handleSearchAll() {
     if (query.trim()) {
-      addRecentSearch(query);
+      addRecentSearch(recentKey, query);
       setOpen(false);
       router.push(`/search?q=${encodeURIComponent(query.trim())}`);
       setQuery("");

@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 
 interface RequisitionEditDialogProps {
   open: boolean;
@@ -43,6 +44,7 @@ export function RequisitionEditDialog({
   requisition,
   cases,
 }: RequisitionEditDialogProps) {
+  const { currency } = useOrgConfig();
   const router = useRouter();
   const [description, setDescription] = useState(requisition.description);
   const [amount, setAmount] = useState(requisition.amount);
@@ -120,7 +122,7 @@ export function RequisitionEditDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="edit-req-amount">Amount (KES) *</Label>
+              <Label htmlFor="edit-req-amount">{`Amount (${currency}) *`}</Label>
               <Input
                 id="edit-req-amount"
                 type="number"

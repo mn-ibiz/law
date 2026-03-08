@@ -17,7 +17,8 @@ import { UpcomingDeadlines } from "./widgets/upcoming-deadlines";
 import { OverdueInvoicesTable } from "./widgets/overdue-invoices-table";
 import { ComplianceWidget } from "./widgets/compliance-widget";
 import { DashboardSkeleton } from "./dashboard-skeleton";
-import { formatKES, formatNumber } from "@/lib/utils/format";
+import { formatCurrency, formatNumber } from "@/lib/utils/format";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import { getAdminDashboardStats } from "@/lib/queries/dashboard";
 import {
   getMonthlyRevenue,
@@ -28,10 +29,15 @@ import {
 } from "@/lib/queries/dashboard-charts";
 import { getUtilizationRate, getRealizationRate, getCollectionRate, getARAgingBuckets } from "@/lib/queries/kpi";
 import { requireOrg } from "@/lib/auth/get-session";
+import { OnboardingChecklist, buildChecklistItems } from "./onboarding-checklist";
+import { getOnboardingData } from "@/lib/queries/onboarding";
 
 async function AdminStats() {
   const { organizationId } = await requireOrg();
-  const stats = await getAdminDashboardStats(organizationId);
+  const [stats, config] = await Promise.all([
+    getAdminDashboardStats(organizationId),
+    getOrgConfig(organizationId),
+  ]);
 
   return (
     <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
@@ -49,13 +55,13 @@ async function AdminStats() {
       />
       <StatCard
         label="Revenue This Month"
-        value={formatKES(stats.revenueThisMonth)}
+        value={formatCurrency(stats.revenueThisMonth, config.currency, config.locale)}
         icon={Banknote}
         color="emerald"
       />
       <StatCard
         label="Outstanding Invoices"
-        value={formatKES(stats.outstandingInvoices)}
+        value={formatCurrency(stats.outstandingInvoices, config.currency, config.locale)}
         icon={FileWarning}
         color="amber"
       />
@@ -135,9 +141,29 @@ async function AdminWidgets() {
   );
 }
 
+async function AdminOnboarding() {
+  const { organizationId } = await requireOrg();
+  const data = await getOnboardingData(organizationId);
+  if (!data || data.daysOld > 14) return null;
+
+  const items = buildChecklistItems(data);
+  return (
+    <OnboardingChecklist
+      items={items}
+      firmName={data.firmName}
+      daysOld={data.daysOld}
+    />
+  );
+}
+
 export function AdminDashboard() {
   return (
     <div className="space-y-6">
+      {/* Onboarding checklist for new orgs */}
+      <Suspense fallback={null}>
+        <AdminOnboarding />
+      </Suspense>
+
       {/* Row 1: Key stat cards */}
       <Suspense fallback={<DashboardSkeleton cards={6} />}>
         <AdminStats />

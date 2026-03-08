@@ -9,6 +9,7 @@ import { createTrustTransactionSchema, createTrustAccountSchema, createPettyCash
 import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { safeAction } from "@/lib/utils/safe-action";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 
 export async function createTrustTransaction(data: unknown) {
   return safeAction(async () => {
@@ -81,8 +82,9 @@ export async function createTrustAccount(data: unknown) {
     }
 
     // Generate a unique account number
+    const config = await getOrgConfig(organizationId);
     const year = new Date().getFullYear();
-    const prefix = `TRUST-${year}-`;
+    const prefix = `${config.prefixes.trustAccount}-${year}-`;
     const [maxResult] = await db
       .select({ maxNum: sql<string>`MAX(${trustAccounts.accountNumber})` })
       .from(trustAccounts)

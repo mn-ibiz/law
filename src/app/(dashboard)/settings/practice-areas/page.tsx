@@ -1,6 +1,7 @@
 import { requireOrg } from "@/lib/auth/get-session";
 import { getPracticeAreas, getBillingRates } from "@/lib/queries/settings";
-import { formatKES } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils/format";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -17,9 +18,10 @@ export const metadata: Metadata = {
 
 export default async function PracticeAreasPage() {
   const { organizationId } = await requireOrg();
-  const [areas, rates] = await Promise.all([
+  const [areas, rates, config] = await Promise.all([
     getPracticeAreas(organizationId),
     getBillingRates(organizationId),
+    getOrgConfig(organizationId),
   ]);
 
   return (
@@ -105,7 +107,7 @@ export default async function PracticeAreasPage() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        {formatKES(Number(rate.ratePerHour))}
+                        {formatCurrency(Number(rate.ratePerHour), config.currency, config.locale)}
                       </TableCell>
                       <TableCell>
                         {rate.isDefault && <Badge>Default</Badge>}

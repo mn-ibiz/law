@@ -16,6 +16,7 @@ import { Play, Pause, Square, Clock, X, ChevronDown, ChevronUp } from "lucide-re
 import { useAction } from "@/hooks/use-action";
 import { createTimeEntry } from "@/lib/actions/time-expenses";
 import { cn } from "@/lib/utils";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 
 interface TimerCase {
   id: string;
@@ -27,8 +28,6 @@ interface TimerWidgetProps {
   cases: TimerCase[];
 }
 
-const STORAGE_KEY = "law-firm-timer";
-
 interface TimerState {
   isRunning: boolean;
   startTime: number | null;
@@ -37,7 +36,7 @@ interface TimerState {
   description: string;
 }
 
-function loadTimerState(): TimerState {
+function loadTimerState(storageKey: string): TimerState {
   if (typeof window === "undefined") {
     return {
       isRunning: false,
@@ -48,7 +47,7 @@ function loadTimerState(): TimerState {
     };
   }
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(storageKey);
     if (stored) return JSON.parse(stored);
   } catch {
     // ignore parse errors
@@ -62,9 +61,9 @@ function loadTimerState(): TimerState {
   };
 }
 
-function saveTimerState(state: TimerState) {
+function saveTimerState(storageKey: string, state: TimerState) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(storageKey, JSON.stringify(state));
   } catch {
     // ignore storage errors
   }
@@ -78,7 +77,9 @@ function formatElapsed(totalSeconds: number): string {
 }
 
 export function TimerWidget({ cases }: TimerWidgetProps) {
-  const [initial] = useState<TimerState>(() => loadTimerState());
+  const { organizationId } = useOrgConfig();
+  const storageKey = `${organizationId}:law-firm-timer`;
+  const [initial] = useState<TimerState>(() => loadTimerState(storageKey));
 
   const [isRunning, setIsRunning] = useState(initial.isRunning);
   const [startTime, setStartTime] = useState<number | null>(initial.startTime);
@@ -101,20 +102,20 @@ export function TimerWidget({ cases }: TimerWidgetProps) {
       setElapsedSeconds(0);
       setDescription("");
       setSelectedCaseId("");
-      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(storageKey);
     },
   });
 
   // Persist state changes
   useEffect(() => {
-    saveTimerState({
+    saveTimerState(storageKey, {
       isRunning,
       startTime,
       accumulatedMs,
       selectedCaseId,
       description,
     });
-  }, [isRunning, startTime, accumulatedMs, selectedCaseId, description]);
+  }, [isRunning, startTime, accumulatedMs, selectedCaseId, description, storageKey]);
 
   // Timer tick
   useEffect(() => {
@@ -180,8 +181,8 @@ export function TimerWidget({ cases }: TimerWidgetProps) {
     setDescription("");
     setSelectedCaseId("");
     setIsVisible(false);
-    localStorage.removeItem(STORAGE_KEY);
-  }, []);
+    localStorage.removeItem(storageKey);
+  }, [storageKey]);
 
   if (!isVisible) {
     return (

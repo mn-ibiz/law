@@ -10,8 +10,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ReportActions } from "./report-actions";
-import { formatKES } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils/format";
 import { formatEnum } from "@/lib/utils/format-enum";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 interface ReportColumn {
   key: string;
   label: string;
@@ -32,26 +33,6 @@ interface ReportCardProps {
   emptyMessage?: string;
 }
 
-function formatValue(value: unknown, format?: ReportColumn["format"]): string {
-  if (value == null) return "\u2014";
-  switch (format) {
-    case "currency":
-      return formatKES(Number(value));
-    case "number":
-      return Number(value).toFixed(2);
-    case "percent":
-      return `${Number(value).toFixed(1)}%`;
-    case "enum":
-      return formatEnum(String(value));
-    case "date":
-      return value instanceof Date
-        ? value.toLocaleDateString("en-KE")
-        : String(value);
-    default:
-      return String(value);
-  }
-}
-
 export function ReportCard({
   title,
   description,
@@ -64,6 +45,28 @@ export function ReportCard({
   summary,
   emptyMessage = "No data available for this period.",
 }: ReportCardProps) {
+  const { currency, locale } = useOrgConfig();
+
+  function formatValue(value: unknown, format?: ReportColumn["format"]): string {
+    if (value == null) return "\u2014";
+    switch (format) {
+      case "currency":
+        return formatCurrency(Number(value), currency, locale);
+      case "number":
+        return Number(value).toFixed(2);
+      case "percent":
+        return `${Number(value).toFixed(1)}%`;
+      case "enum":
+        return formatEnum(String(value));
+      case "date":
+        return value instanceof Date
+          ? value.toLocaleDateString(locale)
+          : String(value);
+      default:
+        return String(value);
+    }
+  }
+
   const csvColumns = columns.map((c) => ({ key: c.key, label: c.label }));
   const pdfColumns = columns.map((c) => ({
     key: c.key,

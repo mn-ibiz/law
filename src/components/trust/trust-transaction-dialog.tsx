@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAction } from "@/hooks/use-action";
 import { createTrustTransaction } from "@/lib/actions/trust";
-import { formatKES } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { AlertTriangle, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 
 interface TrustTransactionDialogProps {
   accountId: string;
@@ -33,6 +34,7 @@ export function TrustTransactionDialog({
   currentBalance,
   trigger,
 }: TrustTransactionDialogProps) {
+  const { currency, locale } = useOrgConfig();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState("");
@@ -106,13 +108,13 @@ export function TrustTransactionDialog({
           {!isDeposit && (
             <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
               <p className="text-sm font-medium text-amber-800">
-                Current Balance: {formatKES(currentBalance)}
+                Current Balance: {formatCurrency(currentBalance, currency, locale)}
               </p>
             </div>
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="tx-amount">Amount (KES) *</Label>
+            <Label htmlFor="tx-amount">{`Amount (${currency}) *`}</Label>
             <Input
               id="tx-amount"
               type="number"

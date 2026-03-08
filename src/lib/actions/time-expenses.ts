@@ -12,6 +12,7 @@ import { safeAction } from "@/lib/utils/safe-action";
 import { validateId } from "@/lib/utils/validate-id";
 import { withUniqueRetry } from "@/lib/utils/with-retry";
 import { createAuditLog } from "@/lib/utils/audit";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 
 export async function createTimeEntry(data: unknown) {
   return safeAction(async () => {
@@ -105,10 +106,11 @@ export async function createRequisition(data: unknown) {
       return { error: validated.error.issues[0].message };
     }
 
+    const config = await getOrgConfig(organizationId);
     // Retry on unique constraint violation (concurrent number generation race)
     const result = await withUniqueRetry(async () => {
       const reqYear = new Date().getFullYear();
-      const reqPrefix = `REQ-${reqYear}-`;
+      const reqPrefix = `${config.prefixes.requisition}-${reqYear}-`;
       const [reqResult] = await db
         .select({ maxNum: sql<string>`MAX(${requisitions.requisitionNumber})` })
         .from(requisitions)

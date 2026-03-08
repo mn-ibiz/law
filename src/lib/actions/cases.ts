@@ -16,6 +16,8 @@ import { revalidatePath } from "next/cache";
 import { safeAction } from "@/lib/utils/safe-action";
 import { withUniqueRetry } from "@/lib/utils/with-retry";
 import { dispatchWorkflowEvent } from "@/lib/workflows/engine";
+import { checkPlanLimit } from "@/lib/utils/plan-limits";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 
 async function isAssignedToCase(userId: string, caseId: string, organizationId: string): Promise<boolean> {
   const [assignment] = await db
@@ -36,6 +38,12 @@ export async function createCase(data: unknown) {
     const { organizationId, userId, role } = await getTenantContext();
     if (!["admin", "attorney"].includes(role)) {
       return { error: "Unauthorized" };
+    }
+
+    // Check plan limit for cases
+    const caseLimit = await checkPlanLimit(organizationId, "cases");
+    if (!caseLimit.allowed) {
+      return { error: caseLimit.error };
     }
 
     const validated = createCaseSchema.safeParse(data);
@@ -97,7 +105,8 @@ export async function createCase(data: unknown) {
 
     // Retry on unique constraint violation (concurrent number generation race)
     const result = await withUniqueRetry(async () => {
-      const caseNumber = await generateCaseNumber(organizationId);
+      const config = await getOrgConfig(organizationId);
+      const caseNumber = await generateCaseNumber(organizationId, config.prefixes.case);
       return await db
         .insert(cases)
         .values({

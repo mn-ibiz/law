@@ -1,20 +1,31 @@
-import { APP_LOCALE } from "@/lib/constants/locale";
-
-export function formatKES(amount: number): string {
-  if (!Number.isFinite(amount)) return "KES 0";
-  return new Intl.NumberFormat(APP_LOCALE, {
+/**
+ * Format a monetary amount using the given currency and locale.
+ */
+export function formatCurrency(amount: number, currency: string, locale: string): string {
+  if (!Number.isFinite(amount)) return `${currency} 0`;
+  return new Intl.NumberFormat(locale, {
     style: "currency",
-    currency: "KES",
+    currency,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);
 }
 
-export function formatNumber(n: number): string {
-  return new Intl.NumberFormat(APP_LOCALE).format(n);
+export function formatNumber(n: number, locale = "en-KE"): string {
+  return new Intl.NumberFormat(locale).format(n);
 }
 
-export function formatRelativeDate(date: Date | null | undefined): string {
+export function formatDate(
+  date: Date | string | null | undefined,
+  locale: string,
+  options?: Intl.DateTimeFormatOptions,
+): string {
+  if (!date) return "\u2014";
+  const d = typeof date === "string" ? new Date(date) : date;
+  return d.toLocaleDateString(locale, options ?? { month: "short", day: "numeric", year: "numeric" });
+}
+
+export function formatRelativeDate(date: Date | null | undefined, locale = "en-KE"): string {
   if (!date) return "\u2014";
   const now = new Date();
   const diffMs = date.getTime() - now.getTime();
@@ -26,7 +37,7 @@ export function formatRelativeDate(date: Date | null | undefined): string {
   if (diffDays > 0 && diffDays <= 7) return `in ${diffDays} days`;
   if (diffDays < 0 && diffDays >= -7) return `${Math.abs(diffDays)} days ago`;
 
-  return date.toLocaleDateString(APP_LOCALE, {
+  return date.toLocaleDateString(locale, {
     month: "short",
     day: "numeric",
     year: "numeric",

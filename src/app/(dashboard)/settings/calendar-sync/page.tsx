@@ -13,7 +13,8 @@ export default async function CalendarSyncPage() {
   await requireRole("admin", "attorney");
   const session = await auth();
   const userId = session!.user!.id;
-  const token = generateIcalToken(userId);
+  const organizationId = session!.user!.organizationId;
+  const token = generateIcalToken(userId, organizationId);
 
   return (
     <div className="space-y-6">

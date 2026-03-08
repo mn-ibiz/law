@@ -5,7 +5,8 @@ import { TimeEntryDataTable } from "@/components/time-expenses/time-entry-data-t
 import { ExpenseDataTable } from "@/components/time-expenses/expense-data-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { formatKES } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils/format";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import { Plus, Clock, Receipt, CalendarDays, DollarSign } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -22,9 +23,10 @@ export default async function TimeExpensesPage({
 }) {
   const { organizationId } = await requireOrg();
   const params = await searchParams;
-  const [entries, expenseList] = await Promise.all([
+  const [entries, expenseList, config] = await Promise.all([
     getTimeEntries(organizationId),
     getExpenses(organizationId),
+    getOrgConfig(organizationId),
   ]);
 
   const totalHours = entries.reduce((sum, e) => sum + Number(e.hours), 0);
@@ -110,7 +112,7 @@ export default async function TimeExpensesPage({
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Total Expenses</p>
-              <p className="text-2xl font-bold">{formatKES(totalExpenses)}</p>
+              <p className="text-2xl font-bold">{formatCurrency(totalExpenses, config.currency, config.locale)}</p>
             </div>
           </CardContent>
         </Card>

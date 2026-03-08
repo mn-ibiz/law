@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Eye, Pencil } from "lucide-react";
-import { formatKES } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils/format";
 import { formatEnum } from "@/lib/utils/format-enum";
 
 export interface AttorneyRow {
@@ -30,7 +30,8 @@ export interface AttorneyRow {
   isActive: boolean;
 }
 
-export const attorneyColumns: ColumnDef<AttorneyRow>[] = [
+export function getAttorneyColumns(currency: string, locale: string): ColumnDef<AttorneyRow>[] {
+  return [
   {
     accessorKey: "name",
     header: ({ column }) => <SortableHeader column={column}>Name</SortableHeader>,
@@ -91,7 +92,7 @@ export const attorneyColumns: ColumnDef<AttorneyRow>[] = [
     cell: ({ row }) => {
       const rate = row.getValue("hourlyRate") as string | null;
       return rate ? (
-        <span className="font-medium">{formatKES(Number(rate))}</span>
+        <span className="font-medium">{formatCurrency(Number(rate), currency, locale)}</span>
       ) : (
         <span className="text-muted-foreground">\u2014</span>
       );
@@ -126,3 +127,4 @@ export const attorneyColumns: ColumnDef<AttorneyRow>[] = [
     ),
   },
 ];
+}

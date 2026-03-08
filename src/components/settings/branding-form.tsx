@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import { siteConfig } from "@/lib/config/site";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -452,7 +453,7 @@ export function BrandingForm({ initialData }: BrandingFormProps) {
     }
   }
 
-  const displayName = firmName || "Law Firm Registry";
+  const displayName = firmName || siteConfig.name;
   const displayTagline = tagline || "Advocates & Legal Consultants";
   const selectedFont =
     FONT_OPTIONS.find((f) => f.value === fontFamily) ?? FONT_OPTIONS[0];

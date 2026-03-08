@@ -13,7 +13,8 @@ import { CaseSummarySidebar } from "@/components/cases/case-summary-sidebar";
 import { CaseStatusBadge, PriorityBadge } from "@/components/shared/status-badges";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { StatCard } from "@/components/shared/stat-card";
-import { formatKES } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils/format";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import { Clock, Receipt, AlertTriangle, CheckCircle2 } from "lucide-react";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -32,7 +33,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
   const caseData = await getCaseById(organizationId, id);
   if (!caseData) notFound();
 
-  const [assignments, notes, timeline, parties, documents, caseInvoices, caseTimeEntries, caseExpenses, caseDeadlines, caseTasks, allUsers] = await Promise.all([
+  const [assignments, notes, timeline, parties, documents, caseInvoices, caseTimeEntries, caseExpenses, caseDeadlines, caseTasks, allUsers, config] = await Promise.all([
     getCaseAssignments(organizationId, id),
     getCaseNotes(organizationId, id),
     getCaseTimeline(organizationId, id),
@@ -44,6 +45,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
     getDeadlines(organizationId, { caseId: id }),
     getTasks(organizationId, { caseId: id }),
     getUsers(organizationId),
+    getOrgConfig(organizationId),
   ]);
 
   // Compute financial stats
@@ -92,14 +94,14 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
         />
         <StatCard
           label="Total Billed"
-          value={formatKES(totalBilled)}
+          value={formatCurrency(totalBilled, config.currency, config.locale)}
           icon={Receipt}
           description={`${caseInvoices.length} invoice${caseInvoices.length !== 1 ? "s" : ""}`}
           color="emerald"
         />
         <StatCard
           label="Outstanding"
-          value={formatKES(outstanding)}
+          value={formatCurrency(outstanding, config.currency, config.locale)}
           icon={AlertTriangle}
           description={outstanding > 0 ? "Unpaid balance" : "Fully paid"}
           color={outstanding > 0 ? "amber" : "emerald"}

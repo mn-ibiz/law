@@ -239,3 +239,29 @@ development_status:
   20-4-responsive-design-polish: done
   20-5-final-deployment-verification: done
   epic-20-retrospective: optional
+
+  # ============================================
+  # SAAS CONVERSION EPIC (11 stories)
+  # Epic File: _bmad-output/planning-artifacts/saas-conversion-epic.md
+  # Tracker: _bmad-output/implementation-artifacts/saas-loop-tracker.yaml
+  # Dependencies: All previous epics (builds on completed single-tenant app)
+  # ============================================
+
+  # P0 - Foundation (must be done first)
+  epic-saas: in-progress
+  SAAS-S01-organization-db-foundation: in-progress
+  SAAS-S02-auth-tenant-context: backlog
+  SAAS-S03-query-action-isolation: backlog
+
+  # P1 - Core Infrastructure
+  SAAS-S04-file-storage-isolation: backlog
+  SAAS-S05-subscription-billing: backlog
+  SAAS-S06-tenant-onboarding: backlog
+  SAAS-S07-internationalization: backlog
+  SAAS-S10-rate-limiting-background-jobs: backlog
+
+  # P2 - Platform & Polish
+  SAAS-S08-super-admin-panel: backlog
+  SAAS-S09-landing-page-overhaul: backlog
+  SAAS-S11-data-compliance-api-keys: backlog
+  epic-saas-retrospective: optional

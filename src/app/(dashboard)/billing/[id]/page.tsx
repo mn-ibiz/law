@@ -10,9 +10,9 @@ import {
 } from "@/lib/queries/billing";
 import { getFirmBranding } from "@/lib/queries/settings";
 import { Badge } from "@/components/ui/badge";
-import { formatKES } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils/format";
 import { formatEnum } from "@/lib/utils/format-enum";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import {
   Table,
   TableBody,
@@ -41,23 +41,23 @@ const statusColorMap: Record<string, string> = {
   written_off: "bg-rose-100 text-rose-700 border-rose-300",
 };
 
-function fmtDate(d: Date | string | null | undefined) {
+function fmtDate(d: Date | string | null | undefined, locale: string) {
   if (!d) return "—";
-  return new Date(d).toLocaleDateString(APP_LOCALE, {
+  return new Date(d).toLocaleDateString(locale, {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
   });
 }
 
-function fmtDateTime(d: Date | string | null | undefined) {
+function fmtDateTime(d: Date | string | null | undefined, locale: string) {
   if (!d) return "—";
   const date = new Date(d);
-  return `${date.toLocaleDateString(APP_LOCALE, {
+  return `${date.toLocaleDateString(locale, {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  })} at ${date.toLocaleTimeString(APP_LOCALE, {
+  })} at ${date.toLocaleTimeString(locale, {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
@@ -118,12 +118,14 @@ export default async function InvoiceDetailPage({
   const invoice = await getInvoiceById(organizationId, id);
   if (!invoice) notFound();
 
-  const [lineItems, paymentList, history, branding] = await Promise.all([
+  const [lineItems, paymentList, history, branding, config] = await Promise.all([
     getInvoiceLineItems(organizationId, id),
     getInvoicePayments(organizationId, id),
     getInvoiceHistory(organizationId, id),
     getFirmBranding(organizationId),
+    getOrgConfig(organizationId),
   ]);
+  const { locale, currency } = config;
 
   const balanceDue =
     Number(invoice.totalAmount) - Number(invoice.paidAmount);
@@ -152,8 +154,8 @@ export default async function InvoiceDetailPage({
   const pdfData = {
     invoiceNumber: invoice.invoiceNumber,
     status: invoice.status,
-    issueDate: fmtDate(invoice.createdAt),
-    dueDate: fmtDate(invoice.dueDate),
+    issueDate: fmtDate(invoice.createdAt, locale),
+    dueDate: fmtDate(invoice.dueDate, locale),
     caseNumber: invoice.caseNumber ?? undefined,
     caseTitle: invoice.caseTitle ?? undefined,
     createdBy: invoice.createdByName,
@@ -182,6 +184,8 @@ export default async function InvoiceDetailPage({
     paidAmount: String(invoice.paidAmount),
     balanceDue: String(balanceDue),
     notes: invoice.notes ?? undefined,
+    currency,
+    locale,
   };
 
   return (
@@ -227,7 +231,7 @@ export default async function InvoiceDetailPage({
           invoiceNumber={invoice.invoiceNumber}
           clientName={invoice.clientName}
           clientEmail={invoice.clientEmail ?? ""}
-          totalAmount={formatKES(Number(invoice.totalAmount))}
+          totalAmount={formatCurrency(Number(invoice.totalAmount), config.currency, config.locale)}
           firmName={firmName}
           pdfData={pdfData}
         />
@@ -334,7 +338,7 @@ export default async function InvoiceDetailPage({
                   Issue Date
                 </p>
                 <p className="mt-0.5 text-sm font-medium text-slate-800">
-                  {fmtDate(invoice.createdAt)}
+                  {fmtDate(invoice.createdAt, locale)}
                 </p>
               </div>
               <div>
@@ -342,7 +346,7 @@ export default async function InvoiceDetailPage({
                   Due Date
                 </p>
                 <p className="mt-0.5 text-sm font-medium text-slate-800">
-                  {fmtDate(invoice.dueDate)}
+                  {fmtDate(invoice.dueDate, locale)}
                 </p>
               </div>
               <div>
@@ -407,10 +411,10 @@ export default async function InvoiceDetailPage({
                       {Number(item.quantity).toFixed(2)}
                     </td>
                     <td className="py-3.5 text-right tabular-nums text-slate-600">
-                      {formatKES(Number(item.unitPrice))}
+                      {formatCurrency(Number(item.unitPrice), config.currency, config.locale)}
                     </td>
                     <td className="py-3.5 text-right tabular-nums font-semibold text-slate-800">
-                      {formatKES(Number(item.amount))}
+                      {formatCurrency(Number(item.amount), config.currency, config.locale)}
                     </td>
                   </tr>
                 ))}
@@ -432,7 +436,7 @@ export default async function InvoiceDetailPage({
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">Subtotal</span>
                   <span className="tabular-nums font-medium text-slate-700">
-                    {formatKES(Number(invoice.subtotal))}
+                    {formatCurrency(Number(invoice.subtotal), config.currency, config.locale)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -440,20 +444,20 @@ export default async function InvoiceDetailPage({
                     VAT ({invoice.vatRate}%)
                   </span>
                   <span className="tabular-nums font-medium text-slate-700">
-                    {formatKES(Number(invoice.vatAmount))}
+                    {formatCurrency(Number(invoice.vatAmount), config.currency, config.locale)}
                   </span>
                 </div>
                 <div className="border-t border-slate-200 pt-2 flex justify-between">
                   <span className="text-sm font-semibold text-slate-700">Total</span>
                   <span className="tabular-nums text-base font-bold text-slate-900">
-                    {formatKES(Number(invoice.totalAmount))}
+                    {formatCurrency(Number(invoice.totalAmount), config.currency, config.locale)}
                   </span>
                 </div>
                 {Number(invoice.paidAmount) > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-emerald-600 font-medium">Paid</span>
                     <span className="tabular-nums font-medium text-emerald-600">
-                      -{formatKES(Number(invoice.paidAmount))}
+                      -{formatCurrency(Number(invoice.paidAmount), config.currency, config.locale)}
                     </span>
                   </div>
                 )}
@@ -462,7 +466,7 @@ export default async function InvoiceDetailPage({
                     Amount Due
                   </span>
                   <span className="tabular-nums text-xl font-extrabold text-slate-900">
-                    {formatKES(balanceDue)}
+                    {formatCurrency(balanceDue, config.currency, config.locale)}
                   </span>
                 </div>
               </div>
@@ -511,7 +515,7 @@ export default async function InvoiceDetailPage({
                         {formatAuditDetails(entry.action, entry.details)}
                       </p>
                       <p className="text-xs text-slate-400">
-                        {entry.userName} &middot; {fmtDateTime(entry.createdAt)}
+                        {entry.userName} &middot; {fmtDateTime(entry.createdAt, locale)}
                       </p>
                     </div>
                   </div>
@@ -542,14 +546,14 @@ export default async function InvoiceDetailPage({
                           {formatEnum(p.method)}
                         </p>
                         <p className="text-xs text-slate-400">
-                          {fmtDate(p.paymentDate)}
+                          {fmtDate(p.paymentDate, locale)}
                           {p.reference || p.mpesaTransactionId
                             ? ` · ${p.reference ?? p.mpesaTransactionId}`
                             : ""}
                         </p>
                       </div>
                       <span className="text-sm tabular-nums font-semibold text-emerald-600 shrink-0 ml-4">
-                        +{formatKES(Number(p.amount))}
+                        +{formatCurrency(Number(p.amount), config.currency, config.locale)}
                       </span>
                     </div>
                   ))}
@@ -559,7 +563,7 @@ export default async function InvoiceDetailPage({
                     Balance Due
                   </span>
                   <span className="text-base tabular-nums font-bold text-slate-900">
-                    {formatKES(balanceDue)}
+                    {formatCurrency(balanceDue, config.currency, config.locale)}
                   </span>
                 </div>
               </>

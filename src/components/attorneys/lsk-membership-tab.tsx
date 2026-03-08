@@ -31,10 +31,10 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus } from "lucide-react";
-import { formatKES } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils/format";
 import { formatEnum } from "@/lib/utils/format-enum";
-import { APP_LOCALE } from "@/lib/constants/locale";
 import { addLskMembership } from "@/lib/actions/attorneys";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 
 interface LskMembershipRecord {
   id: string;
@@ -65,6 +65,7 @@ export function LskMembershipTab({
   attorneyId: string;
   records: LskMembershipRecord[];
 }) {
+  const { currency, locale } = useOrgConfig();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -145,7 +146,7 @@ export function LskMembershipTab({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="amount">Amount (KES) *</Label>
+                    <Label htmlFor="amount">{`Amount (${currency}) *`}</Label>
                     <Input
                       id="amount"
                       type="number"
@@ -234,10 +235,10 @@ export function LskMembershipTab({
                 {records.map((record) => (
                   <TableRow key={record.id}>
                     <TableCell className="font-medium">{record.year}</TableCell>
-                    <TableCell>{formatKES(Number(record.amount))}</TableCell>
+                    <TableCell>{formatCurrency(Number(record.amount), currency, locale)}</TableCell>
                     <TableCell>
                       {record.paymentDate
-                        ? new Date(record.paymentDate).toLocaleDateString(APP_LOCALE)
+                        ? new Date(record.paymentDate).toLocaleDateString(locale)
                         : "\u2014"}
                     </TableCell>
                     <TableCell>{record.receiptNumber ?? "\u2014"}</TableCell>

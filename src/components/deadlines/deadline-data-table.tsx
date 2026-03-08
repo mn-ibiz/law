@@ -7,7 +7,8 @@ import {
   type DataTableFilterConfig,
   type ExportColumn,
 } from "@/components/shared/enhanced-data-table";
-import { deadlineColumns, type DeadlineRow } from "./deadline-columns";
+import { getDeadlineColumns, type DeadlineRow } from "./deadline-columns";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 import { DeadlineRowActions } from "./deadline-row-actions";
 import { AlertTriangle } from "lucide-react";
 
@@ -46,6 +47,7 @@ interface DeadlineDataTableProps {
 }
 
 export function DeadlineDataTable({ data }: DeadlineDataTableProps) {
+  const { locale } = useOrgConfig();
   const columns = useMemo(() => {
     const actionsColumn: ColumnDef<DeadlineRow> = {
       id: "actions",
@@ -66,8 +68,8 @@ export function DeadlineDataTable({ data }: DeadlineDataTableProps) {
         />
       ),
     };
-    return [...deadlineColumns, actionsColumn];
-  }, []);
+    return [...getDeadlineColumns(locale), actionsColumn];
+  }, [locale]);
 
   return (
     <EnhancedDataTable

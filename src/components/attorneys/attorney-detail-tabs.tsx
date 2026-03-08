@@ -4,10 +4,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ActiveBadge } from "@/components/shared/status-badges";
 import { cn } from "@/lib/utils";
-import { formatKES } from "@/lib/utils/format";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { formatCurrency } from "@/lib/utils/format";
 import { IndemnityTab } from "@/components/attorneys/indemnity-tab";
 import { LskMembershipTab } from "@/components/attorneys/lsk-membership-tab";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 
 const designationCapsule =
   "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold leading-none whitespace-nowrap bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-600/20";
@@ -67,6 +67,7 @@ interface AttorneyDetailTabsProps {
 }
 
 export function AttorneyDetailTabs({ attorney, indemnityRecords = [], lskMembershipRecords = [] }: AttorneyDetailTabsProps) {
+  const { currency, locale } = useOrgConfig();
   return (
     <Tabs defaultValue="profile" className="space-y-4">
       <TabsList>
@@ -113,14 +114,14 @@ export function AttorneyDetailTabs({ attorney, indemnityRecords = [], lskMembers
               <div>
                 <dt className="text-sm text-muted-foreground">Hourly Rate</dt>
                 <dd className="font-medium">
-                  {attorney.hourlyRate ? formatKES(Number(attorney.hourlyRate)) : "\u2014"}
+                  {attorney.hourlyRate ? formatCurrency(Number(attorney.hourlyRate), currency, locale) : "\u2014"}
                 </dd>
               </div>
               <div>
                 <dt className="text-sm text-muted-foreground">Date Admitted</dt>
                 <dd className="font-medium">
                   {attorney.dateAdmitted
-                    ? new Date(attorney.dateAdmitted).toLocaleDateString(APP_LOCALE)
+                    ? new Date(attorney.dateAdmitted).toLocaleDateString(locale)
                     : "\u2014"}
                 </dd>
               </div>

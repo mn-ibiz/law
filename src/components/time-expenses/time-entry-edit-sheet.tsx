@@ -23,6 +23,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 import type { TimeEntryRow } from "./time-entry-columns";
 
 interface TimeEntryEditSheetProps {
@@ -32,6 +33,7 @@ interface TimeEntryEditSheetProps {
 }
 
 export function TimeEntryEditSheet({ entry, open, onOpenChange }: TimeEntryEditSheetProps) {
+  const { currency } = useOrgConfig();
   const router = useRouter();
   const [caseId, setCaseId] = useState(entry.caseId ?? "");
   const [description, setDescription] = useState(entry.description);
@@ -126,7 +128,7 @@ export function TimeEntryEditSheet({ entry, open, onOpenChange }: TimeEntryEditS
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="edit-te-rate">Hourly Rate (KES)</Label>
+            <Label htmlFor="edit-te-rate">{`Hourly Rate (${currency})`}</Label>
             <Input
               id="edit-te-rate"
               type="number"

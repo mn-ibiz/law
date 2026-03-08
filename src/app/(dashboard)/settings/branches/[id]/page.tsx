@@ -26,7 +26,7 @@ import {
   Calendar,
   Users,
 } from "lucide-react";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 
 export async function generateMetadata({
   params,
@@ -51,7 +51,10 @@ export default async function BranchDetailPage({
 }) {
   const { organizationId } = await requireOrg();
   const { id } = await params;
-  const branch = await getBranchWithUsers(organizationId, id);
+  const [branch, config] = await Promise.all([
+    getBranchWithUsers(organizationId, id),
+    getOrgConfig(organizationId),
+  ]);
   if (!branch) notFound();
 
   const location = [branch.address, branch.city, branch.county]
@@ -134,7 +137,7 @@ export default async function BranchDetailPage({
               <Calendar className="h-3.5 w-3.5" />
               <span>
                 Created{" "}
-                {new Date(branch.createdAt).toLocaleDateString(APP_LOCALE, {
+                {new Date(branch.createdAt).toLocaleDateString(config.locale, {
                   year: "numeric",
                   month: "long",
                   day: "numeric",

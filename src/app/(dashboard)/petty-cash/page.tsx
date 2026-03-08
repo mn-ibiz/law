@@ -2,8 +2,8 @@ import { requireOrg } from "@/lib/auth/get-session";
 import { getPettyCashTransactions } from "@/lib/queries/trust";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TransactionTypeBadge } from "@/components/shared/status-badges";
-import { formatKES } from "@/lib/utils/format";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { formatCurrency } from "@/lib/utils/format";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -19,7 +19,10 @@ export const metadata: Metadata = {
 
 export default async function PettyCashPage() {
   const { organizationId } = await requireOrg();
-  const transactions = await getPettyCashTransactions(organizationId);
+  const [transactions, config] = await Promise.all([
+    getPettyCashTransactions(organizationId),
+    getOrgConfig(organizationId),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -57,7 +60,7 @@ export default async function PettyCashPage() {
               <TableBody>
                 {transactions.map((t) => (
                   <TableRow key={t.id} className="transition-colors hover:bg-muted/50">
-                    <TableCell>{new Date(t.transactionDate).toLocaleDateString(APP_LOCALE)}</TableCell>
+                    <TableCell>{new Date(t.transactionDate).toLocaleDateString(config.locale)}</TableCell>
                     <TableCell>
                       <TransactionTypeBadge type={t.type} />
                     </TableCell>
@@ -74,7 +77,7 @@ export default async function PettyCashPage() {
                         <span className="text-muted-foreground text-xs">{"\u2014"}</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-right font-medium">{formatKES(Number(t.amount))}</TableCell>
+                    <TableCell className="text-right font-medium">{formatCurrency(Number(t.amount), config.currency, config.locale)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

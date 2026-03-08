@@ -3,7 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { SortableHeader } from "@/components/shared/enhanced-data-table";
 import { formatEnum } from "@/lib/utils/format-enum";
-import { APP_LOCALE } from "@/lib/constants/locale";
+
 import { cn } from "@/lib/utils";
 
 export interface DocumentRow {
@@ -33,7 +33,8 @@ const docStatusStyles: Record<string, string> = {
   archived: "bg-gray-50 text-gray-500 ring-1 ring-inset ring-gray-500/20",
 };
 
-export const documentColumns: ColumnDef<DocumentRow>[] = [
+export function getDocumentColumns(locale: string): ColumnDef<DocumentRow>[] {
+  return [
   {
     accessorKey: "title",
     header: ({ column }) => <SortableHeader column={column}>Title</SortableHeader>,
@@ -87,8 +88,9 @@ export const documentColumns: ColumnDef<DocumentRow>[] = [
     header: ({ column }) => <SortableHeader column={column}>Date</SortableHeader>,
     cell: ({ row }) => (
       <span className="text-sm">
-        {new Date(row.getValue("createdAt") as Date).toLocaleDateString(APP_LOCALE)}
+        {new Date(row.getValue("createdAt") as Date).toLocaleDateString(locale)}
       </span>
     ),
   },
 ];
+}

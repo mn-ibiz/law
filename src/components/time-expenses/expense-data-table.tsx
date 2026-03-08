@@ -7,8 +7,9 @@ import {
   type DataTableFilterConfig,
   type ExportColumn,
 } from "@/components/shared/enhanced-data-table";
-import { expenseColumns, type ExpenseRow } from "./expense-columns";
+import { getExpenseColumns, type ExpenseRow } from "./expense-columns";
 import { ExpenseRowActions } from "./expense-row-actions";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 import { Receipt } from "lucide-react";
 
 const filters: DataTableFilterConfig[] = [
@@ -36,14 +37,15 @@ interface ExpenseDataTableProps {
 }
 
 export function ExpenseDataTable({ data }: ExpenseDataTableProps) {
+  const { currency, locale } = useOrgConfig();
   const columns = useMemo(() => {
     const actionsColumn: ColumnDef<ExpenseRow> = {
       id: "actions",
       enableHiding: false,
       cell: ({ row }) => <ExpenseRowActions expense={row.original} />,
     };
-    return [...expenseColumns, actionsColumn];
-  }, []);
+    return [...getExpenseColumns(currency, locale), actionsColumn];
+  }, [currency, locale]);
 
   return (
     <EnhancedDataTable

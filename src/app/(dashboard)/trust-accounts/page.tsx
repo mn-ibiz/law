@@ -1,7 +1,8 @@
 import { requireOrg } from "@/lib/auth/get-session";
 import { getTrustAccounts, getClientsForSelect, getCasesForSelect } from "@/lib/queries/trust";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatKES } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils/format";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import { TrustAccountDataTable } from "@/components/trust/trust-account-data-table";
 import { CreateTrustAccountDialog } from "@/components/trust/create-trust-account-dialog";
 import { Landmark, DollarSign, Wallet } from "lucide-react";
@@ -14,10 +15,11 @@ export const metadata: Metadata = {
 
 export default async function TrustAccountsPage() {
   const { organizationId } = await requireOrg();
-  const [accounts, clients, cases] = await Promise.all([
+  const [accounts, clients, cases, config] = await Promise.all([
     getTrustAccounts(organizationId),
     getClientsForSelect(organizationId),
     getCasesForSelect(organizationId),
+    getOrgConfig(organizationId),
   ]);
 
   const totalBalance = accounts.reduce((sum, a) => sum + Number(a.balance), 0);
@@ -59,7 +61,7 @@ export default async function TrustAccountsPage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Total Balance</p>
-              <p className="text-2xl font-bold">{formatKES(totalBalance)}</p>
+              <p className="text-2xl font-bold">{formatCurrency(totalBalance, config.currency, config.locale)}</p>
             </div>
           </CardContent>
         </Card>

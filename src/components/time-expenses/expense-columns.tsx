@@ -4,9 +4,8 @@ import { ColumnDef } from "@tanstack/react-table";
 import { SortableHeader } from "@/components/shared/enhanced-data-table";
 import { BillableBadge } from "@/components/shared/status-badges";
 import { PersonAvatar } from "@/components/shared/person-avatar";
-import { formatKES } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils/format";
 import { formatEnum } from "@/lib/utils/format-enum";
-import { APP_LOCALE } from "@/lib/constants/locale";
 
 export interface ExpenseRow {
   id: string;
@@ -23,13 +22,14 @@ export interface ExpenseRow {
   userAvatar: string | null;
 }
 
-export const expenseColumns: ColumnDef<ExpenseRow>[] = [
+export function getExpenseColumns(currency: string, locale: string): ColumnDef<ExpenseRow>[] {
+  return [
   {
     accessorKey: "date",
     header: ({ column }) => <SortableHeader column={column}>Date</SortableHeader>,
     cell: ({ row }) => (
       <span className="text-sm">
-        {new Date(row.getValue("date") as Date).toLocaleDateString(APP_LOCALE)}
+        {new Date(row.getValue("date") as Date).toLocaleDateString(locale)}
       </span>
     ),
   },
@@ -63,7 +63,7 @@ export const expenseColumns: ColumnDef<ExpenseRow>[] = [
     accessorKey: "amount",
     header: ({ column }) => <SortableHeader column={column}>Amount</SortableHeader>,
     cell: ({ row }) => (
-      <span className="font-medium">{formatKES(Number(row.getValue("amount")))}</span>
+      <span className="font-medium">{formatCurrency(Number(row.getValue("amount")), currency, locale)}</span>
     ),
   },
   {
@@ -75,3 +75,4 @@ export const expenseColumns: ColumnDef<ExpenseRow>[] = [
     },
   },
 ];
+}

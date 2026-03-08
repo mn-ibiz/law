@@ -5,8 +5,7 @@ import Link from "next/link";
 import { SortableHeader } from "@/components/shared/enhanced-data-table";
 import { InvoiceStatusBadge } from "@/components/shared/status-badges";
 import { PersonAvatar } from "@/components/shared/person-avatar";
-import { formatKES } from "@/lib/utils/format";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { formatCurrency } from "@/lib/utils/format";
 
 export interface InvoiceRow {
   id: string;
@@ -21,7 +20,8 @@ export interface InvoiceRow {
   caseNumber: string | null;
 }
 
-export const invoiceColumns: ColumnDef<InvoiceRow>[] = [
+export function getInvoiceColumns(currency: string, locale: string): ColumnDef<InvoiceRow>[] {
+  return [
   {
     accessorKey: "invoiceNumber",
     header: ({ column }) => <SortableHeader column={column}>Invoice #</SortableHeader>,
@@ -58,7 +58,7 @@ export const invoiceColumns: ColumnDef<InvoiceRow>[] = [
     header: ({ column }) => <SortableHeader column={column}>Total</SortableHeader>,
     cell: ({ row }) => (
       <span className="font-medium">
-        {formatKES(Number(row.getValue("totalAmount")))}
+        {formatCurrency(Number(row.getValue("totalAmount")), currency, locale)}
       </span>
     ),
   },
@@ -67,7 +67,7 @@ export const invoiceColumns: ColumnDef<InvoiceRow>[] = [
     header: ({ column }) => <SortableHeader column={column}>Paid</SortableHeader>,
     cell: ({ row }) => (
       <span className="text-sm text-muted-foreground">
-        {formatKES(Number(row.getValue("paidAmount")))}
+        {formatCurrency(Number(row.getValue("paidAmount")), currency, locale)}
       </span>
     ),
   },
@@ -78,7 +78,7 @@ export const invoiceColumns: ColumnDef<InvoiceRow>[] = [
       const dueDate = row.original.dueDate;
       return dueDate ? (
         <span className="text-sm">
-          {new Date(dueDate).toLocaleDateString(APP_LOCALE, {
+          {new Date(dueDate).toLocaleDateString(locale, {
             year: "numeric",
             month: "short",
             day: "numeric",
@@ -98,3 +98,4 @@ export const invoiceColumns: ColumnDef<InvoiceRow>[] = [
     },
   },
 ];
+}

@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 
 interface UserOption {
   id: string;
@@ -35,6 +36,8 @@ interface AttorneyFormProps {
 
 export function AttorneyForm({ defaultValues, attorneyId, users }: AttorneyFormProps) {
   const router = useRouter();
+  const { country, currency } = useOrgConfig();
+  const isKenya = country === "KE";
   const isEditing = !!attorneyId;
 
   const form = useForm<CreateAttorneyInput>({
@@ -161,7 +164,7 @@ export function AttorneyForm({ defaultValues, attorneyId, users }: AttorneyFormP
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="hourlyRate">Hourly Rate (KES)</Label>
+              <Label htmlFor="hourlyRate">Hourly Rate ({currency})</Label>
               <Input
                 id="hourlyRate"
                 type="number"
@@ -179,10 +182,12 @@ export function AttorneyForm({ defaultValues, attorneyId, users }: AttorneyFormP
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="lskNumber">LSK Number</Label>
-              <Input id="lskNumber" {...form.register("lskNumber")} />
-            </div>
+            {isKenya && (
+              <div className="space-y-2">
+                <Label htmlFor="lskNumber">LSK Number</Label>
+                <Input id="lskNumber" {...form.register("lskNumber")} />
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -191,16 +196,18 @@ export function AttorneyForm({ defaultValues, attorneyId, users }: AttorneyFormP
           </div>
 
           <div className="flex flex-wrap gap-6">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="commissionerForOaths"
-                checked={form.watch("commissionerForOaths")}
-                onCheckedChange={(checked) =>
-                  form.setValue("commissionerForOaths", checked === true)
-                }
-              />
-              <Label htmlFor="commissionerForOaths">Commissioner for Oaths</Label>
-            </div>
+            {isKenya && (
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="commissionerForOaths"
+                  checked={form.watch("commissionerForOaths")}
+                  onCheckedChange={(checked) =>
+                    form.setValue("commissionerForOaths", checked === true)
+                  }
+                />
+                <Label htmlFor="commissionerForOaths">Commissioner for Oaths</Label>
+              </div>
+            )}
             <div className="flex items-center gap-2">
               <Checkbox
                 id="notaryPublic"
@@ -211,16 +218,18 @@ export function AttorneyForm({ defaultValues, attorneyId, users }: AttorneyFormP
               />
               <Label htmlFor="notaryPublic">Notary Public</Label>
             </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="seniorCounsel"
-                checked={form.watch("seniorCounsel")}
-                onCheckedChange={(checked) =>
-                  form.setValue("seniorCounsel", checked === true)
-                }
-              />
-              <Label htmlFor="seniorCounsel">Senior Counsel</Label>
-            </div>
+            {isKenya && (
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="seniorCounsel"
+                  checked={form.watch("seniorCounsel")}
+                  onCheckedChange={(checked) =>
+                    form.setValue("seniorCounsel", checked === true)
+                  }
+                />
+                <Label htmlFor="seniorCounsel">Senior Counsel</Label>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-4">

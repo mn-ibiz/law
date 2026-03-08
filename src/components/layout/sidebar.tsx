@@ -15,26 +15,31 @@ import {
 } from "@/components/ui/tooltip";
 import { dashboardNav } from "./sidebar-nav";
 import { BranchSelector } from "./branch-selector";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
+import { getOrgAbbreviation } from "@/lib/config/site";
 
 interface SidebarProps {
   role: string;
   userName: string;
   permissions: Record<string, string[]>;
+  orgName?: string;
 }
 
-export function Sidebar({ role, userName, permissions }: SidebarProps) {
+export function Sidebar({ role, userName, permissions, orgName }: SidebarProps) {
   const pathname = usePathname();
+  const { organizationId } = useOrgConfig();
+  const storageKey = `${organizationId}:sidebar-collapsed`;
 
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("sidebar-collapsed");
+    const saved = localStorage.getItem(storageKey);
     if (saved === "true") setCollapsed(true);
-  }, []);
+  }, [storageKey]);
 
   useEffect(() => {
-    localStorage.setItem("sidebar-collapsed", String(collapsed));
-  }, [collapsed]);
+    localStorage.setItem(storageKey, String(collapsed));
+  }, [collapsed, storageKey]);
 
   return (
     <aside
@@ -56,7 +61,7 @@ export function Sidebar({ role, userName, permissions }: SidebarProps) {
           </div>
           {!collapsed && (
             <span className="text-sm font-bold tracking-tight text-sidebar-foreground">
-              LFR
+              {orgName ? getOrgAbbreviation(orgName) : "LFR"}
             </span>
           )}
         </Link>

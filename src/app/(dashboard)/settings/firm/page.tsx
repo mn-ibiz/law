@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -35,7 +35,10 @@ const SETTING_LABELS: Record<string, string> = {
 
 export default async function FirmSettingsPage() {
   const { organizationId } = await requireOrg();
-  const settings = await getFirmSettings(organizationId);
+  const [settings, config] = await Promise.all([
+    getFirmSettings(organizationId),
+    getOrgConfig(organizationId),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -73,7 +76,7 @@ export default async function FirmSettingsPage() {
                       {setting.value ?? <span className="text-muted-foreground italic">Not set</span>}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
-                      {new Date(setting.updatedAt).toLocaleDateString(APP_LOCALE)}
+                      {new Date(setting.updatedAt).toLocaleDateString(config.locale)}
                     </TableCell>
                   </TableRow>
                 ))}

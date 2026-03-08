@@ -14,7 +14,7 @@ import { validateId } from "@/lib/utils/validate-id";
 import { withUniqueRetry } from "@/lib/utils/with-retry";
 import { sendEmail } from "@/lib/email/send-email";
 import { invoiceDeliveryEmailHtml } from "@/lib/email/templates/invoice-delivery";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import { dispatchWorkflowEvent } from "@/lib/workflows/engine";
 
 export async function createInvoice(data: unknown) {
@@ -35,13 +35,14 @@ export async function createInvoice(data: unknown) {
       amount: item.quantity * item.unitPrice,
     }));
     const subtotal = computedLineItems.reduce((sum, item) => sum + item.amount, 0);
-    const vatRate = 16;
+    const config = await getOrgConfig(organizationId);
+    const vatRate = config.vatRate;
     const vatAmount = Math.round(subtotal * vatRate) / 100;
     const totalAmount = Math.round((subtotal + vatAmount) * 100) / 100;
 
     // Retry on unique constraint violation (concurrent number generation race)
     const result = await withUniqueRetry(async () => {
-      const invoiceNumber = await generateInvoiceNumber(organizationId);
+      const invoiceNumber = await generateInvoiceNumber(organizationId, config.prefixes.invoice);
       return await db
         .insert(invoices)
         .values({
@@ -115,7 +116,8 @@ export async function updateInvoice(data: unknown) {
       amount: item.quantity * item.unitPrice,
     }));
     const subtotal = computedLineItems.reduce((sum, item) => sum + item.amount, 0);
-    const vatRate = 16;
+    const config = await getOrgConfig(organizationId);
+    const vatRate = config.vatRate;
     const vatAmount = Math.round(subtotal * vatRate) / 100;
     const totalAmount = Math.round((subtotal + vatAmount) * 100) / 100;
 
@@ -205,6 +207,9 @@ export async function sendInvoice(id: string, emailOptions?: SendInvoiceEmailOpt
 
     const invoice = result[0];
 
+    const orgConfig = await getOrgConfig(organizationId);
+    const emailFrom = orgConfig.emailFrom ?? undefined;
+
     if (emailOptions) {
       // Send with user-composed email
       const attachments = emailOptions.pdfBase64
@@ -217,6 +222,7 @@ export async function sendInvoice(id: string, emailOptions?: SendInvoiceEmailOpt
         subject: emailOptions.subject,
         html: emailOptions.body,
         attachments,
+        from: emailFrom,
       }).catch((err) => console.error("Invoice email failed:", err));
     } else {
       // Fallback: send with default template
@@ -230,12 +236,12 @@ export async function sendInvoice(id: string, emailOptions?: SendInvoiceEmailOpt
         .limit(1)
         .then(([client]) => {
           if (!client?.email) return;
-          const formattedAmount = Number(invoice.totalAmount).toLocaleString(APP_LOCALE, {
+          const formattedAmount = Number(invoice.totalAmount).toLocaleString(orgConfig.locale, {
             style: "currency",
-            currency: "KES",
+            currency: orgConfig.currency,
           });
           const formattedDue = invoice.dueDate
-            ? new Date(invoice.dueDate).toLocaleDateString(APP_LOCALE)
+            ? new Date(invoice.dueDate).toLocaleDateString(orgConfig.locale)
             : "N/A";
           return sendEmail({
             to: client.email,
@@ -246,6 +252,7 @@ export async function sendInvoice(id: string, emailOptions?: SendInvoiceEmailOpt
               amount: formattedAmount,
               dueDate: formattedDue,
             }),
+            from: emailFrom,
           });
         })
         .catch((err) => console.error("Invoice email failed:", err));
@@ -389,10 +396,12 @@ export async function createQuote(data: unknown) {
     const validated = createQuoteSchema.safeParse(data);
     if (!validated.success) return { error: validated.error.issues[0].message };
 
+    const config = await getOrgConfig(organizationId);
+
     // Retry on unique constraint violation (concurrent number generation race)
     const result = await withUniqueRetry(async () => {
       const year = new Date().getFullYear();
-      const qtPrefix = `QT-${year}-`;
+      const qtPrefix = `${config.prefixes.quote}-${year}-`;
       const [qtResult] = await db
         .select({ maxNum: sql<string>`MAX(${quotes.quoteNumber})` })
         .from(quotes)
@@ -443,14 +452,15 @@ export async function createQuoteWithLineItems(data: unknown) {
       amount: item.quantity * item.rate,
     }));
     const subtotal = computedLineItems.reduce((sum, item) => sum + item.amount, 0);
-    const vatRate = 16;
+    const config = await getOrgConfig(organizationId);
+    const vatRate = config.vatRate;
     const vatAmount = Math.round(subtotal * vatRate) / 100;
     const totalAmount = Math.round((subtotal + vatAmount) * 100) / 100;
 
     // Retry on unique constraint violation (concurrent number generation race)
     const result = await withUniqueRetry(async () => {
       const year = new Date().getFullYear();
-      const qtPrefix = `QT-${year}-`;
+      const qtPrefix = `${config.prefixes.quote}-${year}-`;
       const [qtResult] = await db
         .select({ maxNum: sql<string>`MAX(${quotes.quoteNumber})` })
         .from(quotes)
@@ -546,10 +556,11 @@ export async function createReceipt(data: unknown) {
     const validated = createReceiptSchema.safeParse(data);
     if (!validated.success) return { error: validated.error.issues[0].message };
 
+    const config = await getOrgConfig(organizationId);
     // Retry on unique constraint violation (concurrent number generation race)
     const result = await withUniqueRetry(async () => {
       const rctYear = new Date().getFullYear();
-      const rctPrefix = `RCT-${rctYear}-`;
+      const rctPrefix = `${config.prefixes.receipt}-${rctYear}-`;
       const [rctResult] = await db
         .select({ maxNum: sql<string>`MAX(${receipts.receiptNumber})` })
         .from(receipts)
@@ -590,10 +601,11 @@ export async function createCreditNote(data: unknown) {
     const validated = createCreditNoteSchema.safeParse(data);
     if (!validated.success) return { error: validated.error.issues[0].message };
 
+    const config = await getOrgConfig(organizationId);
     // Retry on unique constraint violation (concurrent number generation race)
     const result = await withUniqueRetry(async () => {
       const cnYear = new Date().getFullYear();
-      const cnPrefix = `CN-${cnYear}-`;
+      const cnPrefix = `${config.prefixes.creditNote}-${cnYear}-`;
       const [cnResult] = await db
         .select({ maxNum: sql<string>`MAX(${creditNotes.creditNoteNumber})` })
         .from(creditNotes)

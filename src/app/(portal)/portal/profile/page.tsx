@@ -2,7 +2,7 @@ import { requireRole, requireOrg } from "@/lib/auth/get-session";
 import { getUserById } from "@/lib/queries/settings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -13,7 +13,10 @@ export const metadata: Metadata = {
 export default async function PortalProfilePage() {
   const session = await requireRole("client");
   const { organizationId } = await requireOrg();
-  const user = await getUserById(organizationId, session.user.id as string);
+  const [user, config] = await Promise.all([
+    getUserById(organizationId, session.user.id as string),
+    getOrgConfig(organizationId),
+  ]);
 
   if (!user) {
     return (
@@ -67,7 +70,7 @@ export default async function PortalProfilePage() {
             <div>
               <dt className="text-sm font-medium text-muted-foreground">Member Since</dt>
               <dd className="text-sm mt-1">
-                {new Date(user.createdAt).toLocaleDateString(APP_LOCALE)}
+                {new Date(user.createdAt).toLocaleDateString(config.locale)}
               </dd>
             </div>
           </dl>

@@ -1,0 +1,11 @@
+{
+  "crons": [
+    { "path": "/api/cron?job=overdue-invoices", "schedule": "0 6 * * *" },
+    { "path": "/api/cron?job=deadline-alerts", "schedule": "0 */4 * * *" },
+    { "path": "/api/cron?job=certificate-expiry", "schedule": "0 7 * * 1" },
+    { "path": "/api/cron?job=subscription-check", "schedule": "0 0 * * *" },
+    { "path": "/api/cron?job=token-cleanup", "schedule": "0 3 * * 0" },
+    { "path": "/api/cron?job=data-purge", "schedule": "0 2 * * 0" },
+    { "path": "/api/cron?job=usage-alerts", "schedule": "0 8 * * *" }
+  ]
+}

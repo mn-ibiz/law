@@ -7,8 +7,9 @@ import {
   type DataTableFilterConfig,
   type ExportColumn,
 } from "@/components/shared/enhanced-data-table";
-import { timeEntryColumns, type TimeEntryRow } from "./time-entry-columns";
+import { getTimeEntryColumns, type TimeEntryRow } from "./time-entry-columns";
 import { TimeEntryRowActions } from "./time-entry-row-actions";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 import { Clock } from "lucide-react";
 
 const filters: DataTableFilterConfig[] = [
@@ -37,6 +38,7 @@ interface TimeEntryDataTableProps {
 }
 
 export function TimeEntryDataTable({ data }: TimeEntryDataTableProps) {
+  const { currency, locale } = useOrgConfig();
   const columns = useMemo(() => {
     const actionsColumn: ColumnDef<TimeEntryRow> = {
       id: "actions",
@@ -45,8 +47,8 @@ export function TimeEntryDataTable({ data }: TimeEntryDataTableProps) {
         <TimeEntryRowActions entry={row.original} />
       ),
     };
-    return [...timeEntryColumns, actionsColumn];
-  }, []);
+    return [...getTimeEntryColumns(currency, locale), actionsColumn];
+  }, [currency, locale]);
 
   return (
     <EnhancedDataTable

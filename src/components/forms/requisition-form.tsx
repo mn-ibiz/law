@@ -21,12 +21,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 
 interface RequisitionFormProps {
   cases: { id: string; caseNumber: string; title: string }[];
 }
 
 export function RequisitionForm({ cases }: RequisitionFormProps) {
+  const { currency } = useOrgConfig();
   const router = useRouter();
 
   const form = useForm<CreateRequisitionInput>({
@@ -96,7 +98,7 @@ export function RequisitionForm({ cases }: RequisitionFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="amount">Amount (KES) *</Label>
+              <Label htmlFor="amount">{`Amount (${currency}) *`}</Label>
               <Input
                 id="amount"
                 type="number"

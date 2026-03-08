@@ -78,7 +78,7 @@ export const defaultPermissions: Record<Role, Partial<Record<Resource, Action[]>
  * falling back to the hardcoded matrix if the DB has no rows.
  */
 export async function checkPermission(
-  session: { user: { role: Role } } | null,
+  session: { user: { role: Role; organizationId?: string } } | null,
   resource: Resource,
   action: Action
 ): Promise<boolean> {
@@ -86,8 +86,8 @@ export async function checkPermission(
 
   // Dynamic import to avoid pulling DB code into client bundles
   const { getPermissionsForRole } = await import("@/lib/queries/permissions");
-  // checkPermission doesn't have organizationId context — pass empty string to use fallback
-  const dbPerms = await getPermissionsForRole("", session.user.role);
+  const orgId = session.user.organizationId ?? "";
+  const dbPerms = await getPermissionsForRole(orgId, session.user.role);
 
   // Use DB permissions if any exist for this role
   if (Object.keys(dbPerms).length > 0) {

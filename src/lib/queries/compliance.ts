@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { practisingCertificates, cpdRecords, attorneys } from "@/lib/db/schema/attorneys";
 import { users } from "@/lib/db/schema/auth";
 import { eq, and, sql, desc, lte, gte } from "drizzle-orm";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 
 export async function getAttorneyCertificates(organizationId: string, attorneyId: string) {
   return db
@@ -59,13 +60,17 @@ export async function getCpdSummary(organizationId: string, attorneyId: string, 
   const totalUnits = totalResult[0]?.total ?? 0;
   const lskProgramUnits = lskResult[0]?.total ?? 0;
 
+  const config = await getOrgConfig(organizationId);
+  const requiredTotal = config.cpdTotalRequired;
+  const requiredLsk = config.cpdLskRequired;
+
   return {
     year: currentYear,
     totalUnits,
     lskProgramUnits,
-    requiredTotal: 5,
-    requiredLsk: 2,
-    isCompliant: totalUnits >= 5 && lskProgramUnits >= 2,
+    requiredTotal,
+    requiredLsk,
+    isCompliant: totalUnits >= requiredTotal && lskProgramUnits >= requiredLsk,
   };
 }
 
@@ -99,6 +104,9 @@ export async function getExpiringCertificates(organizationId: string, daysAhead 
 
 export async function getNonCompliantCpdAttorneys(organizationId: string, year?: number) {
   const currentYear = year ?? new Date().getFullYear();
+  const config = await getOrgConfig(organizationId);
+  const reqTotal = config.cpdTotalRequired;
+  const reqLsk = config.cpdLskRequired;
 
   const result = await db.execute<{
     attorney_id: string;
@@ -119,8 +127,8 @@ export async function getNonCompliantCpdAttorneys(organizationId: string, year?:
     WHERE a.organization_id = ${organizationId}
       AND a.is_active = true
     GROUP BY a.id, u.name, a.photo_url
-    HAVING coalesce(sum(c.units::numeric), 0) < 5
-       OR coalesce(sum(case when c.is_lsk_program then c.units::numeric else 0 end), 0) < 2
+    HAVING coalesce(sum(c.units::numeric), 0) < ${reqTotal}
+       OR coalesce(sum(case when c.is_lsk_program then c.units::numeric else 0 end), 0) < ${reqLsk}
   `);
 
   return result.rows ?? [];

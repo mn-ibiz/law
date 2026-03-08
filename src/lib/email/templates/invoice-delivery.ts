@@ -1,3 +1,5 @@
+import { siteConfig } from "@/lib/config/site";
+
 interface InvoiceEmailData {
   clientName: string;
   invoiceNumber: string;
@@ -38,7 +40,7 @@ export function invoiceDeliveryEmailHtml(data: InvoiceEmailData): string {
       Please ensure payment is made by the due date.
     </p>
     <p style="color: #94a3b8; font-size: 14px; margin-top: 24px;">
-      ${data.firmName ?? "Law Firm Registry"}
+      ${data.firmName ?? siteConfig.name}
     </p>
   </div>
 </body>

@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import { notFound } from "next/navigation";
 import { CauseListEntryActions } from "@/components/courts/cause-list-entry-actions";
 import type { Metadata } from "next";
@@ -31,7 +31,10 @@ export default async function CauseListDetailPage({
   const { organizationId } = await requireOrg();
   const { id } = await params;
 
-  const allCauseLists = await getCauseLists(organizationId);
+  const [allCauseLists, config] = await Promise.all([
+    getCauseLists(organizationId),
+    getOrgConfig(organizationId),
+  ]);
   const causeList = allCauseLists.find((cl) => cl.id === id);
 
   if (!causeList) {
@@ -55,7 +58,7 @@ export default async function CauseListDetailPage({
           <div>
             <h1 className="text-2xl font-bold tracking-tight">
               Cause List -{" "}
-              {new Date(causeList.date).toLocaleDateString(APP_LOCALE, {
+              {new Date(causeList.date).toLocaleDateString(config.locale, {
                 weekday: "long",
                 year: "numeric",
                 month: "long",

@@ -29,6 +29,7 @@ export const attorneys = pgTable(
     notaryPublic: boolean("notary_public").default(false),
     seniorCounsel: boolean("senior_counsel").default(false),
     isActive: boolean("is_active").notNull().default(true),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
@@ -214,6 +215,7 @@ export const lskMembership = pgTable(
 );
 
 export const attorneysRelations = relations(attorneys, ({ one, many }) => ({
+  organization: one(organizations, { fields: [attorneys.organizationId], references: [organizations.id] }),
   user: one(users, { fields: [attorneys.userId], references: [users.id] }),
   practiceAreas: many(attorneyPracticeAreas),
   licenses: many(attorneyLicenses),

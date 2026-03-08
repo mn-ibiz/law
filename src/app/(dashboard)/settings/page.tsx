@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/lib/auth/get-session";
 import Link from "next/link";
-import { Users, Briefcase, Building2, Shield, Database, Settings, Paintbrush, Calendar, Gavel, Kanban } from "lucide-react";
+import { Users, Briefcase, Building2, Shield, Database, Settings, Paintbrush, Calendar, Gavel, Kanban, Key, CreditCard } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -85,6 +85,20 @@ const settingsGroups = [
     href: "/settings/court-rules",
     icon: Gavel,
     color: "bg-orange-500/10 text-orange-600",
+  },
+  {
+    title: "API Keys",
+    description: "Manage API keys for external integrations",
+    href: "/settings/api-keys",
+    icon: Key,
+    color: "bg-slate-500/10 text-slate-600",
+  },
+  {
+    title: "Subscription",
+    description: "Manage your plan and billing",
+    href: "/settings/subscription",
+    icon: CreditCard,
+    color: "bg-green-500/10 text-green-600",
   },
 ];
 

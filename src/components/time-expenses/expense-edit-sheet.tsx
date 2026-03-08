@@ -26,6 +26,7 @@ import {
 import { formatEnum } from "@/lib/utils/format-enum";
 import { Upload, X, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 import type { ExpenseRow } from "./expense-columns";
 
 const EXPENSE_CATEGORIES = [
@@ -45,6 +46,7 @@ interface ExpenseEditSheetProps {
 }
 
 export function ExpenseEditSheet({ expense, open, onOpenChange }: ExpenseEditSheetProps) {
+  const { currency } = useOrgConfig();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [caseId, setCaseId] = useState(expense.caseId ?? "");
@@ -159,7 +161,7 @@ export function ExpenseEditSheet({ expense, open, onOpenChange }: ExpenseEditShe
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="edit-exp-amount">Amount (KES)</Label>
+            <Label htmlFor="edit-exp-amount">{`Amount (${currency})`}</Label>
             <Input
               id="edit-exp-amount"
               type="number"

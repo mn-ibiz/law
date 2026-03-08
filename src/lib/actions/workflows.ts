@@ -95,7 +95,7 @@ export async function createWorkflowRule(data: unknown) {
 
     const result = await db
       .insert(workflowRules)
-      .values(validated.data)
+      .values({ ...validated.data, organizationId })
       .returning();
 
     revalidatePath("/settings");
@@ -110,12 +110,11 @@ export async function deleteWorkflowRule(id: string) {
       return { error: "Unauthorized" };
     }
 
-    // Verify the rule belongs to a template in this organization
+    // Verify the rule belongs to this organization
     const [rule] = await db
       .select({ id: workflowRules.id })
       .from(workflowRules)
-      .innerJoin(workflowTemplates, eq(workflowRules.templateId, workflowTemplates.id))
-      .where(and(eq(workflowRules.id, id), eq(workflowTemplates.organizationId, organizationId)))
+      .where(and(eq(workflowRules.id, id), eq(workflowRules.organizationId, organizationId)))
       .limit(1);
     if (!rule) return { error: "Rule not found" };
 

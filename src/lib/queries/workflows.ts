@@ -30,7 +30,6 @@ export async function getWorkflowTemplateById(organizationId: string, id: string
 }
 
 export async function getWorkflowRules(organizationId: string, templateId: string) {
-  // workflowRules doesn't have organizationId — scope through parent template
   return db
     .select({
       id: workflowRules.id,
@@ -42,14 +41,12 @@ export async function getWorkflowRules(organizationId: string, templateId: strin
       createdAt: workflowRules.createdAt,
     })
     .from(workflowRules)
-    .innerJoin(workflowTemplates, eq(workflowRules.templateId, workflowTemplates.id))
-    .where(and(eq(workflowTemplates.organizationId, organizationId), eq(workflowRules.templateId, templateId)))
+    .where(and(eq(workflowRules.organizationId, organizationId), eq(workflowRules.templateId, templateId)))
     .orderBy(workflowRules.order);
 }
 
 export async function getWorkflowExecutionLog(organizationId: string, templateId?: string) {
-  // workflowExecutionLog doesn't have organizationId — scope through parent template
-  const baseCondition = eq(workflowTemplates.organizationId, organizationId);
+  const baseCondition = eq(workflowExecutionLog.organizationId, organizationId);
 
   const query = db
     .select({
@@ -63,7 +60,7 @@ export async function getWorkflowExecutionLog(organizationId: string, templateId
       executedAt: workflowExecutionLog.executedAt,
     })
     .from(workflowExecutionLog)
-    .innerJoin(workflowTemplates, eq(workflowExecutionLog.templateId, workflowTemplates.id))
+    .leftJoin(workflowTemplates, eq(workflowExecutionLog.templateId, workflowTemplates.id))
     .orderBy(desc(workflowExecutionLog.executedAt));
 
   if (templateId) {

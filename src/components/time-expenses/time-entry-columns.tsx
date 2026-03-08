@@ -4,8 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { SortableHeader } from "@/components/shared/enhanced-data-table";
 import { BillableBadge } from "@/components/shared/status-badges";
 import { PersonAvatar } from "@/components/shared/person-avatar";
-import { formatKES } from "@/lib/utils/format";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { formatCurrency } from "@/lib/utils/format";
 
 export interface TimeEntryRow {
   id: string;
@@ -23,13 +22,14 @@ export interface TimeEntryRow {
   userAvatar: string | null;
 }
 
-export const timeEntryColumns: ColumnDef<TimeEntryRow>[] = [
+export function getTimeEntryColumns(currency: string, locale: string): ColumnDef<TimeEntryRow>[] {
+  return [
   {
     accessorKey: "date",
     header: ({ column }) => <SortableHeader column={column}>Date</SortableHeader>,
     cell: ({ row }) => (
       <span className="text-sm">
-        {new Date(row.getValue("date") as Date).toLocaleDateString(APP_LOCALE)}
+        {new Date(row.getValue("date") as Date).toLocaleDateString(locale)}
       </span>
     ),
   },
@@ -74,7 +74,7 @@ export const timeEntryColumns: ColumnDef<TimeEntryRow>[] = [
     cell: ({ row }) => {
       const amount = row.getValue("amount") as string | null;
       return amount ? (
-        <span className="text-sm">{formatKES(Number(amount))}</span>
+        <span className="text-sm">{formatCurrency(Number(amount), currency, locale)}</span>
       ) : (
         <span className="text-muted-foreground">{"\u2014"}</span>
       );
@@ -89,3 +89,4 @@ export const timeEntryColumns: ColumnDef<TimeEntryRow>[] = [
     },
   },
 ];
+}

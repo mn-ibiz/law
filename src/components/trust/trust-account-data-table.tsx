@@ -8,7 +8,8 @@ import {
   type DataTableFilterConfig,
   type ExportColumn,
 } from "@/components/shared/enhanced-data-table";
-import { trustAccountColumns, type TrustAccountRow } from "./trust-account-columns";
+import { getTrustAccountColumns, type TrustAccountRow } from "./trust-account-columns";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 import { TrustTransactionDialog } from "./trust-transaction-dialog";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -42,6 +43,7 @@ interface TrustAccountDataTableProps {
 
 export function TrustAccountDataTable({ data }: TrustAccountDataTableProps) {
   const router = useRouter();
+  const { currency, locale } = useOrgConfig();
 
   const columns = useMemo(() => {
     const actionsColumn: ColumnDef<TrustAccountRow> = {
@@ -80,8 +82,8 @@ export function TrustAccountDataTable({ data }: TrustAccountDataTableProps) {
         );
       },
     };
-    return [...trustAccountColumns, actionsColumn];
-  }, []);
+    return [...getTrustAccountColumns(currency, locale), actionsColumn];
+  }, [currency, locale]);
 
   return (
     <EnhancedDataTable

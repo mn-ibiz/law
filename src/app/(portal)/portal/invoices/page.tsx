@@ -2,9 +2,9 @@ import { requireRole, requireOrg } from "@/lib/auth/get-session";
 import { getPortalInvoices } from "@/lib/queries/portal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatKES } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils/format";
 import { formatEnum } from "@/lib/utils/format-enum";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -18,7 +18,10 @@ export const metadata: Metadata = {
 export default async function PortalInvoicesPage() {
   const session = await requireRole("client");
   const { organizationId } = await requireOrg();
-  const invoiceList = await getPortalInvoices(organizationId, session.user.id as string);
+  const [invoiceList, config] = await Promise.all([
+    getPortalInvoices(organizationId, session.user.id as string),
+    getOrgConfig(organizationId),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -47,9 +50,9 @@ export default async function PortalInvoicesPage() {
                   <TableRow key={inv.id}>
                     <TableCell className="font-mono">{inv.invoiceNumber}</TableCell>
                     <TableCell><Badge variant="outline">{formatEnum(inv.status)}</Badge></TableCell>
-                    <TableCell>{formatKES(Number(inv.totalAmount))}</TableCell>
-                    <TableCell>{formatKES(Number(inv.paidAmount))}</TableCell>
-                    <TableCell>{inv.dueDate ? new Date(inv.dueDate).toLocaleDateString(APP_LOCALE) : "—"}</TableCell>
+                    <TableCell>{formatCurrency(Number(inv.totalAmount), config.currency, config.locale)}</TableCell>
+                    <TableCell>{formatCurrency(Number(inv.paidAmount), config.currency, config.locale)}</TableCell>
+                    <TableCell>{inv.dueDate ? new Date(inv.dueDate).toLocaleDateString(config.locale) : "—"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

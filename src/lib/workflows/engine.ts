@@ -56,7 +56,7 @@ export async function dispatchWorkflowEvent(
       const rules = await db
         .select()
         .from(workflowRules)
-        .where(eq(workflowRules.templateId, template.id))
+        .where(and(eq(workflowRules.templateId, template.id), eq(workflowRules.organizationId, context.organizationId)))
         .orderBy(workflowRules.order);
 
       // 4. Execute each rule
@@ -76,6 +76,7 @@ export async function dispatchWorkflowEvent(
 
           // Log success
           await db.insert(workflowExecutionLog).values({
+            organizationId: context.organizationId,
             templateId: template.id,
             ruleId: rule.id,
             triggeredBy: context.userId ?? "system",
@@ -93,6 +94,7 @@ export async function dispatchWorkflowEvent(
           await db
             .insert(workflowExecutionLog)
             .values({
+              organizationId: context.organizationId,
               templateId: template.id,
               ruleId: rule.id,
               triggeredBy: context.userId ?? "system",
@@ -174,7 +176,9 @@ async function handleSendEmail(
     `<p>A workflow event was triggered for ${context.entityType} (${context.entityId}).</p>`;
 
   if (to) {
-    await sendEmail({ to, subject, html });
+    const { getOrgConfig } = await import("@/lib/utils/tenant-config");
+    const orgConfig = await getOrgConfig(context.organizationId);
+    await sendEmail({ to, subject, html, from: orgConfig.emailFrom ?? undefined });
   }
 }
 
@@ -182,14 +186,16 @@ async function handleSendSMS(
   config: Record<string, unknown>,
   context: WorkflowContext
 ): Promise<void> {
-  const { sendSMS } = await import("@/lib/sms/send-sms");
   const to = (config.to as string) ?? (context.data?.phone as string);
   const message =
     (config.message as string) ??
     `Notification for ${context.entityType}`;
 
   if (to) {
-    await sendSMS({ organizationId: context.organizationId, to, message, userId: context.userId });
+    const { sendSMS } = await import("@/lib/sms/send-sms");
+    const { getOrgConfig } = await import("@/lib/utils/tenant-config");
+    const orgConfig = await getOrgConfig(context.organizationId);
+    await sendSMS({ organizationId: context.organizationId, to, message, userId: context.userId, senderId: orgConfig.smsSenderId ?? undefined });
   }
 }
 
@@ -266,6 +272,6 @@ async function handleUpdateStatus(
           | "archived",
         updatedAt: new Date(),
       })
-      .where(eq(cases.id, context.entityId));
+      .where(and(eq(cases.id, context.entityId), eq(cases.organizationId, context.organizationId)));
   }
 }

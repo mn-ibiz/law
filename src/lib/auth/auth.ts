@@ -5,6 +5,8 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { organizations } from "@/lib/db/schema";
+import { cookies } from "next/headers";
+import { verifyImpersonationCookie } from "@/lib/utils/impersonation";
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
@@ -172,6 +174,20 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
           return token;
         }
 
+        // Verify organization is still active (skip for super_admin)
+        if (freshUser.role !== "super_admin" && freshUser.organizationId) {
+          const [org] = await db
+            .select({ status: organizations.status })
+            .from(organizations)
+            .where(eq(organizations.id, freshUser.organizationId))
+            .limit(1);
+          if (!org || org.status !== "active") {
+            token.id = "";
+            token.role = "" as "admin" | "attorney" | "client";
+            return token;
+          }
+        }
+
         token.role = freshUser.role as "super_admin" | "admin" | "attorney" | "client";
         token.organizationId = freshUser.organizationId;
         token.lastRefresh = Date.now();
@@ -192,6 +208,34 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
       session.user.image = token.image;
       session.user.organizationId = token.organizationId;
       session.user.organizationSlug = token.organizationSlug;
+      session.user.impersonating = null;
+
+      // If super_admin, check for impersonation cookie and overlay org context.
+      // IMPORTANT: We do NOT change session.user.role — it stays "super_admin"
+      // so that requireSuperAdmin() and middleware /admin checks still work.
+      // The `impersonating` field signals to consuming code that the effective
+      // role for permissions/UI should be "admin" on the target org.
+      if (token.role === "super_admin") {
+        try {
+          const cookieStore = await cookies();
+          const cookie = cookieStore.get("impersonation");
+          if (cookie) {
+            const imp = verifyImpersonationCookie(cookie.value);
+            if (imp && imp.superAdminId === token.id) {
+              session.user.organizationId = imp.targetOrgId;
+              session.user.organizationSlug = imp.targetOrgSlug;
+              session.user.impersonating = {
+                superAdminId: imp.superAdminId,
+                superAdminName: imp.superAdminName,
+                targetOrgName: imp.targetOrgName,
+              };
+            }
+          }
+        } catch {
+          // Cookie reading may fail in edge runtime — ignore
+        }
+      }
+
       return session;
     },
     async redirect({ url, baseUrl }) {

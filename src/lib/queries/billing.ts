@@ -137,9 +137,9 @@ export async function getInvoiceHistory(organizationId: string, invoiceId: strin
     .limit(50);
 }
 
-export async function generateInvoiceNumber(organizationId: string): Promise<string> {
+export async function generateInvoiceNumber(organizationId: string, invoicePrefix = "INV"): Promise<string> {
   const year = new Date().getFullYear();
-  const prefix = `INV-${year}-`;
+  const prefix = `${invoicePrefix}-${year}-`;
   const [result] = await db
     .select({ maxNum: sql<string>`MAX(${invoices.invoiceNumber})` })
     .from(invoices)

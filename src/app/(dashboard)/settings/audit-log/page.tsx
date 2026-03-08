@@ -6,7 +6,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { formatEnum } from "@/lib/utils/format-enum";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -17,7 +17,10 @@ export const metadata: Metadata = {
 export default async function AuditLogPage() {
   const { organizationId } = await requireOrg();
 
-  const logs = await getAuditLogs(organizationId);
+  const [logs, config] = await Promise.all([
+    getAuditLogs(organizationId),
+    getOrgConfig(organizationId),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -44,7 +47,7 @@ export default async function AuditLogPage() {
               <TableBody>
                 {logs.map((log) => (
                   <TableRow key={log.id}>
-                    <TableCell className="text-xs">{new Date(log.createdAt).toLocaleString(APP_LOCALE)}</TableCell>
+                    <TableCell className="text-xs">{new Date(log.createdAt).toLocaleString(config.locale)}</TableCell>
                     <TableCell className="font-mono text-xs">{log.userId?.slice(0, 8) ?? "System"}</TableCell>
                     <TableCell><Badge variant="outline">{log.action}</Badge></TableCell>
                     <TableCell className="capitalize">{formatEnum(log.entityType)}</TableCell>

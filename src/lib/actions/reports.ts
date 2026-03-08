@@ -2,6 +2,7 @@
 
 import { sendEmail } from "@/lib/email/send-email";
 import { getTenantContext } from "@/lib/auth/get-session";
+import { siteConfig } from "@/lib/config/site";
 
 interface EmailReportInput {
   to: string;
@@ -29,7 +30,7 @@ export async function emailReport(input: EmailReportInput) {
         ${reportTitle}
       </h2>
       <p style="color: #6b7280; font-size: 14px;">
-        Please find the attached report generated from the Law Firm Registry system.
+        Please find the attached report generated from the ${siteConfig.name} system.
       </p>
       <p style="color: #6b7280; font-size: 14px;">
         Generated on: ${new Date().toLocaleDateString("en-KE", {
@@ -42,7 +43,7 @@ export async function emailReport(input: EmailReportInput) {
       </p>
       <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
       <p style="color: #9ca3af; font-size: 12px;">
-        This is an automated report from the Law Firm Registry. Please do not reply to this email.
+        This is an automated report from ${siteConfig.name}. Please do not reply to this email.
       </p>
     </div>
   `;

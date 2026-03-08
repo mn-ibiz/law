@@ -7,7 +7,8 @@ import {
   type DataTableFilterConfig,
   type ExportColumn,
 } from "@/components/shared/enhanced-data-table";
-import { attorneyColumns, type AttorneyRow } from "./attorney-columns";
+import { getAttorneyColumns, type AttorneyRow } from "./attorney-columns";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 import { Scale } from "lucide-react";
 
 const filters: DataTableFilterConfig[] = [
@@ -37,11 +38,12 @@ interface AttorneyDataTableProps {
 
 export function AttorneyDataTable({ data }: AttorneyDataTableProps) {
   const router = useRouter();
+  const { currency, locale } = useOrgConfig();
 
   return (
     <EnhancedDataTable
       data={data}
-      columns={attorneyColumns}
+      columns={getAttorneyColumns(currency, locale)}
       searchPlaceholder="Search by name, bar number, email..."
       filters={filters}
       exportFilename="attorneys.csv"

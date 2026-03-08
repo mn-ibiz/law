@@ -32,7 +32,7 @@ export async function submitIntake(organizationSlug: string, data: unknown) {
     // Rate limit: max 5 submissions per hour per IP
     const headersList = await headers();
     const ip = headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-    const { success } = rateLimit(`intake:${ip}`);
+    const { success } = await rateLimit(`intake:${organizationId}:${ip}`);
     if (!success) {
       return { error: "Too many submissions. Please try again later." };
     }

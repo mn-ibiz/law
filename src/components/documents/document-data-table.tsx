@@ -7,7 +7,8 @@ import {
   type DataTableFilterConfig,
   type ExportColumn,
 } from "@/components/shared/enhanced-data-table";
-import { documentColumns, type DocumentRow } from "./document-columns";
+import { getDocumentColumns, type DocumentRow } from "./document-columns";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 import { DocumentRowActions } from "./document-row-actions";
 import { FileText } from "lucide-react";
 
@@ -54,6 +55,7 @@ interface DocumentDataTableProps {
 }
 
 export function DocumentDataTable({ data, cases, clients }: DocumentDataTableProps) {
+  const { locale } = useOrgConfig();
   const columns = useMemo(() => {
     const actionsColumn: ColumnDef<DocumentRow> = {
       id: "actions",
@@ -73,8 +75,8 @@ export function DocumentDataTable({ data, cases, clients }: DocumentDataTablePro
         />
       ),
     };
-    return [...documentColumns, actionsColumn];
-  }, [cases, clients]);
+    return [...getDocumentColumns(locale), actionsColumn];
+  }, [locale, cases, clients]);
 
   return (
     <EnhancedDataTable

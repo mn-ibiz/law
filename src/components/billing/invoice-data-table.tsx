@@ -8,8 +8,9 @@ import {
   type DataTableFilterConfig,
   type ExportColumn,
 } from "@/components/shared/enhanced-data-table";
-import { invoiceColumns, type InvoiceRow } from "./invoice-columns";
+import { getInvoiceColumns, type InvoiceRow } from "./invoice-columns";
 import { InvoiceRowActions } from "./invoice-row-actions";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 import { FileText } from "lucide-react";
 
 const filters: DataTableFilterConfig[] = [
@@ -46,6 +47,7 @@ interface InvoiceDataTableProps {
 
 export function InvoiceDataTable({ data, userRole }: InvoiceDataTableProps) {
   const router = useRouter();
+  const { currency, locale } = useOrgConfig();
 
   const columns = useMemo(() => {
     const actionsColumn: ColumnDef<InvoiceRow> = {
@@ -61,8 +63,8 @@ export function InvoiceDataTable({ data, userRole }: InvoiceDataTableProps) {
         />
       ),
     };
-    return [...invoiceColumns, actionsColumn];
-  }, [userRole]);
+    return [...getInvoiceColumns(currency, locale), actionsColumn];
+  }, [userRole, currency, locale]);
 
   return (
     <EnhancedDataTable

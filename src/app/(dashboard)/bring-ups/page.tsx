@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -27,10 +27,11 @@ export const metadata: Metadata = {
 
 export default async function BringUpsPage() {
   const { organizationId } = await requireOrg();
-  const [bringUpList, { data: caseList }, userList] = await Promise.all([
+  const [bringUpList, { data: caseList }, userList, config] = await Promise.all([
     getBringUps(organizationId),
     getCases(organizationId, { limit: 200 }),
     getUsers(organizationId),
+    getOrgConfig(organizationId),
   ]);
 
   const cases = caseList.map((c) => ({
@@ -89,7 +90,7 @@ export default async function BringUpsPage() {
                 {bringUpList.map((bu) => (
                   <TableRow key={bu.id} className="transition-colors hover:bg-muted/50">
                     <TableCell>
-                      {new Date(bu.date).toLocaleDateString(APP_LOCALE)}
+                      {new Date(bu.date).toLocaleDateString(config.locale)}
                     </TableCell>
                     <TableCell>
                       <Link

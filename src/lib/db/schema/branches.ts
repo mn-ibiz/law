@@ -31,6 +31,9 @@ export const branchUsers = pgTable(
   "branch_users",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
     branchId: uuid("branch_id")
       .notNull()
       .references(() => branches.id, { onDelete: "cascade" }),
@@ -42,6 +45,7 @@ export const branchUsers = pgTable(
   },
   (table) => [
     unique("branch_users_branch_user_unique").on(table.branchId, table.userId),
+    index("branch_users_organization_id_idx").on(table.organizationId),
   ]
 );
 
@@ -56,11 +60,13 @@ export const usersRelations = relations(users, ({ one }) => ({
   }),
 }));
 
-export const branchesRelations = relations(branches, ({ many }) => ({
+export const branchesRelations = relations(branches, ({ one, many }) => ({
+  organization: one(organizations, { fields: [branches.organizationId], references: [organizations.id] }),
   users: many(branchUsers),
 }));
 
 export const branchUsersRelations = relations(branchUsers, ({ one }) => ({
+  organization: one(organizations, { fields: [branchUsers.organizationId], references: [organizations.id] }),
   branch: one(branches, { fields: [branchUsers.branchId], references: [branches.id] }),
   user: one(users, { fields: [branchUsers.userId], references: [users.id] }),
 }));

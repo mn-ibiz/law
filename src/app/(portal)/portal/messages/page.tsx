@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -21,7 +21,10 @@ export const metadata: Metadata = {
 export default async function PortalMessagesPage() {
   const session = await requireRole("client");
   const { organizationId } = await requireOrg();
-  const messageList = await getPortalMessages(organizationId, session.user.id as string);
+  const [messageList, config] = await Promise.all([
+    getPortalMessages(organizationId, session.user.id as string),
+    getOrgConfig(organizationId),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -58,7 +61,7 @@ export default async function PortalMessagesPage() {
                       {msg.body}
                     </TableCell>
                     <TableCell>
-                      {new Date(msg.createdAt).toLocaleDateString(APP_LOCALE)}
+                      {new Date(msg.createdAt).toLocaleDateString(config.locale)}
                     </TableCell>
                     <TableCell>
                       {msg.readAt ? (

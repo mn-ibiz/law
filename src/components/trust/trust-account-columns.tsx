@@ -3,7 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { SortableHeader } from "@/components/shared/enhanced-data-table";
-import { formatKES } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils/format";
 import { formatEnum } from "@/lib/utils/format-enum";
 import { PersonAvatar } from "@/components/shared/person-avatar";
 import { cn } from "@/lib/utils";
@@ -30,7 +30,8 @@ const accountTypeStyles: Record<string, string> = {
   escrow: "bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20",
 };
 
-export const trustAccountColumns: ColumnDef<TrustAccountRow>[] = [
+export function getTrustAccountColumns(currency: string, locale: string): ColumnDef<TrustAccountRow>[] {
+return [
   {
     accessorKey: "accountName",
     header: ({ column }) => <SortableHeader column={column}>Account Name</SortableHeader>,
@@ -92,8 +93,9 @@ export const trustAccountColumns: ColumnDef<TrustAccountRow>[] = [
     header: ({ column }) => <SortableHeader column={column}>Balance</SortableHeader>,
     cell: ({ row }) => (
       <span className="font-medium text-right block">
-        {formatKES(Number(row.getValue("balance")))}
+        {formatCurrency(Number(row.getValue("balance")), currency, locale)}
       </span>
     ),
   },
 ];
+}

@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, boolean, timestamp, numeric, integer, index, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, boolean, timestamp, numeric, integer, bigint, index, uniqueIndex, unique } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { users } from "./auth";
 
@@ -23,6 +23,8 @@ export const organizations = pgTable(
     locale: text("locale").notNull().default("en-KE"),
     currency: text("currency").notNull().default("KES"),
     status: text("status").notNull().default("active"), // active, suspended, cancelled
+    storageUsedBytes: bigint("storage_used_bytes", { mode: "number" }).notNull().default(0),
+    stripeCustomerId: text("stripe_customer_id"),
     planId: uuid("plan_id").references(() => plans.id, { onDelete: "set null" }),
     trialEndsAt: timestamp("trial_ends_at", { withTimezone: true }),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
@@ -57,6 +59,38 @@ export const plans = pgTable("plans", {
 });
 
 // ---------------------------------------------------------------------------
+// Subscriptions
+// ---------------------------------------------------------------------------
+export const subscriptions = pgTable(
+  "subscriptions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    planId: uuid("plan_id")
+      .notNull()
+      .references(() => plans.id, { onDelete: "restrict" }),
+    status: text("status").notNull().default("trialing"), // trialing, active, past_due, cancelled, suspended
+    stripeCustomerId: text("stripe_customer_id"),
+    stripeSubscriptionId: text("stripe_subscription_id"),
+    stripePriceId: text("stripe_price_id"),
+    currentPeriodStart: timestamp("current_period_start", { withTimezone: true }),
+    currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }),
+    cancelAtPeriodEnd: boolean("cancel_at_period_end").notNull().default(false),
+    trialEnd: timestamp("trial_end", { withTimezone: true }),
+    gracePeriodEnd: timestamp("grace_period_end", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("subscriptions_organization_id_idx").on(table.organizationId),
+    index("subscriptions_stripe_customer_id_idx").on(table.stripeCustomerId),
+    index("subscriptions_stripe_subscription_id_idx").on(table.stripeSubscriptionId),
+  ]
+);
+
+// ---------------------------------------------------------------------------
 // Organization Members (for future multi-org support)
 // ---------------------------------------------------------------------------
 export const organizationMembers = pgTable(
@@ -78,6 +112,56 @@ export const organizationMembers = pgTable(
 );
 
 // ---------------------------------------------------------------------------
+// Platform Audit Log (super-admin actions, cross-org events)
+// ---------------------------------------------------------------------------
+export const platformAuditLog = pgTable(
+  "platform_audit_log",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+    action: text("action").notNull(), // impersonate_start, impersonate_end, suspend_org, reactivate_org, update_plan, create_plan, update_org
+    targetOrgId: uuid("target_org_id").references(() => organizations.id, { onDelete: "set null" }),
+    targetUserId: uuid("target_user_id").references(() => users.id, { onDelete: "set null" }),
+    details: text("details"), // JSON
+    ipAddress: text("ip_address"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("platform_audit_log_created_at_idx").on(table.createdAt),
+    index("platform_audit_log_action_idx").on(table.action),
+    index("platform_audit_log_user_id_idx").on(table.userId),
+  ]
+);
+
+// ---------------------------------------------------------------------------
+// API Keys (for programmatic access, Enterprise plan only)
+// ---------------------------------------------------------------------------
+export const apiKeys = pgTable(
+  "api_keys",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    keyHash: text("key_hash").notNull(), // SHA-256 hash of the full key
+    keyPrefix: text("key_prefix").notNull(), // First 8 hex chars after "lfr_" for identification
+    permissions: text("permissions"), // JSON string of allowed scopes
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    createdBy: uuid("created_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("api_keys_organization_id_idx").on(table.organizationId),
+    uniqueIndex("api_keys_org_prefix_idx").on(table.organizationId, table.keyPrefix),
+  ]
+);
+
+// ---------------------------------------------------------------------------
 // Relations
 // ---------------------------------------------------------------------------
 export const organizationsRelations = relations(organizations, ({ one, many }) => ({
@@ -85,11 +169,29 @@ export const organizationsRelations = relations(organizations, ({ one, many }) =
     fields: [organizations.planId],
     references: [plans.id],
   }),
+  subscription: one(subscriptions),
   members: many(organizationMembers),
 }));
 
 export const plansRelations = relations(plans, ({ many }) => ({
   organizations: many(organizations),
+  subscriptions: many(subscriptions),
+}));
+
+export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [subscriptions.organizationId],
+    references: [organizations.id],
+  }),
+  plan: one(plans, {
+    fields: [subscriptions.planId],
+    references: [plans.id],
+  }),
+}));
+
+export const platformAuditLogRelations = relations(platformAuditLog, ({ one }) => ({
+  user: one(users, { fields: [platformAuditLog.userId], references: [users.id] }),
+  targetOrg: one(organizations, { fields: [platformAuditLog.targetOrgId], references: [organizations.id] }),
 }));
 
 export const organizationMembersRelations = relations(organizationMembers, ({ one }) => ({
@@ -99,6 +201,17 @@ export const organizationMembersRelations = relations(organizationMembers, ({ on
   }),
   user: one(users, {
     fields: [organizationMembers.userId],
+    references: [users.id],
+  }),
+}));
+
+export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [apiKeys.organizationId],
+    references: [organizations.id],
+  }),
+  createdByUser: one(users, {
+    fields: [apiKeys.createdBy],
     references: [users.id],
   }),
 }));

@@ -7,9 +7,11 @@ import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { CaseStatusBadge, PriorityBadge } from "@/components/shared/status-badges";
 import { PersonAvatar } from "@/components/shared/person-avatar";
-import { formatKES, formatRelativeDate } from "@/lib/utils/format";
+import { formatCurrency, formatRelativeDate } from "@/lib/utils/format";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import { formatEnum } from "@/lib/utils/format-enum";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { requireOrg } from "@/lib/auth/get-session";
+
 
 interface Assignment {
   id: string;
@@ -71,15 +73,17 @@ function InfoRow({ label, children }: { label: string; children: React.ReactNode
   );
 }
 
-function billingAmount(caseData: CaseData): string | null {
-  if (caseData.hourlyRate) return `${formatKES(Number(caseData.hourlyRate))}/hr`;
-  if (caseData.flatFeeAmount) return formatKES(Number(caseData.flatFeeAmount));
+function billingAmount(caseData: CaseData, currency: string, locale: string): string | null {
+  if (caseData.hourlyRate) return `${formatCurrency(Number(caseData.hourlyRate), currency, locale)}/hr`;
+  if (caseData.flatFeeAmount) return formatCurrency(Number(caseData.flatFeeAmount), currency, locale);
   if (caseData.contingencyPercentage) return `${caseData.contingencyPercentage}%`;
   return null;
 }
 
-export function CaseSummarySidebar({ caseData, assignments, deadlines = [], tasks = [] }: CaseSummarySidebarProps) {
-  const amount = billingAmount(caseData);
+export async function CaseSummarySidebar({ caseData, assignments, deadlines = [], tasks = [] }: CaseSummarySidebarProps) {
+  const { organizationId } = await requireOrg();
+  const config = await getOrgConfig(organizationId);
+  const amount = billingAmount(caseData, config.currency, config.locale);
 
   // Upcoming deadlines (incomplete, sorted by due date, max 3)
   const upcomingDeadlines = deadlines
@@ -140,18 +144,18 @@ export function CaseSummarySidebar({ caseData, assignments, deadlines = [], task
           <div className="space-y-2.5">
             {caseData.dateFiled && (
               <InfoRow label="Filed">
-                {new Date(caseData.dateFiled).toLocaleDateString(APP_LOCALE)}
+                {new Date(caseData.dateFiled).toLocaleDateString(config.locale)}
               </InfoRow>
             )}
             {caseData.createdAt && (
               <InfoRow label="Created">
-                {new Date(caseData.createdAt).toLocaleDateString(APP_LOCALE)}
+                {new Date(caseData.createdAt).toLocaleDateString(config.locale)}
               </InfoRow>
             )}
             {caseData.statuteOfLimitations && (
               <InfoRow label="Limitation">
                 <span className={statuteDaysLeft < 30 ? "text-destructive font-semibold" : ""}>
-                  {new Date(caseData.statuteOfLimitations).toLocaleDateString(APP_LOCALE)}
+                  {new Date(caseData.statuteOfLimitations).toLocaleDateString(config.locale)}
                 </span>
               </InfoRow>
             )}
@@ -181,7 +185,7 @@ export function CaseSummarySidebar({ caseData, assignments, deadlines = [], task
             {amount && <InfoRow label="Amount">{amount}</InfoRow>}
             {caseData.estimatedValue && (
               <InfoRow label="Est. Value">
-                {formatKES(Number(caseData.estimatedValue))}
+                {formatCurrency(Number(caseData.estimatedValue), config.currency, config.locale)}
               </InfoRow>
             )}
           </div>

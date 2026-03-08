@@ -10,14 +10,16 @@ import {
   CartesianGrid,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { formatKES } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils/format";
 import { TrendingUp } from "lucide-react";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 
 interface RevenueChartProps {
   data: { month: string; revenue: number }[];
 }
 
 export function RevenueChart({ data }: RevenueChartProps) {
+  const { currency, locale } = useOrgConfig();
   return (
     <Card className="shadow-sm">
       <CardHeader className="pb-2">
@@ -54,7 +56,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
                 axisLine={false}
               />
               <Tooltip
-                formatter={(value) => [formatKES(Number(value)), "Revenue"]}
+                formatter={(value) => [formatCurrency(Number(value), currency, locale), "Revenue"]}
                 contentStyle={{
                   borderRadius: "8px",
                   border: "1px solid #e5e7eb",

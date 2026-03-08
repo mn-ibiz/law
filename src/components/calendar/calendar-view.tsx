@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, AlertTriangle } from "lucide-react";
 import { formatEnum } from "@/lib/utils/format-enum";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 import { cn } from "@/lib/utils";
 import { getDotColor, getBadgeStyle } from "./event-type-colors";
 import { CalendarDaySheet } from "./calendar-day-sheet";
@@ -32,6 +32,7 @@ const capsule =
   "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold leading-none whitespace-nowrap";
 
 export function CalendarView({ events: serializedEvents, deadlines }: CalendarViewProps) {
+  const { locale } = useOrgConfig();
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -99,7 +100,7 @@ export function CalendarView({ events: serializedEvents, deadlines }: CalendarVi
                       <p className="font-medium text-sm">{event.title}</p>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <span className="text-xs text-muted-foreground">
-                          {new Date(event.startTime).toLocaleString(APP_LOCALE, {
+                          {new Date(event.startTime).toLocaleString(locale, {
                             dateStyle: "medium",
                             timeStyle: "short",
                           })}
@@ -149,7 +150,7 @@ export function CalendarView({ events: serializedEvents, deadlines }: CalendarVi
                         <p className="font-medium text-sm">{dl.title}</p>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
                           <span className="text-xs text-muted-foreground">
-                            Due: {new Date(dl.dueDate).toLocaleDateString(APP_LOCALE)}
+                            Due: {new Date(dl.dueDate).toLocaleDateString(locale)}
                           </span>
                           {dl.caseNumber && (
                             <span className="text-xs font-mono text-muted-foreground">

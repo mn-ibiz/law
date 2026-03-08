@@ -3,7 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { CreditCard, ArrowRight, Receipt } from "lucide-react";
-import { formatKES } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils/format";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
+import { requireOrg } from "@/lib/auth/get-session";
 import { PersonAvatar } from "@/components/shared/person-avatar";
 import { Button } from "@/components/ui/button";
 
@@ -47,7 +49,9 @@ function OverdueSeverity({ days }: { days: number }) {
   );
 }
 
-export function OverdueInvoicesTable({ data }: { data: OverdueInvoice[] }) {
+export async function OverdueInvoicesTable({ data }: { data: OverdueInvoice[] }) {
+  const { organizationId } = await requireOrg();
+  const config = await getOrgConfig(organizationId);
   const totalOverdue = data.reduce(
     (sum, inv) => sum + (Number(inv.totalAmount) - Number(inv.paidAmount)),
     0
@@ -65,7 +69,7 @@ export function OverdueInvoicesTable({ data }: { data: OverdueInvoice[] }) {
               <CardTitle className="text-base font-semibold">Overdue Invoices</CardTitle>
               <p className="text-xs text-muted-foreground">
                 {data.length > 0
-                  ? `${formatKES(totalOverdue)} outstanding`
+                  ? `${formatCurrency(totalOverdue, config.currency, config.locale)} outstanding`
                   : "Requires follow-up"}
               </p>
             </div>
@@ -108,7 +112,7 @@ export function OverdueInvoicesTable({ data }: { data: OverdueInvoice[] }) {
                         {inv.clientName}
                       </span>
                     </div>
-                    <p className="mt-0.5 text-xs font-semibold">{formatKES(balance)}</p>
+                    <p className="mt-0.5 text-xs font-semibold">{formatCurrency(balance, config.currency, config.locale)}</p>
                   </div>
                   <OverdueSeverity days={days} />
                 </div>

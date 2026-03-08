@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -25,7 +25,10 @@ export const metadata: Metadata = {
 
 export default async function TasksPage() {
   const { organizationId } = await requireOrg();
-  const taskList = await getTasks(organizationId);
+  const [taskList, config] = await Promise.all([
+    getTasks(organizationId),
+    getOrgConfig(organizationId),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -89,7 +92,7 @@ export default async function TasksPage() {
                     </TableCell>
                     <TableCell>
                       {task.dueDate
-                        ? new Date(task.dueDate).toLocaleDateString(APP_LOCALE)
+                        ? new Date(task.dueDate).toLocaleDateString(config.locale)
                         : "—"}
                     </TableCell>
                     <TableCell>

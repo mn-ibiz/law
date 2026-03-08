@@ -6,7 +6,7 @@ import { formatEnum } from "@/lib/utils/format-enum";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import { DocumentUploadForm } from "@/components/portal/document-upload-form";
 import type { Metadata } from "next";
 
@@ -18,7 +18,10 @@ export const metadata: Metadata = {
 export default async function PortalDocumentsPage() {
   const session = await requireRole("client");
   const { organizationId } = await requireOrg();
-  const docs = await getPortalDocuments(organizationId, session.user.id as string);
+  const [docs, config] = await Promise.all([
+    getPortalDocuments(organizationId, session.user.id as string),
+    getOrgConfig(organizationId),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -50,7 +53,7 @@ export default async function PortalDocumentsPage() {
                     <TableCell>
                       <Badge variant="outline" className="capitalize">{formatEnum(doc.category)}</Badge>
                     </TableCell>
-                    <TableCell>{new Date(doc.createdAt).toLocaleDateString(APP_LOCALE)}</TableCell>
+                    <TableCell>{new Date(doc.createdAt).toLocaleDateString(config.locale)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

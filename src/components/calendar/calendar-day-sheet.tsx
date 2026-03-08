@@ -20,7 +20,7 @@ import { getBadgeStyle } from "./event-type-colors";
 import { deleteEvent } from "@/lib/actions/calendar";
 import type { CalendarEvent } from "./calendar-types";
 import { EventEditDialog } from "./event-edit-dialog";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 import Link from "next/link";
 
 const capsule =
@@ -61,6 +61,7 @@ export function CalendarDaySheet({
   date,
   events,
 }: CalendarDaySheetProps) {
+  const { locale } = useOrgConfig();
   const router = useRouter();
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -156,12 +157,12 @@ export function CalendarDaySheet({
                       <span>All day</span>
                     ) : (
                       <span>
-                        {new Date(selectedEvent.startTime).toLocaleTimeString(APP_LOCALE, {
+                        {new Date(selectedEvent.startTime).toLocaleTimeString(locale, {
                           hour: "2-digit",
                           minute: "2-digit",
                         })}{" "}
                         &ndash;{" "}
-                        {new Date(selectedEvent.endTime).toLocaleTimeString(APP_LOCALE, {
+                        {new Date(selectedEvent.endTime).toLocaleTimeString(locale, {
                           hour: "2-digit",
                           minute: "2-digit",
                         })}
@@ -226,7 +227,7 @@ export function CalendarDaySheet({
                         <span className="text-xs text-muted-foreground">
                           {event.allDay
                             ? "All day"
-                            : new Date(event.startTime).toLocaleTimeString(APP_LOCALE, {
+                            : new Date(event.startTime).toLocaleTimeString(locale, {
                                 hour: "2-digit",
                                 minute: "2-digit",
                               })}

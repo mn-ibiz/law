@@ -37,6 +37,7 @@ export interface InvoicePDFData {
   balanceDue: string;
   notes?: string;
   currency?: string;
+  locale?: string;
 }
 
 /* ── Helpers ── */
@@ -55,10 +56,12 @@ const COLORS = {
   green: [22, 163, 74] as [number, number, number],      // green-600
 };
 
-function fmtKES(amount: string | number): string {
+import { formatCurrency } from "@/lib/utils/format";
+
+function fmtAmount(amount: string | number, currency: string, locale: string): string {
   const num = typeof amount === "string" ? parseFloat(amount) : amount;
-  if (!Number.isFinite(num)) return "KES 0";
-  return `KES ${num.toLocaleString("en-KE", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  if (!Number.isFinite(num)) return `${currency} 0`;
+  return formatCurrency(num, currency, locale);
 }
 
 function setColor(doc: jsPDF, color: [number, number, number]) {
@@ -68,6 +71,9 @@ function setColor(doc: jsPDF, color: [number, number, number]) {
 /* ── Main Generator ── */
 
 export function generateInvoicePDF(data: InvoicePDFData): jsPDF {
+  const cur = data.currency ?? "KES";
+  const loc = data.locale ?? "en-KE";
+  const fmt = (amount: string | number) => fmtAmount(amount, cur, loc);
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pw = doc.internal.pageSize.getWidth();   // 210
   const ph = doc.internal.pageSize.getHeight();   // 297
@@ -275,8 +281,8 @@ export function generateInvoicePDF(data: InvoicePDFData): jsPDF {
   const tableBody = data.lineItems.map((item) => [
     item.description,
     parseFloat(item.quantity).toFixed(2),
-    fmtKES(item.unitPrice),
-    fmtKES(item.amount),
+    fmt(item.unitPrice),
+    fmt(item.amount),
   ]);
 
   autoTable(doc, {
@@ -328,8 +334,8 @@ export function generateInvoicePDF(data: InvoicePDFData): jsPDF {
 
   // Background box for totals
   const totalsLines = [
-    { label: "Subtotal", value: fmtKES(data.subtotal), bold: false },
-    { label: `VAT (${data.vatRate}%)`, value: fmtKES(data.vatAmount), bold: false },
+    { label: "Subtotal", value: fmt(data.subtotal), bold: false },
+    { label: `VAT (${data.vatRate}%)`, value: fmt(data.vatAmount), bold: false },
   ];
   const paid = parseFloat(data.paidAmount);
   const totalLineCount = totalsLines.length + (paid > 0 ? 2 : 1) + 1; // +1 for total, +1 for balance
@@ -364,7 +370,7 @@ export function generateInvoicePDF(data: InvoicePDFData): jsPDF {
   setColor(doc, COLORS.muted);
   doc.text("Total", tLabelX, ty + 2);
   setColor(doc, COLORS.heading);
-  doc.text(fmtKES(data.totalAmount), tValueX, ty + 2, { align: "right" });
+  doc.text(fmt(data.totalAmount), tValueX, ty + 2, { align: "right" });
   ty += 7;
 
   // Paid
@@ -373,7 +379,7 @@ export function generateInvoicePDF(data: InvoicePDFData): jsPDF {
     doc.setFontSize(8.5);
     setColor(doc, COLORS.green);
     doc.text("Paid", tLabelX, ty);
-    doc.text(`-${fmtKES(data.paidAmount)}`, tValueX, ty, { align: "right" });
+    doc.text(`-${fmt(data.paidAmount)}`, tValueX, ty, { align: "right" });
     ty += 7;
   }
 
@@ -389,7 +395,7 @@ export function generateInvoicePDF(data: InvoicePDFData): jsPDF {
   doc.text("AMOUNT DUE", tLabelX, ty + 4);
   doc.setFontSize(13);
   setColor(doc, COLORS.accent);
-  doc.text(fmtKES(data.balanceDue), tValueX, ty + 4, { align: "right" });
+  doc.text(fmt(data.balanceDue), tValueX, ty + 4, { align: "right" });
 
   y += totalsBoxH + 6;
 

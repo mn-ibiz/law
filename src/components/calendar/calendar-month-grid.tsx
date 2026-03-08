@@ -18,7 +18,7 @@ import { CalendarDaySheet } from "./calendar-day-sheet";
 import type { SerializedCalendarEvent } from "./calendar-types";
 import { deserializeEvents, type CalendarEvent } from "./calendar-types";
 import { formatEnum } from "@/lib/utils/format-enum";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 import { MapPin, Gavel, Clock } from "lucide-react";
 
 const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -30,10 +30,11 @@ interface CalendarMonthGridProps {
 
 /** Compact event block shown inside a day cell on larger screens */
 function EventBlock({ event }: { event: CalendarEvent }) {
+  const { locale } = useOrgConfig();
   const blockColor = getBlockColor(event.type);
   const time = event.allDay
     ? null
-    : new Date(event.startTime).toLocaleTimeString(APP_LOCALE, {
+    : new Date(event.startTime).toLocaleTimeString(locale, {
         hour: "2-digit",
         minute: "2-digit",
         hour12: false,

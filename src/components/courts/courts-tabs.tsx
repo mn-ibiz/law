@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatEnum } from "@/lib/utils/format-enum";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 import { FilingStatusBadge } from "@/components/shared/status-badges";
 import { FilingForm } from "@/components/courts/filing-form";
 import { ServiceForm } from "@/components/courts/service-form";
@@ -83,6 +83,7 @@ const capsule =
   "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold leading-none whitespace-nowrap";
 
 export function CourtsTabs({ hierarchy, filings, serviceRecords, cases, courts, userRole }: CourtsTabsProps) {
+  const { locale } = useOrgConfig();
   const [showFilingForm, setShowFilingForm] = useState(false);
   const [showServiceForm, setShowServiceForm] = useState(false);
   const [editingCourt, setEditingCourt] = useState<Court | null>(null);
@@ -219,7 +220,7 @@ export function CourtsTabs({ hierarchy, filings, serviceRecords, cases, courts, 
                     {filings.map((f) => (
                       <TableRow key={f.id} className="transition-colors hover:bg-muted/50">
                         <TableCell>
-                          {f.filingDate ? new Date(f.filingDate).toLocaleDateString(APP_LOCALE) : "\u2014"}
+                          {f.filingDate ? new Date(f.filingDate).toLocaleDateString(locale) : "\u2014"}
                         </TableCell>
                         <TableCell className="font-mono text-xs">{f.caseNumber}</TableCell>
                         <TableCell>{f.courtName ?? "\u2014"}</TableCell>
@@ -287,7 +288,7 @@ export function CourtsTabs({ hierarchy, filings, serviceRecords, cases, courts, 
                     {serviceRecords.map((s) => (
                       <TableRow key={s.id} className="transition-colors hover:bg-muted/50">
                         <TableCell>
-                          {s.serviceDate ? new Date(s.serviceDate).toLocaleDateString(APP_LOCALE) : "\u2014"}
+                          {s.serviceDate ? new Date(s.serviceDate).toLocaleDateString(locale) : "\u2014"}
                         </TableCell>
                         <TableCell className="font-mono text-xs">{s.caseNumber}</TableCell>
                         <TableCell>{s.documentTitle}</TableCell>

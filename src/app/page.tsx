@@ -38,6 +38,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { motion } from "motion/react";
+import { siteConfig } from "@/lib/config/site";
 
 /* ------------------------------------------------------------------ */
 /*  DATA                                                               */
@@ -147,7 +148,7 @@ function DashboardMockup() {
           </div>
           <div className="ml-4 flex h-7 flex-1 items-center rounded-lg bg-white/5 px-4">
             <span className="text-[11px] text-white/30">
-              lawfirmregistry.co.ke/dashboard
+              yourfirm.lawfirmregistry.co.ke/dashboard
             </span>
           </div>
         </div>
@@ -445,7 +446,7 @@ export default function Home() {
               <Scale className="h-5 w-5 text-white" />
             </div>
             <span className="text-lg font-bold tracking-tight text-white">
-              Law Firm Registry
+              {siteConfig.name}
             </span>
           </Link>
           <nav className="hidden items-center gap-8 md:flex">
@@ -467,6 +468,12 @@ export default function Home() {
             >
               Compliance
             </a>
+            <Link
+              href="/pricing"
+              className="text-sm text-white/50 transition-colors hover:text-white"
+            >
+              Pricing
+            </Link>
           </nav>
           <Button
             size="sm"
@@ -513,7 +520,7 @@ export default function Home() {
               >
                 <Badge className="mb-8 gap-2 border-blue-400/20 bg-blue-500/10 px-4 py-2 text-sm font-medium text-blue-300 shadow-lg shadow-blue-500/5 hover:bg-blue-500/10">
                   <Sparkles className="h-3.5 w-3.5" />
-                  Built for Kenya&apos;s Legal Profession
+                  Built for Kenya&apos;s Legal Profession &mdash; and Beyond
                 </Badge>
               </motion.div>
 
@@ -537,8 +544,8 @@ export default function Home() {
                 transition={{ duration: 0.5, delay: 0.2 }}
               >
                 Manage cases, clients, billing, documents, and compliance from
-                one powerful dashboard — purpose-built for Kenya law firms with
-                full Advocates Act and AML/CFT regulation support.
+                one powerful cloud platform — purpose-built for law firms with
+                full Advocates Act and AML/CFT regulation support. Start your free trial today.
               </motion.p>
 
               <motion.div
@@ -552,8 +559,8 @@ export default function Home() {
                   className="h-13 gap-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 px-10 text-base font-semibold text-white shadow-xl shadow-blue-500/25 transition-all hover:shadow-blue-500/40 hover:brightness-110"
                   asChild
                 >
-                  <Link href="/login">
-                    Sign In to Dashboard
+                  <Link href="/signup">
+                    Start Free Trial
                     <ArrowRight className="h-5 w-5" />
                   </Link>
                 </Button>
@@ -563,8 +570,8 @@ export default function Home() {
                   className="h-13 gap-2.5 border-white/10 bg-white/5 px-10 text-base font-semibold text-white transition-all hover:bg-white/10 hover:text-white"
                   asChild
                 >
-                  <Link href="/intake">
-                    Submit Case Intake
+                  <Link href="/pricing">
+                    View Pricing
                     <ChevronRight className="h-5 w-5" />
                   </Link>
                 </Button>
@@ -1026,13 +1033,11 @@ export default function Home() {
                     <Scale className="h-4.5 w-4.5 text-primary-foreground" />
                   </div>
                   <span className="text-base font-bold tracking-tight">
-                    Law Firm Registry
+                    {siteConfig.name}
                   </span>
                 </Link>
                 <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
-                  A comprehensive practice management system built for Kenya law
-                  firms. Manage cases, clients, billing, and regulatory
-                  compliance from one secure platform.
+                  {siteConfig.description}
                 </p>
               </div>
 
@@ -1069,15 +1074,15 @@ export default function Home() {
                 <ul className="space-y-3 text-sm">
                   <li className="flex items-center gap-2.5 text-muted-foreground">
                     <Mail className="h-4 w-4" />
-                    info@lawfirmregistry.co.ke
+                    {siteConfig.supportEmail}
                   </li>
                   <li className="flex items-center gap-2.5 text-muted-foreground">
                     <Phone className="h-4 w-4" />
-                    +254 700 000 000
+                    {siteConfig.supportPhone}
                   </li>
                   <li className="flex items-center gap-2.5 text-muted-foreground">
                     <Building2 className="h-4 w-4" />
-                    Nairobi, Kenya
+                    {siteConfig.address}
                   </li>
                 </ul>
               </div>
@@ -1088,7 +1093,7 @@ export default function Home() {
 
           <div className="flex flex-col items-center justify-between gap-4 py-8 md:flex-row">
             <p className="text-xs text-muted-foreground">
-              &copy; {new Date().getFullYear()} Law Firm Registry. All rights
+              &copy; {new Date().getFullYear()} {siteConfig.name}. All rights
               reserved.
             </p>
             <div className="flex items-center gap-6 text-xs text-muted-foreground">

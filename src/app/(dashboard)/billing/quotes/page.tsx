@@ -4,8 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { QuoteStatusBadge } from "@/components/shared/status-badges";
 import { EmptyState } from "@/components/shared/empty-state";
 import { QuoteRowActions } from "@/components/billing/quote-row-actions";
-import { formatKES } from "@/lib/utils/format";
-import { APP_LOCALE } from "@/lib/constants/locale";
+import { formatCurrency } from "@/lib/utils/format";
+import { getOrgConfig } from "@/lib/utils/tenant-config";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Plus, FileText } from "lucide-react";
@@ -21,7 +21,10 @@ export const metadata: Metadata = {
 
 export default async function QuotesPage() {
   const { organizationId, session } = await requireOrg();
-  const quoteList = await getQuotes(organizationId);
+  const [quoteList, config] = await Promise.all([
+    getQuotes(organizationId),
+    getOrgConfig(organizationId),
+  ]);
   const userRole = session.user.role;
 
   return (
@@ -69,15 +72,15 @@ export default async function QuotesPage() {
                   <TableRow key={qt.id} className="transition-colors hover:bg-muted/50">
                     <TableCell className="font-mono text-primary">{qt.quoteNumber}</TableCell>
                     <TableCell>{qt.clientName}</TableCell>
-                    <TableCell>{formatKES(Number(qt.totalAmount))}</TableCell>
+                    <TableCell>{formatCurrency(Number(qt.totalAmount), config.currency, config.locale)}</TableCell>
                     <TableCell>
                       <QuoteStatusBadge status={qt.status} />
                     </TableCell>
                     <TableCell>
-                      {qt.validUntil ? new Date(qt.validUntil).toLocaleDateString(APP_LOCALE) : "\u2014"}
+                      {qt.validUntil ? new Date(qt.validUntil).toLocaleDateString(config.locale) : "\u2014"}
                     </TableCell>
                     <TableCell>
-                      {new Date(qt.createdAt).toLocaleDateString(APP_LOCALE)}
+                      {new Date(qt.createdAt).toLocaleDateString(config.locale)}
                     </TableCell>
                     <TableCell>
                       <QuoteRowActions

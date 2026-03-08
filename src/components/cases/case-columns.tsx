@@ -17,7 +17,6 @@ import { toast } from "sonner";
 import { formatEnum } from "@/lib/utils/format-enum";
 import { CaseStatusBadge, PriorityBadge } from "@/components/shared/status-badges";
 import { PersonAvatar } from "@/components/shared/person-avatar";
-import { APP_LOCALE } from "@/lib/constants/locale";
 
 export interface CaseRow {
   id: string;
@@ -35,7 +34,7 @@ export interface CaseRow {
   createdAt: Date;
 }
 
-export const caseColumns: ColumnDef<CaseRow>[] = [
+export const createCaseColumns = (locale: string): ColumnDef<CaseRow>[] => [
   {
     accessorKey: "caseNumber",
     header: ({ column }) => <SortableHeader column={column}>Case #</SortableHeader>,
@@ -105,7 +104,7 @@ export const caseColumns: ColumnDef<CaseRow>[] = [
       const dateFiled = row.original.dateFiled;
       return dateFiled ? (
         <span className="text-sm text-muted-foreground">
-          {new Date(dateFiled).toLocaleDateString(APP_LOCALE, {
+          {new Date(dateFiled).toLocaleDateString(locale, {
             year: "numeric",
             month: "short",
             day: "numeric",

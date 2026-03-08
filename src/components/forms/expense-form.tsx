@@ -25,6 +25,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { formatEnum } from "@/lib/utils/format-enum";
 import { Upload, X, FileText } from "lucide-react";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 
 const EXPENSE_CATEGORIES = [
   "filing_fee",
@@ -41,6 +42,7 @@ interface ExpenseFormProps {
 }
 
 export function ExpenseForm({ cases }: ExpenseFormProps) {
+  const { currency } = useOrgConfig();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
@@ -158,7 +160,7 @@ export function ExpenseForm({ cases }: ExpenseFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="amount">Amount (KES) *</Label>
+              <Label htmlFor="amount">{`Amount (${currency}) *`}</Label>
               <Input
                 id="amount"
                 type="number"

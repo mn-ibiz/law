@@ -23,8 +23,9 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { useAction } from "@/hooks/use-action";
 import { recordPayment } from "@/lib/actions/billing";
-import { formatKES } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils/format";
 import { useRouter } from "next/navigation";
+import { useOrgConfig } from "@/components/providers/tenant-config-provider";
 
 interface PaymentDialogProps {
   open: boolean;
@@ -49,6 +50,7 @@ export function PaymentDialog({
   totalAmount,
   paidAmount,
 }: PaymentDialogProps) {
+  const { currency, locale } = useOrgConfig();
   const router = useRouter();
   const remainingBalance = totalAmount - paidAmount;
 
@@ -97,30 +99,30 @@ export function PaymentDialog({
         <DialogHeader>
           <DialogTitle>Record Payment</DialogTitle>
           <DialogDescription>
-            Outstanding balance: {formatKES(remainingBalance)}
+            Outstanding balance: {formatCurrency(remainingBalance, currency, locale)}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
               <span className="text-muted-foreground">Total:</span>{" "}
-              <span className="font-medium">{formatKES(totalAmount)}</span>
+              <span className="font-medium">{formatCurrency(totalAmount, currency, locale)}</span>
             </div>
             <div>
               <span className="text-muted-foreground">Paid:</span>{" "}
-              <span className="font-medium">{formatKES(paidAmount)}</span>
+              <span className="font-medium">{formatCurrency(paidAmount, currency, locale)}</span>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="payment-amount">Amount (KES)</Label>
+            <Label htmlFor="payment-amount">{`Amount (${currency})`}</Label>
             <Input
               id="payment-amount"
               type="number"
               step="0.01"
               min="0.01"
               max={remainingBalance}
-              placeholder={`Max ${formatKES(remainingBalance)}`}
+              placeholder={`Max ${formatCurrency(remainingBalance, currency, locale)}`}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               required
